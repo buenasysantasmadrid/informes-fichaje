@@ -4,309 +4,257 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fichajes · RRHH</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0f0f0f;
-  --bg2:#181818;
-  --bg3:#222;
-  --line:#2e2e2e;
-  --line2:#3a3a3a;
-  --txt:#e8e4dc;
-  --txt2:#888;
-  --txt3:#555;
-  --gold:#c9a96e;
-  --gold2:#a07840;
+  --cream:#f7f4ee;
+  --cream2:#f0ece3;
+  --cream3:#e8e2d7;
+  --ink:#1c2b1e;
+  --ink2:#4a5e4c;
+  --ink3:#8a9e8c;
+  --green:#2d6a3f;
+  --green2:#3d8a52;
+  --green3:#e8f5ec;
+  --green4:#c8e6d0;
+  --green-acc:#1a4f2e;
   --red:#c0392b;
-  --green:#27ae60;
-  --amber:#e67e22;
-  --blue:#2980b9;
-  --r:6px;
+  --red-soft:#fdecea;
+  --amber:#b7770d;
+  --amber-soft:#fef8ec;
+  --border:#ddd8ce;
+  --border2:#c8c2b6;
+  --shadow:0 1px 3px rgba(28,43,30,.07);
+  --shadow2:0 4px 16px rgba(28,43,30,.10);
+  --r:8px;
 }
-html{font-size:15px;background:var(--bg)}
-body{font-family:'DM Mono',monospace;color:var(--txt);min-height:100vh}
+html{font-size:15px;background:var(--cream)}
+body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 
-/* HEADER */
 .hdr{
-  background:var(--bg2);
-  border-bottom:1px solid var(--line);
-  padding:0 2rem;
-  height:56px;
+  background:var(--green);padding:0 2.5rem;height:58px;
   display:flex;align-items:center;justify-content:space-between;
   position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 8px rgba(28,43,30,.18);
 }
-.hdr-logo{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--gold);letter-spacing:.02em}
-.hdr-logo span{color:var(--txt2);font-size:.7rem;font-family:'DM Mono',monospace;margin-left:10px}
+.hdr-logo{
+  font-family:'Lora',serif;font-size:1.1rem;
+  color:#fff;letter-spacing:.01em;display:flex;align-items:center;gap:10px;
+}
+.hdr-logo .dot{width:8px;height:8px;border-radius:50%;background:#7ecf95;flex-shrink:0}
+.hdr-right{font-size:.62rem;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase}
 
-/* LAYOUT */
-.shell{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 56px)}
+.shell{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 58px)}
 
-/* SIDEBAR */
 .side{
-  background:var(--bg2);
-  border-right:1px solid var(--line);
-  padding:1.5rem 1.25rem;
-  display:flex;flex-direction:column;gap:1.4rem;
+  background:#fff;border-right:1px solid var(--border);
+  padding:1.75rem 1.5rem;display:flex;flex-direction:column;gap:1.6rem;
 }
-.lbl{
-  font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--txt3);margin-bottom:.5rem;display:block;
-}
+.lbl{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:.55rem;display:block}
+
 .emp-list{
-  display:flex;flex-direction:column;gap:2px;
-  max-height:260px;overflow-y:auto;
-  border:1px solid var(--line);border-radius:var(--r);
-  background:var(--bg3);padding:4px;
+  display:flex;flex-direction:column;gap:1px;max-height:270px;overflow-y:auto;
+  border:1px solid var(--border);border-radius:var(--r);background:var(--cream);padding:4px;
 }
-.emp-list::-webkit-scrollbar{width:3px}
-.emp-list::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
-.emp-row{
-  display:flex;align-items:center;gap:8px;
-  padding:5px 8px;border-radius:4px;cursor:pointer;
-}
-.emp-row:hover{background:var(--line)}
-.emp-row input{accent-color:var(--gold);width:13px;height:13px;flex-shrink:0;cursor:pointer}
-.emp-row label{font-size:.74rem;cursor:pointer;color:var(--txt);line-height:1.3}
-.emp-btns{display:flex;gap:6px;margin-bottom:5px}
+.emp-list::-webkit-scrollbar{width:4px}
+.emp-list::-webkit-scrollbar-thumb{background:var(--cream3);border-radius:2px}
+.emp-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .12s}
+.emp-row:hover{background:var(--green3)}
+.emp-row input{accent-color:var(--green);width:14px;height:14px;flex-shrink:0;cursor:pointer}
+.emp-row label{font-size:.74rem;cursor:pointer;color:var(--ink2);line-height:1.3}
+.emp-btns{display:flex;gap:6px;margin-bottom:6px}
 .bxs{
-  padding:3px 10px;font-size:.65rem;font-family:'DM Mono',monospace;
-  border:1px solid var(--line2);background:var(--bg3);
-  border-radius:4px;cursor:pointer;color:var(--txt2);transition:all .15s;
+  padding:4px 10px;font-size:.64rem;font-family:'DM Mono',monospace;
+  border:1px solid var(--border2);background:#fff;border-radius:5px;
+  cursor:pointer;color:var(--ink3);transition:all .12s;
 }
-.bxs:hover{background:var(--gold);color:#000;border-color:var(--gold)}
+.bxs:hover{background:var(--green);color:#fff;border-color:var(--green)}
 
 .date-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .df{display:flex;flex-direction:column;gap:4px}
-.df span{font-size:.62rem;color:var(--txt3)}
+.df span{font-size:.62rem;color:var(--ink3)}
 .df input[type=date]{
-  padding:6px 8px;font-family:'DM Mono',monospace;font-size:.7rem;
-  background:var(--bg3);border:1px solid var(--line2);
-  border-radius:var(--r);color:var(--txt);outline:none;width:100%;
+  padding:7px 8px;font-family:'DM Mono',monospace;font-size:.7rem;
+  background:#fff;border:1px solid var(--border2);border-radius:6px;
+  color:var(--ink);outline:none;width:100%;transition:border-color .15s;
 }
-.df input:focus{border-color:var(--gold)}
+.df input:focus{border-color:var(--green)}
 
 .btn-gen{
-  width:100%;padding:10px;
-  background:var(--gold);color:#000;
-  border:none;border-radius:var(--r);
-  font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500;
-  cursor:pointer;letter-spacing:.06em;transition:opacity .15s;
+  width:100%;padding:11px;background:var(--green);color:#fff;border:none;
+  border-radius:var(--r);font-family:'DM Mono',monospace;font-size:.78rem;font-weight:500;
+  cursor:pointer;letter-spacing:.05em;transition:background .15s,box-shadow .15s;
+  box-shadow:0 2px 8px rgba(45,106,63,.25);
 }
-.btn-gen:hover{opacity:.85}
-.btn-gen:disabled{opacity:.3;cursor:not-allowed}
+.btn-gen:hover{background:var(--green-acc);box-shadow:0 4px 12px rgba(45,106,63,.3)}
+.btn-gen:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
 
-.status-dot{
-  width:6px;height:6px;border-radius:50%;
-  background:var(--gold);display:inline-block;margin-right:6px;
-  animation:pulse 2s infinite;
+.sync-note{
+  font-size:.6rem;color:var(--ink3);line-height:1.7;
+  border:1px solid var(--border);border-radius:6px;padding:.6rem .75rem;background:var(--cream);
 }
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.status-dot.ok{background:var(--green);animation:none}
-.status-dot.err{background:var(--red);animation:none}
-#stxt{font-size:.65rem;color:var(--txt3)}
 
-/* MAIN */
-.main{padding:2rem;overflow-x:hidden}
+.status-bar{display:flex;align-items:center;gap:6px;font-size:.62rem;color:var(--ink3)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--cream3);flex-shrink:0;transition:background .3s}
+.sdot.ok{background:var(--green2)}
+.sdot.spin{background:var(--amber);animation:blink 1s infinite}
+.sdot.err{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-.empty{
-  display:flex;flex-direction:column;align-items:center;
-  justify-content:center;height:60vh;gap:.75rem;text-align:center;
-}
-.empty-ico{font-size:2.5rem;opacity:.15}
-.empty h2{font-family:'Fraunces',serif;font-size:1.4rem;color:var(--txt2);font-weight:300}
-.empty p{font-size:.72rem;color:var(--txt3);max-width:280px;line-height:1.7}
+.main{padding:2rem 2.5rem;max-width:960px}
 
-/* EMP SECTION */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:58vh;gap:.75rem;text-align:center}
+.empty-ico{font-size:2.8rem;opacity:.18}
+.empty h2{font-family:'Lora',serif;font-size:1.4rem;color:var(--ink2);font-weight:400}
+.empty p{font-size:.72rem;color:var(--ink3);max-width:280px;line-height:1.7}
+
 .emp-block{margin-bottom:3rem}
-.emp-name{
-  font-family:'Fraunces',serif;font-size:1.5rem;font-weight:300;
-  color:var(--gold);margin-bottom:.35rem;
-}
-.emp-meta{font-size:.65rem;color:var(--txt3);margin-bottom:1.5rem}
+.emp-name{font-family:'Lora',serif;font-size:1.55rem;font-weight:400;color:var(--green-acc);margin-bottom:.2rem}
+.emp-meta{font-size:.64rem;color:var(--ink3);margin-bottom:1.25rem}
 
-/* SUMMARY PILLS */
-.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.75rem}
-.pill{
-  padding:5px 14px;border-radius:20px;
-  font-size:.65rem;border:1px solid var(--line2);color:var(--txt2);
-}
-.pill strong{color:var(--txt)}
-.pill.g{border-color:#27ae6044;background:#27ae6011;color:#4ecb7a}
-.pill.r{border-color:#c0392b44;background:#c0392b11;color:#e05a4b}
-.pill.a{border-color:#e67e2244;background:#e67e2211;color:#f39c12}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
+.pill{padding:5px 13px;border-radius:20px;font-size:.65rem;border:1px solid var(--border2);color:var(--ink2);background:#fff}
+.pill strong{color:var(--ink)}
+.pill.g{background:var(--green3);border-color:var(--green4);color:var(--green)}
+.pill.r{background:var(--red-soft);border-color:#f5c6c2;color:var(--red)}
+.pill.a{background:var(--amber-soft);border-color:#f5e0a0;color:var(--amber)}
 
-/* DAY CARDS */
-.days{display:flex;flex-direction:column;gap:12px}
+.export-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+  font-size:.66rem;font-family:'DM Mono',monospace;background:#fff;
+  border:1px solid var(--border2);border-radius:6px;color:var(--ink2);
+  cursor:pointer;transition:all .12s;margin-bottom:1.25rem;
+}
+.export-btn:hover{border-color:var(--green);color:var(--green);background:var(--green3)}
+
+.days{display:flex;flex-direction:column;gap:8px}
 
 .day-card{
-  background:var(--bg2);
-  border:1px solid var(--line);
-  border-radius:10px;
-  overflow:hidden;
-  transition:border-color .2s;
+  background:#fff;border:1px solid var(--border);border-radius:10px;
+  overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s,border-color .2s;
 }
-.day-card:hover{border-color:var(--line2)}
-.day-card.has-error{border-color:#c0392b55}
-.day-card.has-warn{border-color:#e67e2233}
+.day-card:hover{box-shadow:var(--shadow2)}
+.day-card.has-error{border-left:3px solid var(--red)}
+.day-card.has-warn{border-left:3px solid var(--amber)}
+.day-card.is-empty{opacity:.5}
 
-.day-head{
-  display:flex;align-items:center;gap:0;
-  padding:.75rem 1.1rem;
-  cursor:pointer;
-  user-select:none;
-}
-.day-head:hover .day-name{color:var(--gold)}
+.day-head{display:flex;align-items:center;padding:.85rem 1.25rem;cursor:pointer;user-select:none}
 
 .day-dow{
-  font-family:'Fraunces',serif;font-size:1.05rem;font-weight:300;
-  color:var(--txt2);width:110px;flex-shrink:0;text-transform:capitalize;
+  font-family:'Lora',serif;font-size:1rem;font-weight:400;
+  color:var(--ink);width:115px;flex-shrink:0;text-transform:capitalize;
 }
-.day-date{
-  font-size:.68rem;color:var(--txt3);width:90px;flex-shrink:0;
-}
-.day-summary{
-  display:flex;align-items:center;gap:12px;flex:1;
-}
-.time-chip{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:3px 10px;border-radius:20px;font-size:.68rem;
-}
-.tc-in{background:#27ae6018;color:#4ecb7a;border:1px solid #27ae6033}
-.tc-out{background:#2980b918;color:#5dade2;border:1px solid #2980b933}
-.tc-dur{background:#c9a96e18;color:var(--gold);border:1px solid #c9a96e33}
-.tc-err{background:#c0392b18;color:#e05a4b;border:1px solid #c0392b33}
-.tc-warn{background:#e67e2218;color:#f39c12;border:1px solid #e67e2233}
+.day-date{font-size:.65rem;color:var(--ink3);width:85px;flex-shrink:0}
 
-.day-chevron{
-  margin-left:auto;color:var(--txt3);font-size:.7rem;
-  transition:transform .2s;flex-shrink:0;
-}
+.day-chips{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.65rem;white-space:nowrap}
+.c-in {background:var(--green3);color:var(--green);border:1px solid var(--green4)}
+.c-out{background:#e8f0fe;color:#1a73e8;border:1px solid #c5d8fc}
+.c-dur{background:var(--cream2);color:var(--ink2);border:1px solid var(--border2)}
+.c-err{background:var(--red-soft);color:var(--red);border:1px solid #f5c6c2}
+.c-wrn{background:var(--amber-soft);color:var(--amber);border:1px solid #f5e0a0}
+.c-emp{color:var(--ink3);font-size:.63rem}
+
+.day-chevron{margin-left:auto;color:var(--ink3);font-size:.65rem;transition:transform .2s;flex-shrink:0;padding-left:8px}
 .day-card.open .day-chevron{transform:rotate(180deg)}
 
-/* DAY BODY (fichajes detalle) */
-.day-body{
-  display:none;
-  border-top:1px solid var(--line);
-  padding:.9rem 1.1rem;
-}
+.day-body{display:none;border-top:1px solid var(--border);background:var(--cream);padding:1rem 1.25rem}
 .day-card.open .day-body{display:block}
 
-.fichajes-table{width:100%;border-collapse:collapse;margin-bottom:.75rem}
-.fichajes-table th{
-  font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--txt3);padding:4px 10px;text-align:left;
-  border-bottom:1px solid var(--line);
+.ft{width:100%;border-collapse:collapse;margin-bottom:.75rem}
+.ft th{
+  font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink3);padding:4px 10px;text-align:left;border-bottom:1px solid var(--border);
 }
-.fichajes-table td{
-  padding:5px 10px;font-size:.75rem;
-  border-bottom:1px solid var(--line);vertical-align:middle;
+.ft td{padding:6px 10px;font-size:.76rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.ft tbody tr:last-child td{border-bottom:none}
+.ft tbody tr:hover td{background:rgba(45,106,63,.025)}
+.t-in{color:var(--green);font-weight:500}
+.t-out{color:#1a73e8;font-weight:500}
+
+.hora-display{
+  cursor:pointer;padding:3px 8px;border-radius:5px;
+  transition:background .12s,color .12s;display:inline-block;
 }
-.fichajes-table tr:last-child td{border-bottom:none}
-.fichajes-table tr:hover td{background:rgba(255,255,255,.02)}
-
-/* Tipo badge */
-.tipo-in{color:#4ecb7a}
-.tipo-out{color:#5dade2}
-
-/* Edit mode */
-.hora-cell{position:relative}
-.hora-display{cursor:pointer;padding:2px 6px;border-radius:3px;transition:background .15s}
-.hora-display:hover{background:var(--line2);color:var(--gold)}
+.hora-display:hover{background:var(--green3);color:var(--green)}
+.hora-display.editing{display:none}
 .hora-input{
-  font-family:'DM Mono',monospace;font-size:.75rem;
-  background:var(--bg3);border:1px solid var(--gold);
-  border-radius:3px;color:var(--txt);padding:2px 6px;
-  width:70px;outline:none;display:none;
+  font-family:'DM Mono',monospace;font-size:.76rem;
+  background:#fff;border:1.5px solid var(--green);border-radius:5px;
+  color:var(--ink);padding:3px 8px;width:82px;outline:none;display:none;
 }
 .hora-input.editing{display:inline-block}
-.hora-display.editing{display:none}
 
-.edit-hint{font-size:.6rem;color:var(--txt3);margin-top:.5rem;font-style:italic}
+.save-ind{display:inline-block;font-size:.58rem;color:var(--green);margin-left:5px;opacity:0;transition:opacity .3s}
+.save-ind.on{opacity:1}
 
-/* Add / delete row buttons */
-.day-actions{display:flex;gap:8px;margin-top:.5rem}
+.day-actions{display:flex;gap:8px;margin-top:.6rem}
 .btn-add{
-  padding:4px 12px;font-size:.65rem;font-family:'DM Mono',monospace;
-  background:transparent;border:1px solid var(--line2);
-  border-radius:4px;color:var(--txt2);cursor:pointer;transition:all .15s;
+  padding:5px 13px;font-size:.65rem;font-family:'DM Mono',monospace;
+  background:#fff;border:1px solid var(--border2);border-radius:5px;
+  color:var(--ink2);cursor:pointer;transition:all .12s;
 }
-.btn-add:hover{border-color:var(--gold);color:var(--gold)}
-.btn-del{
-  background:transparent;border:none;
-  color:var(--txt3);cursor:pointer;font-size:.8rem;
-  padding:0 4px;transition:color .15s;
-}
+.btn-add:hover{border-color:var(--green);color:var(--green);background:var(--green3)}
+.btn-del{background:transparent;border:none;color:var(--ink3);cursor:pointer;padding:0 5px;font-size:.9rem;transition:color .12s;line-height:1}
 .btn-del:hover{color:var(--red)}
 
-/* Loader */
-.loader{
-  display:none;position:fixed;inset:0;
-  background:rgba(15,15,15,.85);z-index:500;
-  flex-direction:column;align-items:center;justify-content:center;gap:1rem;
-}
+.edit-hint{font-size:.59rem;color:var(--ink3);margin-top:.55rem;display:flex;align-items:center;gap:5px}
+.edit-hint::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green3);border:1px solid var(--green4);flex-shrink:0}
+
+.loader{display:none;position:fixed;inset:0;background:rgba(247,244,238,.88);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:1rem;backdrop-filter:blur(3px)}
 .loader.on{display:flex}
-.spin{
-  width:32px;height:32px;border:2px solid var(--line2);
-  border-top-color:var(--gold);border-radius:50%;
-  animation:rot .6s linear infinite;
-}
+.spin{width:30px;height:30px;border:2.5px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:rot .6s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
-.ltxt{font-size:.72rem;color:var(--txt2)}
+.ltxt{font-size:.7rem;color:var(--ink2)}
 
-/* Toast */
-.toast{
-  position:fixed;bottom:20px;right:20px;
-  background:var(--bg3);color:var(--txt);
-  border:1px solid var(--line2);
-  padding:8px 16px;border-radius:var(--r);
-  font-size:.72rem;z-index:600;
-  opacity:0;transform:translateY(8px);
-  transition:all .2s;pointer-events:none;
-}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:#fff;padding:9px 18px;border-radius:8px;font-size:.7rem;z-index:600;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;box-shadow:0 4px 14px rgba(28,43,30,.25)}
 .toast.on{opacity:1;transform:translateY(0)}
-.toast.ok{border-color:var(--green);color:#4ecb7a}
-.toast.err{border-color:var(--red);color:#e05a4b}
+.toast.ok{background:var(--green)}
+.toast.err{background:var(--red)}
 
-/* Export btn */
-.export-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:7px 16px;font-size:.7rem;font-family:'DM Mono',monospace;
-  background:transparent;border:1px solid var(--line2);
-  border-radius:var(--r);color:var(--txt2);cursor:pointer;transition:all .15s;
-  margin-bottom:1.5rem;
-}
-.export-btn:hover{border-color:var(--gold);color:var(--gold)}
+/* Modal */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(28,43,30,.45);z-index:800;align-items:center;justify-content:center}
+.modal-ov.on{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:2rem;max-width:620px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(28,43,30,.2)}
+.modal-title{font-family:'Lora',serif;font-size:1.2rem;color:var(--green-acc);margin-bottom:1.25rem}
+.modal-body{font-size:.74rem;line-height:1.8;color:var(--ink2)}
+.modal-body strong{color:var(--green)}
+.modal-body pre{background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:.9rem;font-size:.63rem;overflow-x:auto;margin:.5rem 0;line-height:1.7;font-family:'DM Mono',monospace}
+.modal-foot{margin-top:1.25rem;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.modal-foot input{flex:1;min-width:200px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:.72rem;border:1.5px solid var(--border2);border-radius:6px;outline:none;color:var(--ink);transition:border-color .15s}
+.modal-foot input:focus{border-color:var(--green)}
+.modal-foot button{padding:8px 18px;background:var(--green);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer}
+.url-st{font-size:.61rem;color:var(--ink3);margin-top:5px}
 
-@media(max-width:700px){
+@media(max-width:720px){
   .shell{grid-template-columns:1fr}
-  .side{border-right:none;border-bottom:1px solid var(--line)}
-  .main{padding:1rem}
-  .day-dow{width:80px}
+  .side{border-right:none;border-bottom:1px solid var(--border)}
+  .main{padding:1.25rem}
+  .hdr{padding:0 1.25rem}
+  .day-dow{width:90px}
+  .day-date{width:72px}
 }
 </style>
 </head>
 <body>
 
 <header class="hdr">
-  <div class="hdr-logo">Fichajes <span>RRHH · 2026</span></div>
-  <div style="display:flex;align-items:center">
-    <span class="status-dot" id="sdot"></span>
-    <span id="stxt">Conectando...</span>
-  </div>
+  <div class="hdr-logo"><span class="dot"></span>Fichajes · RRHH</div>
+  <div class="hdr-right">2026</div>
 </header>
 
 <div class="shell">
   <aside class="side">
+    <div class="status-bar"><span class="sdot spin" id="sdot"></span><span id="stxt">Conectando...</span></div>
+
     <div>
       <span class="lbl">Empleados</span>
       <div class="emp-btns">
         <button class="bxs" onclick="selAll()">Todos</button>
         <button class="bxs" onclick="selNone()">Ninguno</button>
       </div>
-      <div class="emp-list" id="emp-list">
-        <span style="font-size:.7rem;color:var(--txt3);padding:8px">Cargando...</span>
-      </div>
+      <div class="emp-list" id="emp-list"><span style="font-size:.7rem;color:var(--ink3);padding:8px">Cargando...</span></div>
     </div>
 
     <div>
@@ -318,11 +266,17 @@ body{font-family:'DM Mono',monospace;color:var(--txt);min-height:100vh}
     </div>
 
     <button class="btn-gen" id="btn-gen" onclick="generar()" disabled>Generar informe</button>
+
+    <div class="sync-note" id="sync-note">
+      <strong>Sync desactivado</strong><br>
+      Para guardar cambios en el sheet, configura el Apps Script.
+      <a href="#" onclick="showModal();return false" style="color:var(--green);text-decoration:underline;display:block;margin-top:3px">Ver instrucciones →</a>
+    </div>
   </aside>
 
   <main class="main" id="main">
     <div class="empty" id="empty">
-      <div class="empty-ico">🗓</div>
+      <div class="empty-ico">🌿</div>
       <h2>Sin datos aún</h2>
       <p>Selecciona empleados y período, luego pulsa generar.</p>
     </div>
@@ -330,157 +284,91 @@ body{font-family:'DM Mono',monospace;color:var(--txt);min-height:100vh}
   </main>
 </div>
 
+<!-- Modal Apps Script -->
+<div class="modal-ov" id="modal-ov" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-title">Activar sincronización con Google Sheets</div>
+    <div class="modal-body">
+      <p><strong>1.</strong> Abre tu Google Sheet → <strong>Extensiones → Apps Script</strong></p>
+      <p style="margin-top:.6rem"><strong>2.</strong> Borra el código existente y pega este:</p>
+<pre>function doPost(e) {
+  try {
+    var data  = JSON.parse(e.postData.contents);
+    var emp   = data.emp;
+    var fecha = data.fecha;
+    var regs  = data.registros;
+
+    var ss    = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(emp);
+    if (!sheet) return resp({ok:false, msg:'Hoja no encontrada: ' + emp});
+
+    // Borrar filas existentes de esa fecha
+    var vals = sheet.getDataRange().getValues();
+    for (var i = vals.length - 1; i >= 0; i--) {
+      var raw = vals[i][0] ? String(vals[i][0]).trim() : '';
+      if (toISO(raw) === fecha) sheet.deleteRow(i + 1);
+    }
+
+    // Insertar nuevas filas
+    var d = fecha.split('-');
+    var dis = d[2] + '/' + d[1] + '/' + d[0];
+    regs.forEach(function(r) {
+      sheet.appendRow([dis, r.tipo, r.hora, '', '', '']);
+    });
+
+    return resp({ok:true});
+  } catch(err) {
+    return resp({ok:false, msg:err.toString()});
+  }
+}
+
+function toISO(s) {
+  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
+  return s;
+}
+
+function resp(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet() {
+  return ContentService.createTextOutput('OK');
+}</pre>
+      <p style="margin-top:.6rem"><strong>3.</strong> Guarda (Ctrl+S) y luego: <strong>Implementar → Nueva implementación</strong></p>
+      <p style="margin-top:.4rem;padding-left:1rem;color:var(--ink3)">
+        Tipo: <strong style="color:var(--ink)">Aplicación web</strong> &nbsp;·&nbsp;
+        Ejecutar como: <strong style="color:var(--ink)">Yo</strong> &nbsp;·&nbsp;
+        Acceso: <strong style="color:var(--ink)">Cualquier persona</strong>
+      </p>
+      <p style="margin-top:.6rem"><strong>4.</strong> Copia la URL que aparece y pégala aquí abajo:</p>
+    </div>
+    <div class="modal-foot">
+      <input id="script-input" type="url" placeholder="https://script.google.com/macros/s/..." oninput="checkUrl(this.value)">
+      <button onclick="saveUrl()">Guardar</button>
+    </div>
+    <div class="url-st" id="url-st"></div>
+    <div style="margin-top:.75rem;text-align:right">
+      <button onclick="closeModal()" style="background:none;border:none;font-size:.7rem;color:var(--ink3);cursor:pointer;font-family:'DM Mono',monospace">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <div class="loader" id="loader"><div class="spin"></div><div class="ltxt" id="ltxt">Cargando...</div></div>
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const SHEET_ID = '1AHGLfzT-yF2kkPUS8IlygX9TAL6poYVnxBmoI_p-550';
-const DIAS_ES = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const SHEET_ID  = '1AHGLfzT-yF2kkPUS8IlygX9TAL6poYVnxBmoI_p-550';
+const DIAS_ES   = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+const DIAS_TILDE= ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
-let empleados = [];
-// Almacén editable: editData[emp][fecha] = [{tipo, hora}, ...]
-let editData = {};
-
-// ── UI helpers ─────────────────────────────────────────────
-function toast(msg, cls='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast on ' + cls;
-  setTimeout(() => t.className = 'toast', 3000);
-}
-function setLoader(on, msg='') {
-  document.getElementById('loader').classList.toggle('on', on);
-  if (msg) document.getElementById('ltxt').textContent = msg;
-}
-function setStatus(cls, msg) {
-  document.getElementById('sdot').className = 'status-dot ' + cls;
-  document.getElementById('stxt').textContent = msg;
-}
-
-// ── Fetch sheet ────────────────────────────────────────────
-async function fetchSheet(sheetName) {
-  const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID
-    + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(sheetName.trim());
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 12000);
-  let resp;
-  try { resp = await fetch(url, {signal: ctrl.signal}); }
-  catch(e) { clearTimeout(timer); throw new Error('Red: ' + sheetName); }
-  clearTimeout(timer);
-  const text = await resp.text();
-  const m = text.match(/setResponse\(([\s\S]*)\)\s*;?\s*$/);
-  if (!m) throw new Error('Sin respuesta válida: ' + sheetName);
-  const data = JSON.parse(m[1]);
-  if (data.status === 'error') throw new Error('Sheet no encontrada: ' + sheetName);
-  return data.table;
-}
-
-// ── Parsear tabla → array de fichajes {fecha, tipo, hora} ──
-function parsearTabla(table) {
-  if (!table || !table.rows) return [];
-  const out = [];
-  for (const row of table.rows) {
-    const c = row.c || [];
-    const get = i => (c[i] && c[i].v != null) ? String(c[i].v).trim() : '';
-    const fecha = parseFecha(get(0));
-    const tipo  = get(1).toUpperCase();
-    const hora  = get(2);
-    if (!fecha || (tipo !== 'ENTRADA' && tipo !== 'SALIDA') || !hora) continue;
-    out.push({ fecha, tipo, hora: normHora(hora) });
-  }
-  return out;
-}
-
-// ── Fecha helpers ──────────────────────────────────────────
-function parseFecha(s) {
-  s = String(s||'').trim();
-  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
-  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return s.slice(0,10);
-  m = s.match(/^Date\((\d+),(\d+),(\d+)\)$/);
-  if (m) return m[1]+'-'+String(+m[2]+1).padStart(2,'0')+'-'+String(+m[3]).padStart(2,'0');
-  return null;
-}
-
-function isoToDate(iso) {
-  const [y,mo,d] = iso.split('-').map(Number);
-  return new Date(y, mo-1, d);
-}
-
-function isoDisplay(iso) {
-  const [y,mo,d] = iso.split('-');
-  return d+'/'+mo+'/'+y;
-}
-
-function dowName(iso) {
-  return DIAS_ES[isoToDate(iso).getDay()];
-}
-
-// ── Hora helpers ───────────────────────────────────────────
-function horaToMins(s) {
-  const m = String(s||'').match(/^(\d{1,2}):(\d{2})/);
-  if (m) return +m[1]*60 + +m[2];
-  return null;
-}
-
-function normHora(s) {
-  const m = horaToMins(s);
-  if (m == null) return s || '';
-  return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
-}
-
-function minsToStr(mins) {
-  if (mins == null || mins < 0) return '—';
-  return Math.floor(mins/60)+'h '+String(mins%60).padStart(2,'0')+'min';
-}
-
-// ── Agrupar fichajes por día ───────────────────────────────
-function agruparPorDia(fichajes) {
-  const map = {};
-  for (const f of fichajes) {
-    if (!map[f.fecha]) map[f.fecha] = [];
-    map[f.fecha].push({tipo: f.tipo, hora: f.hora});
-  }
-  return map;
-}
-
-// ── Calcular resumen de un día ─────────────────────────────
-function calcDia(registros) {
-  const sorted = [...registros].sort((a,b) => (horaToMins(a.hora)||0)-(horaToMins(b.hora)||0));
-  const entradas = sorted.filter(r => r.tipo === 'ENTRADA');
-  const salidas  = sorted.filter(r => r.tipo === 'SALIDA');
-  const primera  = entradas[0]?.hora || null;
-  const ultima   = salidas[salidas.length-1]?.hora || null;
-  let mins = null;
-  if (primera && ultima) {
-    mins = (horaToMins(ultima)||0) - (horaToMins(primera)||0);
-    if (mins < 0) mins += 1440;
-  }
-  const estado = !primera ? 'sin-entrada' : !ultima ? 'sin-salida' : 'ok';
-  return { primera, ultima, mins, estado };
-}
-
-// ── Cargar empleados ───────────────────────────────────────
-async function cargarEmpleados() {
-  try {
-    const table = await fetchSheet('EMPLEADOS');
-    const rows  = table.rows || [];
-    const found = rows.map(r => {
-      const c = r.c || [];
-      return c[0] && c[0].v ? String(c[0].v).trim() : '';
-    }).filter(v => v && !['nombre','empleado','name'].includes(v.toLowerCase()));
-    empleados = found.length ? found : EMPLEADOS_DEFAULT;
-    setStatus('ok', empleados.length + ' empleados');
-  } catch(e) {
-    empleados = EMPLEADOS_DEFAULT;
-    setStatus('ok', empleados.length + ' empleados (default)');
-  }
-  renderEmpleados();
-  document.getElementById('btn-gen').disabled = false;
-}
+let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || '';
+let empleados   = [];
+let editData    = {};
+let currentSel, currentDesde, currentHasta;
 
 const EMPLEADOS_DEFAULT = [
   'LUCIANA Fisbein Efron','RICHARD Silva Vera','ANA HILDA MIRANDA ROCHA',
@@ -488,272 +376,420 @@ const EMPLEADOS_DEFAULT = [
   'RAMIRO DAMIAN Martinez Chapper','SHENAY Nazimova Cholakova','YAMILA Fisbein Efron'
 ];
 
-function renderEmpleados() {
-  document.getElementById('emp-list').innerHTML = empleados.map(e =>
-    `<label class="emp-row"><input type="checkbox" class="echk" value="${esc(e)}" checked><label>${esc(e)}</label></label>`
-  ).join('');
+// ── UI ──────────────────────────────────────────────────────
+function toast(msg, cls, dur) {
+  dur = dur || 2800;
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast on' + (cls ? ' ' + cls : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(function(){ t.className = 'toast'; }, dur);
+}
+function setLoader(on, msg) {
+  document.getElementById('loader').classList.toggle('on', on);
+  if (msg) document.getElementById('ltxt').textContent = msg;
+}
+function setStatus(cls, msg) {
+  document.getElementById('sdot').className = 'sdot ' + cls;
+  document.getElementById('stxt').textContent = msg;
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function empId(emp) {
+  return emp.replace(/[^a-zA-Z0-9]/g,'_');
 }
 
-function selAll()  { document.querySelectorAll('.echk').forEach(c => c.checked=true); }
-function selNone() { document.querySelectorAll('.echk').forEach(c => c.checked=false); }
-function esc(s)    { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ── FETCH ───────────────────────────────────────────────────
+async function fetchSheet(name) {
+  var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID
+    + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(name.trim());
+  var ctrl = new AbortController();
+  var timer = setTimeout(function(){ ctrl.abort(); }, 12000);
+  var resp;
+  try { resp = await fetch(url, {signal: ctrl.signal}); }
+  catch(e) { clearTimeout(timer); throw new Error('Sin conexion: ' + name); }
+  clearTimeout(timer);
+  var text = await resp.text();
+  var m = text.match(/setResponse\(([\s\S]*)\)\s*;?\s*$/);
+  if (!m) throw new Error('Respuesta invalida: ' + name);
+  var data = JSON.parse(m[1]);
+  if (data.status === 'error') throw new Error('Pestana no encontrada: ' + name);
+  return data.table;
+}
 
-// ── Generar ────────────────────────────────────────────────
+// ── WRITE via Apps Script ───────────────────────────────────
+async function writeToSheet(emp, fecha, regs) {
+  if (!SCRIPT_URL) return false;
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({emp: emp, fecha: fecha, registros: regs}),
+      headers: {'Content-Type':'application/json'},
+      mode: 'no-cors'
+    });
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── PARSE ───────────────────────────────────────────────────
+function parsearTabla(table) {
+  if (!table || !table.rows) return [];
+  var out = [];
+  for (var i = 0; i < table.rows.length; i++) {
+    var c = table.rows[i].c || [];
+    var get = function(idx){ return (c[idx] && c[idx].v != null) ? String(c[idx].v).trim() : ''; };
+    var fecha = parseFecha(get(0));
+    var tipo  = get(1).toUpperCase();
+    var hora  = normHora(get(2));
+    if (!fecha || (tipo !== 'ENTRADA' && tipo !== 'SALIDA') || !hora) continue;
+    out.push({fecha: fecha, tipo: tipo, hora: hora});
+  }
+  return out;
+}
+
+function parseFecha(s) {
+  s = String(s||'').trim();
+  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return s.slice(0,10);
+  m = s.match(/^Date\((\d+),(\d+),(\d+)\)$/);
+  if (m) return m[1]+'-'+('0'+(+m[2]+1)).slice(-2)+'-'+('0'+m[3]).slice(-2);
+  return null;
+}
+function horaToMins(s) {
+  var m = String(s||'').match(/^(\d{1,2}):(\d{2})/);
+  return m ? (+m[1])*60+(+m[2]) : null;
+}
+function normHora(s) {
+  var m = horaToMins(s);
+  if (m == null) return s||'';
+  return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);
+}
+function minsToStr(m) {
+  if (m == null || m < 0) return '—';
+  return Math.floor(m/60)+'h '+('0'+(m%60)).slice(-2)+'min';
+}
+function isoDisplay(iso) {
+  var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
+}
+function dowName(iso) {
+  var p = iso.split('-').map(Number);
+  return DIAS_TILDE[new Date(p[0], p[1]-1, p[2]).getDay()];
+}
+function isWeekend(iso) {
+  var p = iso.split('-').map(Number);
+  var d = new Date(p[0],p[1]-1,p[2]).getDay();
+  return d===0||d===6;
+}
+function calcDia(regs) {
+  var sorted = regs.slice().sort(function(a,b){ return (horaToMins(a.hora)||0)-(horaToMins(b.hora)||0); });
+  var ents = sorted.filter(function(r){ return r.tipo==='ENTRADA'; });
+  var sals = sorted.filter(function(r){ return r.tipo==='SALIDA'; });
+  var primera = ents.length ? ents[0].hora : null;
+  var ultima  = sals.length ? sals[sals.length-1].hora : null;
+  var mins = null;
+  if (primera && ultima) {
+    mins = (horaToMins(ultima)||0)-(horaToMins(primera)||0);
+    if (mins < 0) mins += 1440;
+  }
+  var estado = !primera ? 'sin-entrada' : !ultima ? 'sin-salida' : 'ok';
+  return {primera:primera, ultima:ultima, mins:mins, estado:estado};
+}
+
+// ── EMPLEADOS ───────────────────────────────────────────────
+async function cargarEmpleados() {
+  try {
+    var table = await fetchSheet('EMPLEADOS');
+    var rows  = table.rows || [];
+    var found = [];
+    for (var i=0;i<rows.length;i++) {
+      var c = rows[i].c||[];
+      if (c[0]&&c[0].v) {
+        var v = String(c[0].v).trim();
+        if (v && !['nombre','empleado','name'].includes(v.toLowerCase())) found.push(v);
+      }
+    }
+    empleados = found.length ? found : EMPLEADOS_DEFAULT;
+    setStatus('ok', empleados.length + ' empleados');
+  } catch(e) {
+    empleados = EMPLEADOS_DEFAULT;
+    setStatus('ok', empleados.length + ' empleados');
+  }
+  renderEmpleados();
+  document.getElementById('btn-gen').disabled = false;
+  updateSyncNote();
+}
+
+function renderEmpleados() {
+  document.getElementById('emp-list').innerHTML = empleados.map(function(e) {
+    return '<label class="emp-row"><input type="checkbox" class="echk" value="'+esc(e)+'" checked><label>'+esc(e)+'</label></label>';
+  }).join('');
+}
+function selAll()  { document.querySelectorAll('.echk').forEach(function(c){ c.checked=true; }); }
+function selNone() { document.querySelectorAll('.echk').forEach(function(c){ c.checked=false; }); }
+
+// ── GENERAR ─────────────────────────────────────────────────
 async function generar() {
-  const sel   = [...document.querySelectorAll('.echk:checked')].map(c => c.value);
-  const desde = document.getElementById('f-desde').value;
-  const hasta  = document.getElementById('f-hasta').value;
+  var sel   = Array.from(document.querySelectorAll('.echk:checked')).map(function(c){ return c.value; });
+  var desde = document.getElementById('f-desde').value;
+  var hasta  = document.getElementById('f-hasta').value;
   if (!sel.length)      { toast('Selecciona al menos un empleado','err'); return; }
   if (!desde || !hasta) { toast('Elige el período','err'); return; }
   if (desde > hasta)    { toast('Fecha inicio > fin','err'); return; }
 
+  currentSel=sel; currentDesde=desde; currentHasta=hasta;
   editData = {};
-  for (const emp of sel) {
+
+  for (var i=0; i<sel.length; i++) {
+    var emp = sel[i];
     setLoader(true, 'Cargando ' + emp.split(' ')[0] + '...');
     try {
-      const table    = await fetchSheet(emp);
-      const fichajes = parsearTabla(table);
-      const filtrado = fichajes.filter(f => f.fecha >= desde && f.fecha <= hasta);
-      editData[emp]  = agruparPorDia(filtrado);
+      var table    = await fetchSheet(emp);
+      var fichajes = parsearTabla(table);
+      var filt     = fichajes.filter(function(f){ return f.fecha>=desde && f.fecha<=hasta; });
+      var dmap     = {};
+      for (var j=0;j<filt.length;j++) {
+        var f = filt[j];
+        if (!dmap[f.fecha]) dmap[f.fecha]=[];
+        dmap[f.fecha].push({tipo:f.tipo, hora:f.hora});
+      }
+      editData[emp] = dmap;
     } catch(e) {
       editData[emp] = null;
     }
   }
   setLoader(false);
-  render(sel, desde, hasta);
+  renderReport();
 }
 
-// ── Render principal ───────────────────────────────────────
-function render(sel, desde, hasta) {
+// ── RENDER ──────────────────────────────────────────────────
+function getRango(desde, hasta) {
+  var out=[], cur=new Date(desde+'T00:00:00'), end=new Date(hasta+'T00:00:00');
+  while (cur<=end) { out.push(cur.toISOString().slice(0,10)); cur.setDate(cur.getDate()+1); }
+  return out;
+}
+
+function renderReport() {
   document.getElementById('empty').style.display = 'none';
-  const rep = document.getElementById('report');
+  var rep = document.getElementById('report');
   rep.style.display = 'block';
-
-  // Generar rango de fechas
-  const fechas = [];
-  const cur = new Date(desde + 'T00:00:00');
-  const end = new Date(hasta + 'T00:00:00');
-  while (cur <= end) {
-    fechas.push(cur.toISOString().slice(0,10));
-    cur.setDate(cur.getDate()+1);
-  }
-
-  let html = '';
-  for (const emp of sel) {
-    html += renderEmp(emp, fechas);
-  }
-
-  rep.innerHTML = html;
-  // Bind events después de insertar el HTML
-  bindEvents();
+  var fechas = getRango(currentDesde, currentHasta);
+  rep.innerHTML = currentSel.map(function(emp){ return renderEmp(emp, fechas); }).join('');
 }
 
 function renderEmp(emp, fechas) {
-  const dmap = editData[emp];
-
+  var dmap = editData[emp];
   if (!dmap) {
-    return `<div class="emp-block">
-      <div class="emp-name">${esc(emp)}</div>
-      <div class="emp-meta" style="color:#e05a4b">No se encontró la pestaña en el sheet.</div>
-    </div>`;
+    return '<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div>'
+      +'<div class="emp-meta" style="color:var(--red)">No se encontro la pestana en el sheet.</div></div>';
   }
-
-  // Stats globales
-  let totalMins = 0, diasOk = 0, sinSalida = 0, sinEntrada = 0;
-  for (const f of fechas) {
-    const regs = dmap[f] || [];
+  var totalMins=0,diasFich=0,sinSal=0,sinEnt=0;
+  for (var i=0;i<fechas.length;i++) {
+    var regs = dmap[fechas[i]]||[];
     if (!regs.length) continue;
-    const {mins, estado} = calcDia(regs);
-    if (mins != null) { totalMins += mins; diasOk++; }
-    if (estado === 'sin-salida')  sinSalida++;
-    if (estado === 'sin-entrada') sinEntrada++;
+    diasFich++;
+    var calc = calcDia(regs);
+    if (calc.mins!=null) totalMins+=calc.mins;
+    if (calc.estado==='sin-salida') sinSal++;
+    if (calc.estado==='sin-entrada') sinEnt++;
   }
-
-  const pills = `
-    <div class="pills">
-      <div class="pill g">Total <strong>${minsToStr(totalMins)}</strong></div>
-      <div class="pill">Días con fichaje <strong>${diasOk}</strong></div>
-      ${sinSalida  ? `<div class="pill r">Sin salida <strong>${sinSalida}</strong></div>` : ''}
-      ${sinEntrada ? `<div class="pill a">Sin entrada <strong>${sinEntrada}</strong></div>` : ''}
-    </div>`;
-
-  const cards = fechas.map(f => renderDayCard(emp, f, dmap[f] || [])).join('');
-
-  return `<div class="emp-block" data-emp="${esc(emp)}">
-    <div class="emp-name">${esc(emp)}</div>
-    <div class="emp-meta">${fechas.length} días · ${fechas[0] ? isoDisplay(fechas[0]) : ''} → ${fechas[fechas.length-1] ? isoDisplay(fechas[fechas.length-1]) : ''}</div>
-    ${pills}
-    <button class="export-btn" onclick="exportEmp('${esc(emp)}')">↓ Exportar Excel</button>
-    <div class="days">${cards}</div>
-  </div>`;
+  var pills = '<div class="pills">'
+    +'<div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div>'
+    +'<div class="pill">Con fichaje <strong>'+diasFich+'</strong></div>'
+    +(sinSal ? '<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>' : '')
+    +(sinEnt ? '<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>' : '')
+    +'</div>';
+  var cards = fechas.map(function(f){ return renderCard(emp,f,dmap[f]||[]); }).join('');
+  return '<div class="emp-block" data-emp="'+esc(emp)+'">'
+    +'<div class="emp-name">'+esc(emp)+'</div>'
+    +'<div class="emp-meta">'+isoDisplay(fechas[0])+' → '+isoDisplay(fechas[fechas.length-1])+' · '+fechas.length+' días</div>'
+    +pills
+    +'<button class="export-btn" onclick="exportEmp(\''+esc(emp)+'\')">↓ Exportar Excel</button>'
+    +'<div class="days">'+cards+'</div>'
+    +'</div>';
 }
 
-function renderDayCard(emp, fecha, registros) {
-  const dow   = dowName(fecha);
-  const dis   = isoDisplay(fecha);
-  const {primera, ultima, mins, estado} = calcDia(registros);
-  const vacio = registros.length === 0;
+function renderCard(emp, fecha, regs) {
+  var calc   = calcDia(regs);
+  var vacio  = regs.length === 0;
+  var cls    = '';
+  if (calc.estado==='sin-salida')  cls='has-error';
+  if (calc.estado==='sin-entrada') cls='has-warn';
+  if (vacio) cls='is-empty';
 
-  let cls = '';
-  if (estado === 'sin-salida')  cls = 'has-error';
-  if (estado === 'sin-entrada') cls = 'has-warn';
-  if (vacio) cls = '';
-
-  // Summary chips
-  let chips = '';
+  var chips = '';
   if (vacio) {
-    chips = `<span class="time-chip" style="color:var(--txt3);border-color:var(--line)">sin fichajes</span>`;
+    chips = '<span class="c-emp">sin fichajes</span>';
   } else {
-    if (primera) chips += `<span class="time-chip tc-in">▶ ${primera}</span>`;
-    if (ultima)  chips += `<span class="time-chip tc-out">◼ ${ultima}</span>`;
-    if (mins != null) chips += `<span class="time-chip tc-dur">${minsToStr(mins)}</span>`;
-    if (estado === 'sin-salida')  chips += `<span class="time-chip tc-err">sin salida</span>`;
-    if (estado === 'sin-entrada') chips += `<span class="time-chip tc-warn">sin entrada</span>`;
+    if (calc.primera) chips += '<span class="chip c-in">▶ '+calc.primera+'</span>';
+    if (calc.ultima)  chips += '<span class="chip c-out">◼ '+calc.ultima+'</span>';
+    if (calc.mins!=null) chips += '<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
+    if (calc.estado==='sin-salida')  chips += '<span class="chip c-err">sin salida</span>';
+    if (calc.estado==='sin-entrada') chips += '<span class="chip c-wrn">sin entrada</span>';
   }
 
-  // Tabla de registros editables
-  const filas = registros.map((r, i) => `
-    <tr data-emp="${esc(emp)}" data-fecha="${fecha}" data-idx="${i}">
-      <td class="${r.tipo==='ENTRADA'?'tipo-in':'tipo-out'}">${r.tipo}</td>
-      <td class="hora-cell">
-        <span class="hora-display" onclick="startEdit(this)">${esc(r.hora)}</span>
-        <input class="hora-input" type="time" value="${r.hora}" 
-          onblur="saveEdit(this)" onkeydown="keyEdit(event,this)">
-      </td>
-      <td><button class="btn-del" title="Eliminar" onclick="delRow('${esc(emp)}','${fecha}',${i})">✕</button></td>
-    </tr>`).join('');
+  var eId = empId(emp);
+  var filas = regs.map(function(r,i) {
+    var tcls = r.tipo==='ENTRADA' ? 't-in' : 't-out';
+    var siId = 'si-'+eId+'-'+fecha+'-'+i;
+    return '<tr>'
+      +'<td class="'+tcls+'">'+r.tipo+'</td>'
+      +'<td>'
+        +'<span class="hora-display" onclick="startEdit(this,\''+esc(emp)+'\',\''+fecha+'\','+i+')">'+esc(r.hora)+'</span>'
+        +'<input class="hora-input" type="time" value="'+r.hora.slice(0,5)+'"'
+          +' onblur="saveEdit(this,\''+esc(emp)+'\',\''+fecha+'\','+i+')"'
+          +' onkeydown="keyEdit(event,this,\''+esc(emp)+'\',\''+fecha+'\','+i+')">'
+        +'<span class="save-ind" id="'+siId+'">✓</span>'
+      +'</td>'
+      +'<td><button class="btn-del" onclick="delRow(\''+esc(emp)+'\',\''+fecha+'\','+i+')">×</button></td>'
+      +'</tr>';
+  }).join('');
 
-  const tabla = registros.length ? `
-    <table class="fichajes-table">
-      <thead><tr><th>Tipo</th><th>Hora</th><th></th></tr></thead>
-      <tbody>${filas}</tbody>
-    </table>` : `<p style="font-size:.7rem;color:var(--txt3);margin-bottom:.6rem">Sin registros este día.</p>`;
+  var tabla = regs.length
+    ? '<table class="ft"><thead><tr><th>Tipo</th><th>Hora</th><th></th></tr></thead><tbody>'+filas+'</tbody></table>'
+    : '<p style="font-size:.7rem;color:var(--ink3);margin-bottom:.65rem">Sin registros este día.</p>';
 
-  return `<div class="day-card ${cls}" id="card-${esc(emp).replace(/\s/g,'_')}-${fecha}">
-    <div class="day-head" onclick="toggleCard(this)">
-      <span class="day-dow">${dow}</span>
-      <span class="day-date">${dis}</span>
-      <div class="day-summary">${chips}</div>
-      <span class="day-chevron">▾</span>
-    </div>
-    <div class="day-body">
-      ${tabla}
-      <div class="day-actions">
-        <button class="btn-add" onclick="addRow('${esc(emp)}','${fecha}','ENTRADA')">+ Entrada</button>
-        <button class="btn-add" onclick="addRow('${esc(emp)}','${fecha}','SALIDA')">+ Salida</button>
-      </div>
-      <div class="edit-hint">Pulsa una hora para editarla · Enter para confirmar · Esc para cancelar</div>
-    </div>
-  </div>`;
+  var cardId = 'dc-'+eId+'-'+fecha;
+  return '<div class="day-card '+cls+'" id="'+cardId+'">'
+    +'<div class="day-head" onclick="toggleCard(this.parentElement)">'
+    +'<span class="day-dow">'+dowName(fecha)+'</span>'
+    +'<span class="day-date">'+isoDisplay(fecha)+'</span>'
+    +'<div class="day-chips">'+chips+'</div>'
+    +'<span class="day-chevron">▾</span>'
+    +'</div>'
+    +'<div class="day-body">'
+    +tabla
+    +'<div class="day-actions">'
+    +'<button class="btn-add" onclick="addRow(\''+esc(emp)+'\',\''+fecha+'\',\'ENTRADA\')">+ Entrada</button>'
+    +'<button class="btn-add" onclick="addRow(\''+esc(emp)+'\',\''+fecha+'\',\'SALIDA\')">+ Salida</button>'
+    +'</div>'
+    +'<div class="edit-hint">Pulsa una hora para editarla · Enter confirma · Esc cancela</div>'
+    +'</div></div>';
 }
 
-// ── Toggle card ────────────────────────────────────────────
-function toggleCard(head) {
-  head.parentElement.classList.toggle('open');
-}
+// ── INTERACCION ─────────────────────────────────────────────
+function toggleCard(card) { card.classList.toggle('open'); }
 
-// ── Edición inline ─────────────────────────────────────────
-function startEdit(span) {
-  const input = span.nextElementSibling;
+function startEdit(span, emp, fecha, idx) {
+  var input = span.nextElementSibling;
   span.classList.add('editing');
   input.classList.add('editing');
-  input.focus();
-  input.select();
+  input.focus(); input.select();
 }
 
-function saveEdit(input) {
-  const span = input.previousElementSibling;
-  const row  = input.closest('tr');
-  const emp  = row.dataset.emp;
-  const fecha= row.dataset.fecha;
-  const idx  = +row.dataset.idx;
-
-  const val = normHora(input.value);
-  if (val && /^\d{2}:\d{2}$/.test(val)) {
-    editData[emp][fecha][idx].hora = val;
-    span.textContent = val;
-    toast('Hora actualizada: ' + val, 'ok');
-  }
+async function saveEdit(input, emp, fecha, idx) {
+  var span = input.previousElementSibling;
+  var val  = input.value;
+  if (!val) { cancelEdit(input,span); return; }
+  var hora = normHora(val);
+  editData[emp][fecha][idx].hora = hora;
+  span.textContent = hora;
   span.classList.remove('editing');
   input.classList.remove('editing');
+  await syncDia(emp, fecha);
   refreshCard(emp, fecha);
 }
 
-function keyEdit(e, input) {
-  if (e.key === 'Enter') { input.blur(); }
-  if (e.key === 'Escape') {
-    const span = input.previousElementSibling;
-    span.classList.remove('editing');
-    input.classList.remove('editing');
-  }
+function keyEdit(e, input, emp, fecha, idx) {
+  if (e.key==='Enter') { e.preventDefault(); input.blur(); }
+  if (e.key==='Escape') { cancelEdit(input, input.previousElementSibling); }
+}
+function cancelEdit(input, span) {
+  span.classList.remove('editing');
+  input.classList.remove('editing');
 }
 
-// ── Añadir fila ────────────────────────────────────────────
-function addRow(emp, fecha, tipo) {
-  if (!editData[emp][fecha]) editData[emp][fecha] = [];
-  editData[emp][fecha].push({ tipo, hora: tipo === 'ENTRADA' ? '08:00' : '17:00' });
+async function addRow(emp, fecha, tipo) {
+  if (!editData[emp][fecha]) editData[emp][fecha]=[];
+  editData[emp][fecha].push({tipo:tipo, hora: tipo==='ENTRADA'?'08:00':'17:00'});
   refreshCard(emp, fecha);
-  toast('Añadido: ' + tipo, 'ok');
+  await syncDia(emp, fecha);
+  toast('Añadido: '+tipo,'ok');
 }
 
-// ── Eliminar fila ──────────────────────────────────────────
-function delRow(emp, fecha, idx) {
-  editData[emp][fecha].splice(idx, 1);
+async function delRow(emp, fecha, idx) {
+  editData[emp][fecha].splice(idx,1);
   refreshCard(emp, fecha);
-  toast('Registro eliminado', 'ok');
+  await syncDia(emp, fecha);
+  toast('Registro eliminado');
 }
 
-// ── Refresca una card sin re-renderizar todo ───────────────
 function refreshCard(emp, fecha) {
-  const id   = 'card-' + emp.replace(/\s/g,'_') + '-' + fecha;
-  const card = document.getElementById(id);
+  var id   = 'dc-'+empId(emp)+'-'+fecha;
+  var card = document.getElementById(id);
   if (!card) return;
-  const wasOpen = card.classList.contains('open');
-  const regs    = editData[emp][fecha] || [];
-  const newHtml = renderDayCard(emp, fecha, regs);
-  const div     = document.createElement('div');
-  div.innerHTML = newHtml;
-  const newCard = div.firstElementChild;
-  if (wasOpen) newCard.classList.add('open');
-  card.replaceWith(newCard);
-  // Re-bind no hace falta porque usamos onclick inline
+  var wasOpen = card.classList.contains('open');
+  var regs    = editData[emp][fecha]||[];
+  var tmp     = document.createElement('div');
+  tmp.innerHTML = renderCard(emp, fecha, regs);
+  var nc = tmp.firstElementChild;
+  if (wasOpen) nc.classList.add('open');
+  card.replaceWith(nc);
 }
 
-function bindEvents() {
-  // Los eventos son inline en el HTML generado, nada extra necesario
+async function syncDia(emp, fecha) {
+  if (!SCRIPT_URL) return;
+  var regs = editData[emp][fecha]||[];
+  toast('Guardando en sheet...','',4000);
+  var ok = await writeToSheet(emp, fecha, regs);
+  toast(ok ? 'Guardado en Google Sheets ✓' : 'No se pudo guardar en el sheet', ok?'ok':'err');
 }
 
-// ── Export Excel ───────────────────────────────────────────
+// ── EXPORT ──────────────────────────────────────────────────
 function exportEmp(emp) {
-  const dmap = editData[emp];
-  if (!dmap) return;
-  const wb = XLSX.utils.book_new();
-  const rows = [];
-  const fechas = Object.keys(dmap).sort();
-  for (const f of fechas) {
-    const regs = dmap[f] || [];
-    const {primera, ultima, mins} = calcDia(regs);
-    rows.push({
-      'Día':             dowName(f),
-      'Fecha':           isoDisplay(f),
-      '1ª Entrada':      primera || '—',
-      'Última Salida':   ultima  || '—',
-      'Total':           minsToStr(mins),
-      'Horas (decimal)': mins != null ? +(mins/60).toFixed(2) : '',
-      'Nº fichajes':     regs.length,
-    });
-  }
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{wch:12},{wch:11},{wch:11},{wch:13},{wch:10},{wch:14},{wch:11}];
+  var dmap = editData[emp]; if (!dmap) return;
+  var wb   = XLSX.utils.book_new();
+  var rows = Object.keys(dmap).sort().map(function(f) {
+    var calc = calcDia(dmap[f]||[]);
+    return {'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};
+  });
+  var ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:12},{wch:11},{wch:11},{wch:13},{wch:10},{wch:13}];
   XLSX.utils.book_append_sheet(wb, ws, emp.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,'_'));
-  XLSX.writeFile(wb, 'Fichajes_' + emp.split(' ')[0] + '.xlsx');
-  toast('Excel descargado', 'ok');
+  XLSX.writeFile(wb, 'Fichajes_'+emp.split(' ')[0]+'.xlsx');
+  toast('Excel descargado','ok');
 }
 
-// ── Init ───────────────────────────────────────────────────
+// ── MODAL ───────────────────────────────────────────────────
+function showModal() {
+  document.getElementById('script-input').value = SCRIPT_URL||'';
+  document.getElementById('modal-ov').classList.add('on');
+}
+function closeModal() { document.getElementById('modal-ov').classList.remove('on'); }
+function checkUrl(val) {
+  var el = document.getElementById('url-st');
+  if (!val) { el.textContent=''; return; }
+  if (val.startsWith('https://script.google.com/macros/s/')) {
+    el.textContent='✓ URL válida'; el.style.color='var(--green)';
+  } else {
+    el.textContent='Debe empezar por https://script.google.com/macros/s/'; el.style.color='var(--red)';
+  }
+}
+function saveUrl() {
+  var val = document.getElementById('script-input').value.trim();
+  if (!val.startsWith('https://script.google.com/macros/s/')) { toast('URL no válida','err'); return; }
+  SCRIPT_URL = val;
+  localStorage.setItem('fichajes_script_url', val);
+  updateSyncNote(); closeModal();
+  toast('Sincronización activada ✓','ok');
+}
+function updateSyncNote() {
+  var el = document.getElementById('sync-note');
+  if (SCRIPT_URL) {
+    el.innerHTML = '<strong style="color:var(--green)">✓ Sync activo</strong><br>Los cambios se guardan en Google Sheets.<br>'
+      +'<a href="#" onclick="showModal();return false" style="color:var(--ink3);font-size:.58rem">Cambiar configuración →</a>';
+  } else {
+    el.innerHTML = '<strong>Sync desactivado</strong><br>Para guardar cambios en el sheet, configura el Apps Script.'
+      +'<a href="#" onclick="showModal();return false" style="color:var(--green);text-decoration:underline;display:block;margin-top:3px">Ver instrucciones →</a>';
+  }
+}
+
+// ── INIT ────────────────────────────────────────────────────
 (function() {
-  const hoy = new Date();
-  const p1  = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  var hoy = new Date();
+  var p1  = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
   document.getElementById('f-hasta').value = hoy.toISOString().slice(0,10);
   document.getElementById('f-desde').value = p1.toISOString().slice(0,10);
   cargarEmpleados();
