@@ -412,14 +412,24 @@ function aprobarSolicitud(data) {
     }
   }
 
-  // Actualizar la hora en la hoja del empleado
+  // Actualizar/mover la fila en la hoja del empleado
   var empVals = empSh.getDataRange().getValues();
+  var fechaNueva = data.fechaNueva || data.fecha;
   for (var j = 0; j < empVals.length; j++) {
     var rowFecha = toISO(String(empVals[j][0] || '').trim());
     var rowTipo  = String(empVals[j][1] || '').toUpperCase().trim();
     var rowHora  = String(empVals[j][2] || '').trim();
     if (rowFecha === data.fecha && rowTipo === data.tipo && rowHora === data.horaActual) {
-      empSh.getRange(j+1, 3).setValue(data.horaNueva);
+      if (fechaNueva !== data.fecha) {
+        // Cambio de fecha: borrar fila original e insertar en la nueva fecha
+        empSh.deleteRow(j + 1);
+        var dParts = fechaNueva.split('-');
+        var disFecha = dParts[2]+'/'+dParts[1]+'/'+dParts[0];
+        empSh.appendRow([disFecha, data.tipo, data.horaNueva, '', '', '']);
+      } else {
+        // Solo cambio de hora
+        empSh.getRange(j+1, 3).setValue(data.horaNueva);
+      }
       break;
     }
   }
@@ -507,17 +517,25 @@ function doGet() { return ContentService.createTextOutput('OK'); }</pre>
 <!-- Modal: nueva solicitud -->
 <div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
   <div class="modal-box">
-    <div class="modal-title">Solicitud de cambio de horario</div>
+    <div class="modal-title">Solicitud de cambio</div>
     <div class="modal-row">
       <label>Empleado</label>
       <input type="text" id="sol-emp" readonly style="background:var(--cream3)">
     </div>
     <div class="modal-row">
-      <label>Fecha · Tipo de fichaje</label>
+      <label>Tipo de fichaje</label>
       <input type="text" id="sol-detalle" readonly style="background:var(--cream3)">
     </div>
     <div class="modal-row">
-      <label>Hora actual → Hora nueva</label>
+      <label>Fecha actual → Fecha nueva <span style="color:var(--ink3);font-weight:400">(opcional, solo si cambia)</span></label>
+      <div class="hora-change">
+        <input type="text" id="sol-fecha-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
+        <div class="hora-arrow">→</div>
+        <input type="date" id="sol-fecha-nueva">
+      </div>
+    </div>
+    <div class="modal-row">
+      <label>Hora actual → Hora nueva <span style="color:var(--ink3);font-weight:400">(opcional, solo si cambia)</span></label>
       <div class="hora-change">
         <input type="text" id="sol-hora-actual" readonly style="background:var(--cream3);text-align:center">
         <div class="hora-arrow">→</div>
@@ -525,12 +543,12 @@ function doGet() { return ContentService.createTextOutput('OK'); }</pre>
       </div>
     </div>
     <div class="modal-row">
-      <label>Email del empleado (para notificarle)</label>
+      <label>Email del empleado <span style="color:var(--ink3);font-weight:400">(para notificarle)</span></label>
       <input type="email" id="sol-email-emp" placeholder="empleado@empresa.com">
     </div>
     <div class="modal-row">
-      <label>Motivo</label>
-      <textarea id="sol-motivo" placeholder="Describe brevemente el motivo del cambio..."></textarea>
+      <label>Motivo <span style="color:var(--ink3);font-weight:400">(opcional)</span></label>
+      <textarea id="sol-motivo" placeholder="Motivo del cambio..."></textarea>
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cerrarModalSol()">Cancelar</button>
@@ -664,11 +682,12 @@ async function fetchSheet(name) {
 async function callScript(payload) {
   if (!SCRIPT_URL) return {ok:false, msg:'Sin URL configurada'};
   try {
+    // no-cors = opaque response (no podemos leerla), pero Apps Script SÍ ejecuta la petición.
+    // Enviamos como text/plain para evitar preflight CORS y que llegue siempre.
     await fetch(SCRIPT_URL, {
-      method:'POST',
+      method: 'POST',
       body: JSON.stringify(payload),
-      headers:{'Content-Type':'application/json'},
-      mode:'no-cors'
+      mode: 'no-cors'
     });
     return {ok:true};
   } catch(e) { return {ok:false, msg:e.toString()}; }
@@ -876,6 +895,7 @@ function renderCard(emp, fecha, regs) {
           +'onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',\''+r.tipo+'\',\''+r.hora+'\')">'
           +r.hora+' <span class="pencil">✏</span>'
         +'</button>'
+        +(r.modificado ? ' <span title="Modificado" style="font-size:.62rem;color:var(--amber);margin-left:3px" title="Fichaje modificado">✏</span>' : '')
       +'</td>'
       +'</tr>';
   }).join('');
@@ -904,7 +924,9 @@ function toggleCard(card) { card.classList.toggle('open'); }
 function abrirModalSol(emp, fecha, tipo, horaActual) {
   solActual = {emp:emp, fecha:fecha, tipo:tipo, horaActual:horaActual};
   document.getElementById('sol-emp').value = emp;
-  document.getElementById('sol-detalle').value = isoDisplay(fecha)+' · '+tipo;
+  document.getElementById('sol-detalle').value = tipo;
+  document.getElementById('sol-fecha-actual').value = isoDisplay(fecha);
+  document.getElementById('sol-fecha-nueva').value = fecha; // ISO para input date
   document.getElementById('sol-hora-actual').value = horaActual;
   document.getElementById('sol-hora-nueva').value = horaActual.slice(0,5);
   document.getElementById('sol-motivo').value = '';
@@ -918,46 +940,47 @@ function cerrarModalSol() {
 
 async function enviarSolicitud() {
   if (!solActual) return;
-  var horaNueva = document.getElementById('sol-hora-nueva').value;
-  var motivo    = document.getElementById('sol-motivo').value.trim();
-  var emailEmp  = document.getElementById('sol-email-emp').value.trim();
-  if (!horaNueva) { toast('Indica la hora nueva','err'); return; }
-  if (!motivo)    { toast('Indica el motivo','err'); return; }
+  var horaNueva  = document.getElementById('sol-hora-nueva').value;
+  var fechaNueva = document.getElementById('sol-fecha-nueva').value; // ISO
+  var motivo     = document.getElementById('sol-motivo').value.trim();
+  var emailEmp   = document.getElementById('sol-email-emp').value.trim();
 
-  horaNueva = normHora(horaNueva);
+  // Al menos hora o fecha deben cambiar
+  horaNueva  = horaNueva  ? normHora(horaNueva)  : solActual.horaActual;
+  fechaNueva = fechaNueva ? fechaNueva : solActual.fecha;
+
+  if (horaNueva === solActual.horaActual && fechaNueva === solActual.fecha) {
+    toast('No hay ningún cambio respecto al original','err'); return;
+  }
 
   var sol = {
     id:          'SOL-'+Date.now(),
     emp:         solActual.emp,
-    fecha:       solActual.fecha,
+    fecha:       solActual.fecha,       // fecha ORIGINAL
+    fechaNueva:  fechaNueva,            // fecha NUEVA (puede ser igual)
     tipo:        solActual.tipo,
     horaActual:  solActual.horaActual,
     horaNueva:   horaNueva,
-    motivo:      motivo,
+    motivo:      motivo || '—',
     emailEmp:    emailEmp,
     estado:      'pendiente',
     fechaReq:    new Date().toLocaleString('es-ES')
   };
 
-  // Guardar localmente
   solicitudes.push(sol);
   updateBadge();
 
-  // Enviar al sheet via Apps Script
   if (SCRIPT_URL) {
     setLoader(true,'Enviando solicitud...');
-    var r = await callScript({action:'guardarSolicitud', ...sol});
+    await callScript(Object.assign({action:'guardarSolicitud'}, sol));
     setLoader(false);
-    if (r.ok) toast('Solicitud enviada ✓','ok');
-    else      toast('Guardada localmente (sin conexión al script)');
+    toast('Solicitud enviada ✓','ok');
   } else {
-    toast('Solicitud registrada (configura el Apps Script para sincronizar)');
+    toast('Solicitud registrada localmente');
   }
 
   cerrarModalSol();
-  // Refrescar la card para marcar la hora como pendiente
   refreshCard(sol.emp, sol.fecha);
-  // Ir a solicitudes
   setTimeout(function(){ switchTab('solicitudes'); }, 800);
 }
 
@@ -1005,7 +1028,8 @@ function renderSolCard(s) {
     +'<div class="sol-detail">'
     +'<span>Fecha:</span> '+isoDisplay(s.fecha)+' · '+dowName(s.fecha)+'<br>'
     +'<span>Tipo:</span> '+s.tipo+'<br>'
-    +'<span>Cambio:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br>'
+    +(s.fechaNueva && s.fechaNueva !== s.fecha ? '<span>Fecha:</span> <strong>'+isoDisplay(s.fecha)+'</strong> → <strong>'+isoDisplay(s.fechaNueva)+'</strong><br>' : '')
+    +'<span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br>'
     +'<span>Motivo:</span> '+esc(s.motivo)
     +(s.emailEmp?'<br><span>Email emp.:</span> '+esc(s.emailEmp):'')
     +'</div>'
@@ -1024,25 +1048,53 @@ async function aprobar(id) {
   sol.estado='aprobada';
   updateBadge();
   renderSolicitudes();
-  // Actualizar dato local
-  if (editData[sol.emp]&&editData[sol.emp][sol.fecha]) {
-    var regs=editData[sol.emp][sol.fecha];
-    for (var i=0;i<regs.length;i++){
-      if (regs[i].tipo===sol.tipo&&regs[i].hora===sol.horaActual){
-        regs[i].hora=sol.horaNueva; break;
+
+  var fechaOrig  = sol.fecha;
+  var fechaNueva = sol.fechaNueva || sol.fecha;
+  var horaOrig   = sol.horaActual;
+  var horaNueva  = sol.horaNueva;
+
+  // Actualizar datos locales en editData
+  if (editData[sol.emp] && editData[sol.emp][fechaOrig]) {
+    var regs = editData[sol.emp][fechaOrig];
+    for (var i=0;i<regs.length;i++) {
+      if (regs[i].tipo===sol.tipo && regs[i].hora===horaOrig) {
+        if (fechaNueva !== fechaOrig) {
+          // Mover a otra fecha
+          regs.splice(i,1);
+          if (!editData[sol.emp][fechaNueva]) editData[sol.emp][fechaNueva]=[];
+          editData[sol.emp][fechaNueva].push({tipo:sol.tipo, hora:horaNueva, modificado:true});
+          refreshCard(sol.emp, fechaOrig);
+          refreshCard(sol.emp, fechaNueva);
+        } else {
+          // Solo cambia la hora
+          regs[i].hora = horaNueva;
+          regs[i].modificado = true;
+          refreshCard(sol.emp, fechaOrig);
+        }
+        break;
       }
     }
-    refreshCard(sol.emp, sol.fecha);
   }
-  // Llamar al script
+
+  // Llamar al Apps Script para guardar en el sheet
   if (SCRIPT_URL) {
-    setLoader(true,'Aprobando...');
-    var r=await callScript({action:'aprobarSolicitud', id:sol.id, emp:sol.emp, fecha:sol.fecha,
-      tipo:sol.tipo, horaActual:sol.horaActual, horaNueva:sol.horaNueva, emailEmp:sol.emailEmp||''});
+    setLoader(true,'Guardando en sheet...');
+    await callScript({
+      action:'aprobarSolicitud',
+      id:         sol.id,
+      emp:        sol.emp,
+      fecha:      fechaOrig,
+      fechaNueva: fechaNueva,
+      tipo:       sol.tipo,
+      horaActual: horaOrig,
+      horaNueva:  horaNueva,
+      emailEmp:   sol.emailEmp||''
+    });
     setLoader(false);
-    toast(r.ok?'Aprobado y guardado en el sheet ✓':'Aprobado localmente (error en script)', r.ok?'ok':'');
+    toast('Aprobado y guardado en Google Sheets ✓','ok');
   } else {
-    toast('Aprobado localmente (configura el Apps Script para sincronizar con el sheet)');
+    toast('Aprobado localmente — configura el Apps Script para guardar en el sheet');
   }
 }
 
