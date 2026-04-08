@@ -364,7 +364,11 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
         <div class="cfg-step"><strong>2.</strong> Borra el código existente y pega este:</div>
 <pre id="apps-script-code">function doPost(e) {
   try {
-    var data   = JSON.parse(e.postData.contents);
+    // Acepta tanto fetch (postData.contents) como form POST (parameter.data)
+    var raw = (e.postData && e.postData.contents)
+      ? e.postData.contents
+      : (e.parameter && e.parameter.data ? e.parameter.data : '{}');
+    var data   = JSON.parse(raw);
     var action = data.action;
 
     if (action === 'guardarSolicitud') {
@@ -416,16 +420,19 @@ function aprobarSolicitud(data) {
   var empVals = empSh.getDataRange().getValues();
   var fechaNueva = data.fechaNueva || data.fecha;
   for (var j = 0; j < empVals.length; j++) {
-    var rowFecha = toISO(String(empVals[j][0] || '').trim());
+    var rawFecha = String(empVals[j][0] || '').trim();
+    var rowFecha = toISO(rawFecha);
     var rowTipo  = String(empVals[j][1] || '').toUpperCase().trim();
-    var rowHora  = String(empVals[j][2] || '').trim();
-    if (rowFecha === data.fecha && rowTipo === data.tipo && rowHora === data.horaActual) {
+    var rowHora  = normHora(String(empVals[j][2] || '').trim());
+    var buscFecha = toISO(String(data.fecha || '').trim());
+    var buscHora  = normHora(String(data.horaActual || '').trim());
+    if (rowFecha === buscFecha && rowTipo === data.tipo.toUpperCase() && rowHora === buscHora) {
       if (fechaNueva !== data.fecha) {
         // Cambio de fecha: borrar fila original e insertar en la nueva fecha
         empSh.deleteRow(j + 1);
         var dParts = fechaNueva.split('-');
         var disFecha = dParts[2]+'/'+dParts[1]+'/'+dParts[0];
-        empSh.appendRow([disFecha, data.tipo, data.horaNueva, '', '', '']);
+        empSh.appendRow([disFecha, data.tipo.toUpperCase(), data.horaNueva, '', '', '']);
       } else {
         // Solo cambio de hora
         empSh.getRange(j+1, 3).setValue(data.horaNueva);
@@ -481,6 +488,12 @@ function toISO(s) {
   var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
   return s;
+}
+function normHora(s) {
+  s = String(s||'').trim();
+  var m = s.match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return s;
+  return ('0'+m[1]).slice(-2)+':'+('0'+m[2]).slice(-2);
 }
 function resp(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
@@ -682,15 +695,51 @@ async function fetchSheet(name) {
 async function callScript(payload) {
   if (!SCRIPT_URL) return {ok:false, msg:'Sin URL configurada'};
   try {
-    // no-cors = opaque response (no podemos leerla), pero Apps Script SÍ ejecuta la petición.
-    // Enviamos como text/plain para evitar preflight CORS y que llegue siempre.
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      mode: 'no-cors'
-    });
+    // Usamos un iframe oculto + form POST para evitar CORS completamente.
+    // Apps Script acepta POST de formularios y lee e.parameter.data
+    await fetchViaForm(SCRIPT_URL, payload);
     return {ok:true};
-  } catch(e) { return {ok:false, msg:e.toString()}; }
+  } catch(e) {
+    // Fallback: fetch no-cors
+    try {
+      await fetch(SCRIPT_URL, { method:'POST', body:JSON.stringify(payload), mode:'no-cors' });
+      return {ok:true};
+    } catch(e2) { return {ok:false, msg:e2.toString()}; }
+  }
+}
+
+function fetchViaForm(url, payload) {
+  return new Promise(function(resolve) {
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = url;
+    form.target = '_blank_script_' + Date.now(); // abrir en tab oculta
+    form.style.display = 'none';
+
+    // Mandar payload como campo "data"
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = JSON.stringify(payload);
+    form.appendChild(input);
+
+    // Iframe invisible para que no abra pestaña
+    var iframeName = 'iframe_script_' + Date.now();
+    var iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.style.display = 'none';
+    form.target = iframeName;
+    document.body.appendChild(iframe);
+    document.body.appendChild(form);
+
+    setTimeout(function() {
+      form.submit();
+      setTimeout(function() {
+        try { form.remove(); iframe.remove(); } catch(e){}
+        resolve();
+      }, 2000);
+    }, 50);
+  });
 }
 
 // ══════════════════════════════════════════
