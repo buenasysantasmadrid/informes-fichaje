@@ -8,53 +8,63 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --cream:#f7f4ee;
-  --cream2:#f0ece3;
-  --cream3:#e8e2d7;
-  --ink:#1c2b1e;
-  --ink2:#4a5e4c;
-  --ink3:#8a9e8c;
-  --green:#2d6a3f;
-  --green2:#3d8a52;
-  --green3:#e8f5ec;
-  --green4:#c8e6d0;
-  --green-acc:#1a4f2e;
-  --red:#c0392b;
-  --red-soft:#fdecea;
-  --amber:#b7770d;
-  --amber-soft:#fef8ec;
-  --border:#ddd8ce;
-  --border2:#c8c2b6;
-  --shadow:0 1px 3px rgba(28,43,30,.07);
-  --shadow2:0 4px 16px rgba(28,43,30,.10);
+  --cream:#f7f4ee; --cream2:#f0ece3; --cream3:#e8e2d7;
+  --ink:#1c2b1e; --ink2:#4a5e4c; --ink3:#8a9e8c;
+  --green:#2d6a3f; --green2:#3d8a52; --green3:#e8f5ec; --green4:#c8e6d0; --green-acc:#1a4f2e;
+  --red:#c0392b; --red-soft:#fdecea;
+  --amber:#b7770d; --amber-soft:#fef8ec;
+  --blue:#1a56a0; --blue-soft:#e8f0fe;
+  --border:#ddd8ce; --border2:#c8c2b6;
+  --shadow:0 1px 3px rgba(28,43,30,.07); --shadow2:0 4px 16px rgba(28,43,30,.10);
   --r:8px;
 }
 html{font-size:15px;background:var(--cream)}
 body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 
+/* ── HEADER ── */
 .hdr{
-  background:var(--green);padding:0 2.5rem;height:58px;
+  background:var(--green);padding:0 2rem;height:58px;
   display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;
-  box-shadow:0 2px 8px rgba(28,43,30,.18);
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(28,43,30,.18);
 }
-.hdr-logo{
-  font-family:'Lora',serif;font-size:1.1rem;
-  color:#fff;letter-spacing:.01em;display:flex;align-items:center;gap:10px;
-}
+.hdr-logo{font-family:'Lora',serif;font-size:1.1rem;color:#fff;display:flex;align-items:center;gap:10px}
 .hdr-logo .dot{width:8px;height:8px;border-radius:50%;background:#7ecf95;flex-shrink:0}
-.hdr-right{font-size:.62rem;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase}
 
-.shell{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 58px)}
+/* ── NAV TABS ── */
+.nav{
+  background:#fff;border-bottom:1px solid var(--border);
+  display:flex;padding:0 2rem;gap:0;
+}
+.nav-tab{
+  padding:.85rem 1.5rem;font-size:.72rem;font-family:'DM Mono',monospace;
+  color:var(--ink3);cursor:pointer;border-bottom:2.5px solid transparent;
+  transition:color .15s,border-color .15s;display:flex;align-items:center;gap:7px;
+  letter-spacing:.04em;text-transform:uppercase;font-size:.65rem;
+}
+.nav-tab:hover{color:var(--ink2)}
+.nav-tab.active{color:var(--green);border-bottom-color:var(--green);font-weight:500}
+.nav-badge{
+  background:var(--red);color:#fff;font-size:.55rem;
+  padding:1px 6px;border-radius:10px;font-weight:500;
+}
+.nav-badge.hidden{display:none}
 
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 58px - 45px)}
+
+/* ── SIDEBAR ── */
 .side{
   background:#fff;border-right:1px solid var(--border);
-  padding:1.75rem 1.5rem;display:flex;flex-direction:column;gap:1.6rem;
+  padding:1.75rem 1.5rem;display:flex;flex-direction:column;gap:1.5rem;
 }
-.lbl{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:.55rem;display:block}
+.lbl{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;display:block}
+.status-bar{display:flex;align-items:center;gap:6px;font-size:.62rem;color:var(--ink3)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--cream3);flex-shrink:0;transition:background .3s}
+.sdot.ok{background:var(--green2)} .sdot.spin{background:var(--amber);animation:blink 1s infinite} .sdot.err{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 .emp-list{
-  display:flex;flex-direction:column;gap:1px;max-height:270px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:1px;max-height:260px;overflow-y:auto;
   border:1px solid var(--border);border-radius:var(--r);background:var(--cream);padding:4px;
 }
 .emp-list::-webkit-scrollbar{width:4px}
@@ -62,12 +72,11 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .emp-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .12s}
 .emp-row:hover{background:var(--green3)}
 .emp-row input{accent-color:var(--green);width:14px;height:14px;flex-shrink:0;cursor:pointer}
-.emp-row label{font-size:.74rem;cursor:pointer;color:var(--ink2);line-height:1.3}
+.emp-row label{font-size:.73rem;cursor:pointer;color:var(--ink2);line-height:1.3}
 .emp-btns{display:flex;gap:6px;margin-bottom:6px}
 .bxs{
-  padding:4px 10px;font-size:.64rem;font-family:'DM Mono',monospace;
-  border:1px solid var(--border2);background:#fff;border-radius:5px;
-  cursor:pointer;color:var(--ink3);transition:all .12s;
+  padding:4px 10px;font-size:.63rem;font-family:'DM Mono',monospace;
+  border:1px solid var(--border2);background:#fff;border-radius:5px;cursor:pointer;color:var(--ink3);transition:all .12s;
 }
 .bxs:hover{background:var(--green);color:#fff;border-color:var(--green)}
 
@@ -87,33 +96,33 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
   cursor:pointer;letter-spacing:.05em;transition:background .15s,box-shadow .15s;
   box-shadow:0 2px 8px rgba(45,106,63,.25);
 }
-.btn-gen:hover{background:var(--green-acc);box-shadow:0 4px 12px rgba(45,106,63,.3)}
+.btn-gen:hover{background:var(--green-acc)}
 .btn-gen:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
 
-.sync-note{
+.script-cfg{
   font-size:.6rem;color:var(--ink3);line-height:1.7;
-  border:1px solid var(--border);border-radius:6px;padding:.6rem .75rem;background:var(--cream);
+  border:1px solid var(--border);border-radius:6px;padding:.65rem .75rem;background:var(--cream);
 }
+.script-cfg a{color:var(--green);text-decoration:underline;cursor:pointer}
 
-.status-bar{display:flex;align-items:center;gap:6px;font-size:.62rem;color:var(--ink3)}
-.sdot{width:7px;height:7px;border-radius:50%;background:var(--cream3);flex-shrink:0;transition:background .3s}
-.sdot.ok{background:var(--green2)}
-.sdot.spin{background:var(--amber);animation:blink 1s infinite}
-.sdot.err{background:var(--red)}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+/* ── MAIN ── */
+.main{padding:2rem 2.5rem;overflow-x:hidden}
 
-.main{padding:2rem 2.5rem;max-width:960px}
+/* Páginas */
+.page{display:none}
+.page.active{display:block}
 
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:58vh;gap:.75rem;text-align:center}
-.empty-ico{font-size:2.8rem;opacity:.18}
-.empty h2{font-family:'Lora',serif;font-size:1.4rem;color:var(--ink2);font-weight:400}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:55vh;gap:.75rem;text-align:center}
+.empty-ico{font-size:2.5rem;opacity:.18}
+.empty h2{font-family:'Lora',serif;font-size:1.35rem;color:var(--ink2);font-weight:400}
 .empty p{font-size:.72rem;color:var(--ink3);max-width:280px;line-height:1.7}
 
+/* ── EMP BLOCK ── */
 .emp-block{margin-bottom:3rem}
-.emp-name{font-family:'Lora',serif;font-size:1.55rem;font-weight:400;color:var(--green-acc);margin-bottom:.2rem}
-.emp-meta{font-size:.64rem;color:var(--ink3);margin-bottom:1.25rem}
+.emp-name{font-family:'Lora',serif;font-size:1.5rem;font-weight:400;color:var(--green-acc);margin-bottom:.2rem}
+.emp-meta{font-size:.64rem;color:var(--ink3);margin-bottom:1.2rem}
 
-.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.4rem}
 .pill{padding:5px 13px;border-radius:20px;font-size:.65rem;border:1px solid var(--border2);color:var(--ink2);background:#fff}
 .pill strong{color:var(--ink)}
 .pill.g{background:var(--green3);border-color:var(--green4);color:var(--green)}
@@ -122,118 +131,153 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 
 .export-btn{
   display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
-  font-size:.66rem;font-family:'DM Mono',monospace;background:#fff;
+  font-size:.65rem;font-family:'DM Mono',monospace;background:#fff;
   border:1px solid var(--border2);border-radius:6px;color:var(--ink2);
-  cursor:pointer;transition:all .12s;margin-bottom:1.25rem;
+  cursor:pointer;transition:all .12s;margin-bottom:1.2rem;
 }
 .export-btn:hover{border-color:var(--green);color:var(--green);background:var(--green3)}
 
+/* ── DAY CARDS ── */
 .days{display:flex;flex-direction:column;gap:8px}
-
 .day-card{
   background:#fff;border:1px solid var(--border);border-radius:10px;
-  overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s,border-color .2s;
+  overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s;
 }
 .day-card:hover{box-shadow:var(--shadow2)}
 .day-card.has-error{border-left:3px solid var(--red)}
 .day-card.has-warn{border-left:3px solid var(--amber)}
-.day-card.is-empty{opacity:.5}
 
-.day-head{display:flex;align-items:center;padding:.85rem 1.25rem;cursor:pointer;user-select:none}
-
-.day-dow{
-  font-family:'Lora',serif;font-size:1rem;font-weight:400;
-  color:var(--ink);width:115px;flex-shrink:0;text-transform:capitalize;
-}
+.day-head{display:flex;align-items:center;padding:.85rem 1.2rem;cursor:pointer;user-select:none}
+.day-dow{font-family:'Lora',serif;font-size:1rem;font-weight:400;color:var(--ink);width:115px;flex-shrink:0;text-transform:capitalize}
 .day-date{font-size:.65rem;color:var(--ink3);width:85px;flex-shrink:0}
-
 .day-chips{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.65rem;white-space:nowrap}
-.c-in {background:var(--green3);color:var(--green);border:1px solid var(--green4)}
-.c-out{background:#e8f0fe;color:#1a73e8;border:1px solid #c5d8fc}
+.c-in{background:var(--green3);color:var(--green);border:1px solid var(--green4)}
+.c-out{background:var(--blue-soft);color:var(--blue);border:1px solid #c5d8fc}
 .c-dur{background:var(--cream2);color:var(--ink2);border:1px solid var(--border2)}
 .c-err{background:var(--red-soft);color:var(--red);border:1px solid #f5c6c2}
 .c-wrn{background:var(--amber-soft);color:var(--amber);border:1px solid #f5e0a0}
-.c-emp{color:var(--ink3);font-size:.63rem}
-
-.day-chevron{margin-left:auto;color:var(--ink3);font-size:.65rem;transition:transform .2s;flex-shrink:0;padding-left:8px}
+.day-chevron{margin-left:auto;color:var(--ink3);font-size:.65rem;transition:transform .2s;padding-left:8px}
 .day-card.open .day-chevron{transform:rotate(180deg)}
 
-.day-body{display:none;border-top:1px solid var(--border);background:var(--cream);padding:1rem 1.25rem}
+.day-body{display:none;border-top:1px solid var(--border);background:var(--cream);padding:1rem 1.2rem}
 .day-card.open .day-body{display:block}
 
-.ft{width:100%;border-collapse:collapse;margin-bottom:.75rem}
-.ft th{
-  font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--ink3);padding:4px 10px;text-align:left;border-bottom:1px solid var(--border);
-}
+/* Tabla fichajes */
+.ft{width:100%;border-collapse:collapse;margin-bottom:.6rem}
+.ft th{font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:4px 10px;text-align:left;border-bottom:1px solid var(--border)}
 .ft td{padding:6px 10px;font-size:.76rem;border-bottom:1px solid var(--border);vertical-align:middle}
 .ft tbody tr:last-child td{border-bottom:none}
 .ft tbody tr:hover td{background:rgba(45,106,63,.025)}
 .t-in{color:var(--green);font-weight:500}
-.t-out{color:#1a73e8;font-weight:500}
+.t-out{color:var(--blue);font-weight:500}
 
-.hora-display{
-  cursor:pointer;padding:3px 8px;border-radius:5px;
-  transition:background .12s,color .12s;display:inline-block;
+/* Hora clickeable para solicitar cambio */
+.hora-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:5px;font-family:'DM Mono',monospace;font-size:.76rem;
+  background:transparent;border:1px solid transparent;cursor:pointer;color:var(--ink);
+  transition:all .15s;
 }
-.hora-display:hover{background:var(--green3);color:var(--green)}
-.hora-display.editing{display:none}
-.hora-input{
-  font-family:'DM Mono',monospace;font-size:.76rem;
-  background:#fff;border:1.5px solid var(--green);border-radius:5px;
-  color:var(--ink);padding:3px 8px;width:82px;outline:none;display:none;
+.hora-btn:hover{background:var(--green3);border-color:var(--green4);color:var(--green)}
+.hora-btn .pencil{font-size:.6rem;opacity:0;transition:opacity .15s}
+.hora-btn:hover .pencil{opacity:1}
+.hora-btn.pending{background:var(--amber-soft);border-color:#f5e0a0;color:var(--amber)}
+
+/* ── SOLICITUDES PAGE ── */
+.sol-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
+.sol-title{font-family:'Lora',serif;font-size:1.4rem;font-weight:400;color:var(--green-acc)}
+.sol-filters{display:flex;gap:6px}
+.flt-btn{
+  padding:5px 12px;font-size:.63rem;font-family:'DM Mono',monospace;
+  border:1px solid var(--border2);background:#fff;border-radius:5px;
+  cursor:pointer;color:var(--ink3);transition:all .12s;
 }
-.hora-input.editing{display:inline-block}
+.flt-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
 
-.save-ind{display:inline-block;font-size:.58rem;color:var(--green);margin-left:5px;opacity:0;transition:opacity .3s}
-.save-ind.on{opacity:1}
+.sol-list{display:flex;flex-direction:column;gap:10px}
 
-.day-actions{display:flex;gap:8px;margin-top:.6rem}
-.btn-add{
-  padding:5px 13px;font-size:.65rem;font-family:'DM Mono',monospace;
-  background:#fff;border:1px solid var(--border2);border-radius:5px;
-  color:var(--ink2);cursor:pointer;transition:all .12s;
+.sol-card{
+  background:#fff;border:1px solid var(--border);border-radius:10px;
+  padding:1rem 1.25rem;box-shadow:var(--shadow);
+  display:grid;grid-template-columns:1fr auto;gap:.75rem;align-items:start;
 }
-.btn-add:hover{border-color:var(--green);color:var(--green);background:var(--green3)}
-.btn-del{background:transparent;border:none;color:var(--ink3);cursor:pointer;padding:0 5px;font-size:.9rem;transition:color .12s;line-height:1}
-.btn-del:hover{color:var(--red)}
+.sol-card.aprobada{border-left:3px solid var(--green)}
+.sol-card.rechazada{border-left:3px solid var(--red);opacity:.6}
+.sol-card.pendiente{border-left:3px solid var(--amber)}
 
-.edit-hint{font-size:.59rem;color:var(--ink3);margin-top:.55rem;display:flex;align-items:center;gap:5px}
-.edit-hint::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green3);border:1px solid var(--green4);flex-shrink:0}
+.sol-info{}
+.sol-emp{font-family:'Lora',serif;font-size:1rem;font-weight:400;color:var(--green-acc);margin-bottom:.2rem}
+.sol-detail{font-size:.7rem;color:var(--ink2);line-height:1.8}
+.sol-detail span{color:var(--ink3)}
+.sol-fecha-req{font-size:.6rem;color:var(--ink3);margin-top:.35rem}
 
+.sol-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.sol-status{
+  display:inline-block;padding:3px 10px;border-radius:20px;font-size:.62rem;font-family:'DM Mono',monospace;
+}
+.ss-pendiente{background:var(--amber-soft);color:var(--amber);border:1px solid #f5e0a0}
+.ss-aprobada{background:var(--green3);color:var(--green);border:1px solid var(--green4)}
+.ss-rechazada{background:var(--red-soft);color:var(--red);border:1px solid #f5c6c2}
+
+.btn-aprobar{
+  padding:5px 14px;font-size:.65rem;font-family:'DM Mono',monospace;
+  background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;transition:opacity .15s;
+}
+.btn-aprobar:hover{opacity:.85}
+.btn-rechazar{
+  padding:5px 14px;font-size:.65rem;font-family:'DM Mono',monospace;
+  background:#fff;color:var(--red);border:1px solid #f5c6c2;border-radius:5px;cursor:pointer;transition:all .15s;
+}
+.btn-rechazar:hover{background:var(--red-soft)}
+
+/* ── MODAL SOLICITUD ── */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(28,43,30,.45);z-index:800;align-items:center;justify-content:center}
+.modal-ov.on{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:2rem;max-width:500px;width:92%;box-shadow:0 20px 60px rgba(28,43,30,.2)}
+.modal-title{font-family:'Lora',serif;font-size:1.15rem;color:var(--green-acc);margin-bottom:1.25rem}
+.modal-row{display:flex;flex-direction:column;gap:4px;margin-bottom:.9rem}
+.modal-row label{font-size:.62rem;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase}
+.modal-row input,.modal-row textarea,.modal-row select{
+  padding:8px 10px;font-family:'DM Mono',monospace;font-size:.74rem;
+  background:var(--cream);border:1px solid var(--border2);border-radius:6px;
+  color:var(--ink);outline:none;transition:border-color .15s;
+}
+.modal-row input:focus,.modal-row textarea:focus{border-color:var(--green)}
+.modal-row textarea{resize:vertical;min-height:70px}
+.hora-change{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.hora-arrow{color:var(--ink3);font-size:.8rem;text-align:center}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
+.btn-cancel{padding:8px 16px;font-size:.7rem;font-family:'DM Mono',monospace;background:#fff;border:1px solid var(--border2);border-radius:6px;cursor:pointer;color:var(--ink2)}
+.btn-submit{padding:8px 18px;font-size:.7rem;font-family:'DM Mono',monospace;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer}
+
+/* ── MODAL SCRIPT CONFIG ── */
+.cfg-box{background:#fff;border-radius:12px;padding:2rem;max-width:640px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(28,43,30,.2)}
+.cfg-box pre{background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:.85rem;font-size:.61rem;overflow-x:auto;line-height:1.7;font-family:'DM Mono',monospace;margin:.5rem 0}
+.cfg-step{margin-bottom:.7rem;font-size:.74rem;line-height:1.8;color:var(--ink2)}
+.cfg-step strong{color:var(--green)}
+.cfg-input-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:1rem}
+.cfg-input-row input{flex:1;min-width:200px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:.72rem;border:1.5px solid var(--border2);border-radius:6px;outline:none;color:var(--ink)}
+.cfg-input-row input:focus{border-color:var(--green)}
+.cfg-input-row button{padding:8px 18px;background:var(--green);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer}
+.cfg-url-st{font-size:.61rem;margin-top:4px}
+
+/* ── LOADER / TOAST ── */
 .loader{display:none;position:fixed;inset:0;background:rgba(247,244,238,.88);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:1rem;backdrop-filter:blur(3px)}
 .loader.on{display:flex}
 .spin{width:30px;height:30px;border:2.5px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:rot .6s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
 .ltxt{font-size:.7rem;color:var(--ink2)}
-
 .toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:#fff;padding:9px 18px;border-radius:8px;font-size:.7rem;z-index:600;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;box-shadow:0 4px 14px rgba(28,43,30,.25)}
 .toast.on{opacity:1;transform:translateY(0)}
-.toast.ok{background:var(--green)}
-.toast.err{background:var(--red)}
-
-/* Modal */
-.modal-ov{display:none;position:fixed;inset:0;background:rgba(28,43,30,.45);z-index:800;align-items:center;justify-content:center}
-.modal-ov.on{display:flex}
-.modal-box{background:#fff;border-radius:12px;padding:2rem;max-width:620px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(28,43,30,.2)}
-.modal-title{font-family:'Lora',serif;font-size:1.2rem;color:var(--green-acc);margin-bottom:1.25rem}
-.modal-body{font-size:.74rem;line-height:1.8;color:var(--ink2)}
-.modal-body strong{color:var(--green)}
-.modal-body pre{background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:.9rem;font-size:.63rem;overflow-x:auto;margin:.5rem 0;line-height:1.7;font-family:'DM Mono',monospace}
-.modal-foot{margin-top:1.25rem;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.modal-foot input{flex:1;min-width:200px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:.72rem;border:1.5px solid var(--border2);border-radius:6px;outline:none;color:var(--ink);transition:border-color .15s}
-.modal-foot input:focus{border-color:var(--green)}
-.modal-foot button{padding:8px 18px;background:var(--green);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer}
-.url-st{font-size:.61rem;color:var(--ink3);margin-top:5px}
+.toast.ok{background:var(--green)} .toast.err{background:var(--red)}
 
 @media(max-width:720px){
   .shell{grid-template-columns:1fr}
   .side{border-right:none;border-bottom:1px solid var(--border)}
   .main{padding:1.25rem}
-  .hdr{padding:0 1.25rem}
-  .day-dow{width:90px}
-  .day-date{width:72px}
+  .day-dow{width:90px} .day-date{width:72px}
+  .sol-card{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -241,13 +285,25 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 
 <header class="hdr">
   <div class="hdr-logo"><span class="dot"></span>Fichajes · RRHH</div>
-  <div class="hdr-right">2026</div>
+  <div class="status-bar" style="color:rgba(255,255,255,.6)">
+    <span class="sdot spin" id="sdot"></span>
+    <span id="stxt" style="font-size:.62rem">Conectando...</span>
+  </div>
 </header>
 
-<div class="shell">
-  <aside class="side">
-    <div class="status-bar"><span class="sdot spin" id="sdot"></span><span id="stxt">Conectando...</span></div>
+<!-- NAV TABS -->
+<nav class="nav">
+  <div class="nav-tab active" id="tab-informes" onclick="switchTab('informes')">📋 Informes</div>
+  <div class="nav-tab" id="tab-solicitudes" onclick="switchTab('solicitudes')">
+    🔄 Solicitudes
+    <span class="nav-badge hidden" id="badge-sol">0</span>
+  </div>
+  <div class="nav-tab" id="tab-config" onclick="switchTab('config')" style="margin-left:auto">⚙ Configuración</div>
+</nav>
 
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="side">
     <div>
       <span class="lbl">Empleados</span>
       <div class="emp-btns">
@@ -256,7 +312,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       </div>
       <div class="emp-list" id="emp-list"><span style="font-size:.7rem;color:var(--ink3);padding:8px">Cargando...</span></div>
     </div>
-
     <div>
       <span class="lbl">Período</span>
       <div class="date-row">
@@ -264,62 +319,152 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
         <div class="df"><span>Hasta</span><input type="date" id="f-hasta"></div>
       </div>
     </div>
-
     <button class="btn-gen" id="btn-gen" onclick="generar()" disabled>Generar informe</button>
-
-    <div class="sync-note" id="sync-note">
-      <strong>Sync desactivado</strong><br>
-      Para guardar cambios en el sheet, configura el Apps Script.
-      <a href="#" onclick="showModal();return false" style="color:var(--green);text-decoration:underline;display:block;margin-top:3px">Ver instrucciones →</a>
+    <div class="script-cfg" id="script-cfg-note">
+      <span id="cfg-status-txt">Cargando configuración...</span><br>
+      <a onclick="switchTab('config')">Configurar Apps Script →</a>
     </div>
   </aside>
 
-  <main class="main" id="main">
-    <div class="empty" id="empty">
-      <div class="empty-ico">🌿</div>
-      <h2>Sin datos aún</h2>
-      <p>Selecciona empleados y período, luego pulsa generar.</p>
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ── INFORMES ── -->
+    <div class="page active" id="page-informes">
+      <div class="empty" id="empty-inf">
+        <div class="empty-ico">🌿</div>
+        <h2>Sin datos aún</h2>
+        <p>Selecciona empleados y período, luego pulsa generar.<br><br>
+        Pulsa cualquier hora para enviar una solicitud de cambio.</p>
+      </div>
+      <div id="report" style="display:none"></div>
     </div>
-    <div id="report" style="display:none"></div>
-  </main>
-</div>
 
-<!-- Modal Apps Script -->
-<div class="modal-ov" id="modal-ov" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box">
-    <div class="modal-title">Activar sincronización con Google Sheets</div>
-    <div class="modal-body">
-      <p><strong>1.</strong> Abre tu Google Sheet → <strong>Extensiones → Apps Script</strong></p>
-      <p style="margin-top:.6rem"><strong>2.</strong> Borra el código existente y pega este:</p>
-<pre>function doPost(e) {
+    <!-- ── SOLICITUDES ── -->
+    <div class="page" id="page-solicitudes">
+      <div class="sol-header">
+        <div class="sol-title">Solicitudes de cambio</div>
+        <div class="sol-filters">
+          <button class="flt-btn active" onclick="filtrarSol('todas',this)">Todas</button>
+          <button class="flt-btn" onclick="filtrarSol('pendiente',this)">Pendientes</button>
+          <button class="flt-btn" onclick="filtrarSol('aprobada',this)">Aprobadas</button>
+          <button class="flt-btn" onclick="filtrarSol('rechazada',this)">Rechazadas</button>
+        </div>
+      </div>
+      <div id="sol-list">
+        <div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>Aparecerán aquí cuando generes solicitudes desde la vista de Informes.</p></div>
+      </div>
+    </div>
+
+    <!-- ── CONFIG ── -->
+    <div class="page" id="page-config">
+      <div style="max-width:640px">
+        <div style="font-family:'Lora',serif;font-size:1.4rem;color:var(--green-acc);margin-bottom:1.5rem">Configuración del Apps Script</div>
+        <div class="cfg-step"><strong>1.</strong> Abre tu Google Sheet → <strong>Extensiones → Apps Script</strong></div>
+        <div class="cfg-step"><strong>2.</strong> Borra el código existente y pega este:</div>
+<pre id="apps-script-code">function doPost(e) {
   try {
-    var data  = JSON.parse(e.postData.contents);
-    var emp   = data.emp;
-    var fecha = data.fecha;
-    var regs  = data.registros;
+    var data   = JSON.parse(e.postData.contents);
+    var action = data.action;
 
-    var ss    = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName(emp);
-    if (!sheet) return resp({ok:false, msg:'Hoja no encontrada: ' + emp});
-
-    // Borrar filas existentes de esa fecha
-    var vals = sheet.getDataRange().getValues();
-    for (var i = vals.length - 1; i >= 0; i--) {
-      var raw = vals[i][0] ? String(vals[i][0]).trim() : '';
-      if (toISO(raw) === fecha) sheet.deleteRow(i + 1);
+    if (action === 'guardarSolicitud') {
+      return guardarSolicitud(data);
+    } else if (action === 'aprobarSolicitud') {
+      return aprobarSolicitud(data);
+    } else if (action === 'rechazarSolicitud') {
+      return rechazarSolicitud(data);
     }
-
-    // Insertar nuevas filas
-    var d = fecha.split('-');
-    var dis = d[2] + '/' + d[1] + '/' + d[0];
-    regs.forEach(function(r) {
-      sheet.appendRow([dis, r.tipo, r.hora, '', '', '']);
-    });
-
-    return resp({ok:true});
+    return resp({ok:false, msg:'Accion desconocida'});
   } catch(err) {
     return resp({ok:false, msg:err.toString()});
   }
+}
+
+function guardarSolicitud(data) {
+  var ss    = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('SOLICITUDES');
+  if (!sheet) {
+    sheet = ss.insertSheet('SOLICITUDES');
+    sheet.appendRow(['ID','Empleado','Fecha','Tipo','Hora actual','Hora nueva','Motivo','Estado','Fecha solicitud','Email empleado']);
+  }
+  var id = 'SOL-' + Date.now();
+  var now = new Date().toLocaleString('es-ES');
+  sheet.appendRow([
+    id, data.emp, data.fecha, data.tipo,
+    data.horaActual, data.horaNueva, data.motivo,
+    'pendiente', now, data.emailEmp || ''
+  ]);
+  return resp({ok:true, id:id});
+}
+
+function aprobarSolicitud(data) {
+  var ss     = SpreadsheetApp.getActiveSpreadsheet();
+  var solSh  = ss.getSheetByName('SOLICITUDES');
+  var empSh  = ss.getSheetByName(data.emp);
+  if (!solSh || !empSh) return resp({ok:false, msg:'Hoja no encontrada'});
+
+  // Marcar como aprobada en SOLICITUDES
+  var vals = solSh.getDataRange().getValues();
+  for (var i = 1; i < vals.length; i++) {
+    if (vals[i][0] === data.id) {
+      solSh.getRange(i+1, 8).setValue('aprobada');
+      break;
+    }
+  }
+
+  // Actualizar la hora en la hoja del empleado
+  var empVals = empSh.getDataRange().getValues();
+  for (var j = 0; j < empVals.length; j++) {
+    var rowFecha = toISO(String(empVals[j][0] || '').trim());
+    var rowTipo  = String(empVals[j][1] || '').toUpperCase().trim();
+    var rowHora  = String(empVals[j][2] || '').trim();
+    if (rowFecha === data.fecha && rowTipo === data.tipo && rowHora === data.horaActual) {
+      empSh.getRange(j+1, 3).setValue(data.horaNueva);
+      break;
+    }
+  }
+
+  // Notificar por email al empleado
+  if (data.emailEmp) {
+    MailApp.sendEmail({
+      to: data.emailEmp,
+      subject: 'Solicitud de cambio aprobada · Fichajes RRHH',
+      body: 'Hola ' + data.emp.split(' ')[0] + ',\n\n'
+        + 'Tu solicitud de cambio ha sido APROBADA:\n\n'
+        + '  Fecha: ' + data.fecha + '\n'
+        + '  Tipo: ' + data.tipo + '\n'
+        + '  Hora anterior: ' + data.horaActual + '\n'
+        + '  Hora nueva: ' + data.horaNueva + '\n\n'
+        + 'Un saludo,\nRRHH'
+    });
+  }
+
+  return resp({ok:true});
+}
+
+function rechazarSolicitud(data) {
+  var ss    = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('SOLICITUDES');
+  if (!sheet) return resp({ok:false});
+  var vals = sheet.getDataRange().getValues();
+  for (var i = 1; i < vals.length; i++) {
+    if (vals[i][0] === data.id) {
+      sheet.getRange(i+1, 8).setValue('rechazada');
+      break;
+    }
+  }
+  // Notificar rechazo
+  if (data.emailEmp) {
+    MailApp.sendEmail({
+      to: data.emailEmp,
+      subject: 'Solicitud de cambio rechazada · Fichajes RRHH',
+      body: 'Hola ' + data.emp.split(' ')[0] + ',\n\n'
+        + 'Tu solicitud de cambio para el ' + data.fecha
+        + ' (' + data.tipo + ' ' + data.horaActual + ') ha sido rechazada.\n\n'
+        + 'Si tienes dudas, contacta con RRHH.\n\nUn saludo'
+    });
+  }
+  return resp({ok:true});
 }
 
 function toISO(s) {
@@ -327,31 +472,69 @@ function toISO(s) {
   if (m) return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
   return s;
 }
-
 function resp(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
+  return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+function doGet() { return ContentService.createTextOutput('OK'); }</pre>
 
-function doGet() {
-  return ContentService.createTextOutput('OK');
-}</pre>
-      <p style="margin-top:.6rem"><strong>3.</strong> Guarda (Ctrl+S) y luego: <strong>Implementar → Nueva implementación</strong></p>
-      <p style="margin-top:.4rem;padding-left:1rem;color:var(--ink3)">
-        Tipo: <strong style="color:var(--ink)">Aplicación web</strong> &nbsp;·&nbsp;
-        Ejecutar como: <strong style="color:var(--ink)">Yo</strong> &nbsp;·&nbsp;
-        Acceso: <strong style="color:var(--ink)">Cualquier persona</strong>
-      </p>
-      <p style="margin-top:.6rem"><strong>4.</strong> Copia la URL que aparece y pégala aquí abajo:</p>
+        <div class="cfg-step" style="margin-top:1rem"><strong>3.</strong> Guarda (Ctrl+S) → <strong>Implementar → Nueva implementación</strong><br>
+          <span style="color:var(--ink3);padding-left:1rem">
+            Tipo: <strong style="color:var(--ink)">Aplicación web</strong> &nbsp;·&nbsp;
+            Ejecutar como: <strong style="color:var(--ink)">Yo</strong> &nbsp;·&nbsp;
+            Acceso: <strong style="color:var(--ink)">Cualquier persona</strong>
+          </span>
+        </div>
+        <div class="cfg-step"><strong>4.</strong> Pega aquí la URL de la aplicación web:</div>
+        <div class="cfg-input-row">
+          <input id="cfg-url-input" type="url" placeholder="https://script.google.com/macros/s/..." oninput="checkCfgUrl(this.value)">
+          <button onclick="saveCfgUrl()">Guardar</button>
+        </div>
+        <div class="cfg-url-st" id="cfg-url-st"></div>
+
+        <div class="cfg-step" style="margin-top:1.5rem"><strong>5.</strong> Email del administrador (para notificaciones):</div>
+        <div class="cfg-input-row">
+          <input id="cfg-email-input" type="email" placeholder="admin@empresa.com">
+          <button onclick="saveEmail()">Guardar</button>
+        </div>
+        <div style="font-size:.6rem;color:var(--ink3);margin-top:.4rem">Este email recibirá copia de todas las solicitudes enviadas.</div>
+      </div>
     </div>
-    <div class="modal-foot">
-      <input id="script-input" type="url" placeholder="https://script.google.com/macros/s/..." oninput="checkUrl(this.value)">
-      <button onclick="saveUrl()">Guardar</button>
+
+  </main>
+</div>
+
+<!-- Modal: nueva solicitud -->
+<div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
+  <div class="modal-box">
+    <div class="modal-title">Solicitud de cambio de horario</div>
+    <div class="modal-row">
+      <label>Empleado</label>
+      <input type="text" id="sol-emp" readonly style="background:var(--cream3)">
     </div>
-    <div class="url-st" id="url-st"></div>
-    <div style="margin-top:.75rem;text-align:right">
-      <button onclick="closeModal()" style="background:none;border:none;font-size:.7rem;color:var(--ink3);cursor:pointer;font-family:'DM Mono',monospace">Cerrar</button>
+    <div class="modal-row">
+      <label>Fecha · Tipo de fichaje</label>
+      <input type="text" id="sol-detalle" readonly style="background:var(--cream3)">
+    </div>
+    <div class="modal-row">
+      <label>Hora actual → Hora nueva</label>
+      <div class="hora-change">
+        <input type="text" id="sol-hora-actual" readonly style="background:var(--cream3);text-align:center">
+        <div class="hora-arrow">→</div>
+        <input type="time" id="sol-hora-nueva">
+      </div>
+    </div>
+    <div class="modal-row">
+      <label>Email del empleado (para notificarle)</label>
+      <input type="email" id="sol-email-emp" placeholder="empleado@empresa.com">
+    </div>
+    <div class="modal-row">
+      <label>Motivo</label>
+      <textarea id="sol-motivo" placeholder="Describe brevemente el motivo del cambio..."></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarModalSol()">Cancelar</button>
+      <button class="btn-submit" onclick="enviarSolicitud()">Enviar solicitud</button>
     </div>
   </div>
 </div>
@@ -361,14 +544,23 @@ function doGet() {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const SHEET_ID  = '1AHGLfzT-yF2kkPUS8IlygX9TAL6poYVnxBmoI_p-550';
-const DIAS_ES   = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
-const DIAS_TILDE= ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+// ══════════════════════════════════════════
+// CONFIGURACIÓN
+// ══════════════════════════════════════════
+const SHEET_ID    = '1AHGLfzT-yF2kkPUS8IlygX9TAL6poYVnxBmoI_p-550';
+const DIAS_TILDE  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
-let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || '';
-let empleados   = [];
-let editData    = {};
+let SCRIPT_URL   = localStorage.getItem('fichajes_script_url') || '';
+let ADMIN_EMAIL  = localStorage.getItem('fichajes_admin_email') || '';
+
+let empleados    = [];
+let editData     = {};   // editData[emp][fecha] = [{tipo,hora}, ...]
+let solicitudes  = [];   // array local de solicitudes pendientes
+let solFiltro    = 'todas';
 let currentSel, currentDesde, currentHasta;
+
+// Solicitud en edición
+let solActual = null;
 
 const EMPLEADOS_DEFAULT = [
   'LUCIANA Fisbein Efron','RICHARD Silva Vera','ANA HILDA MIRANDA ROCHA',
@@ -376,14 +568,16 @@ const EMPLEADOS_DEFAULT = [
   'RAMIRO DAMIAN Martinez Chapper','SHENAY Nazimova Cholakova','YAMILA Fisbein Efron'
 ];
 
-// ── UI ──────────────────────────────────────────────────────
+// ══════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════
 function toast(msg, cls, dur) {
   dur = dur || 2800;
   var t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast on' + (cls ? ' ' + cls : '');
+  t.className = 'toast on' + (cls ? ' '+cls : '');
   clearTimeout(t._t);
-  t._t = setTimeout(function(){ t.className = 'toast'; }, dur);
+  t._t = setTimeout(function(){ t.className='toast'; }, dur);
 }
 function setLoader(on, msg) {
   document.getElementById('loader').classList.toggle('on', on);
@@ -396,58 +590,107 @@ function setStatus(cls, msg) {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function empId(emp) {
-  return emp.replace(/[^a-zA-Z0-9]/g,'_');
+function empId(emp) { return emp.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('page-'+tab).classList.add('active');
+  if (tab === 'solicitudes') renderSolicitudes();
 }
 
-// ── FETCH ───────────────────────────────────────────────────
+// ══════════════════════════════════════════
+// CONFIGURACIÓN
+// ══════════════════════════════════════════
+function checkCfgUrl(val) {
+  var el = document.getElementById('cfg-url-st');
+  if (!val) { el.textContent=''; return; }
+  if (val.startsWith('https://script.google.com/macros/s/')) {
+    el.textContent='✓ URL válida'; el.style.color='var(--green)';
+  } else {
+    el.textContent='La URL debe empezar por https://script.google.com/macros/s/'; el.style.color='var(--red)';
+  }
+}
+function saveCfgUrl() {
+  var val = document.getElementById('cfg-url-input').value.trim();
+  if (!val.startsWith('https://script.google.com/macros/s/')) { toast('URL no válida','err'); return; }
+  SCRIPT_URL = val;
+  localStorage.setItem('fichajes_script_url', val);
+  updateCfgNote();
+  toast('Apps Script configurado ✓','ok');
+}
+function saveEmail() {
+  var val = document.getElementById('cfg-email-input').value.trim();
+  if (!val || !val.includes('@')) { toast('Email no válido','err'); return; }
+  ADMIN_EMAIL = val;
+  localStorage.setItem('fichajes_admin_email', val);
+  toast('Email guardado ✓','ok');
+}
+function updateCfgNote() {
+  var el = document.getElementById('script-cfg-note');
+  var st = document.getElementById('cfg-status-txt');
+  if (SCRIPT_URL) {
+    st.innerHTML = '<span style="color:var(--green)">✓ Apps Script conectado</span>';
+  } else {
+    st.innerHTML = '<span style="color:var(--amber)">⚠ Sin configurar</span>';
+  }
+}
+
+// ══════════════════════════════════════════
+// FETCH SHEET (lectura)
+// ══════════════════════════════════════════
 async function fetchSheet(name) {
   var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID
     + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(name.trim());
   var ctrl = new AbortController();
   var timer = setTimeout(function(){ ctrl.abort(); }, 12000);
-  var resp;
-  try { resp = await fetch(url, {signal: ctrl.signal}); }
-  catch(e) { clearTimeout(timer); throw new Error('Sin conexion: ' + name); }
+  var res;
+  try { res = await fetch(url, {signal:ctrl.signal}); }
+  catch(e) { clearTimeout(timer); throw new Error('Sin conexión: '+name); }
   clearTimeout(timer);
-  var text = await resp.text();
+  var text = await res.text();
   var m = text.match(/setResponse\(([\s\S]*)\)\s*;?\s*$/);
-  if (!m) throw new Error('Respuesta invalida: ' + name);
+  if (!m) throw new Error('Respuesta inválida: '+name);
   var data = JSON.parse(m[1]);
-  if (data.status === 'error') throw new Error('Pestana no encontrada: ' + name);
+  if (data.status === 'error') throw new Error('Pestaña no encontrada: '+name);
   return data.table;
 }
 
-// ── WRITE via Apps Script ───────────────────────────────────
-async function writeToSheet(emp, fecha, regs) {
-  if (!SCRIPT_URL) return false;
+// POST al Apps Script
+async function callScript(payload) {
+  if (!SCRIPT_URL) return {ok:false, msg:'Sin URL configurada'};
   try {
     await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({emp: emp, fecha: fecha, registros: regs}),
-      headers: {'Content-Type':'application/json'},
-      mode: 'no-cors'
+      method:'POST',
+      body: JSON.stringify(payload),
+      headers:{'Content-Type':'application/json'},
+      mode:'no-cors'
     });
-    return true;
-  } catch(e) { return false; }
+    return {ok:true};
+  } catch(e) { return {ok:false, msg:e.toString()}; }
 }
 
-// ── PARSE ───────────────────────────────────────────────────
+// ══════════════════════════════════════════
+// PARSE
+// ══════════════════════════════════════════
 function parsearTabla(table) {
   if (!table || !table.rows) return [];
   var out = [];
-  for (var i = 0; i < table.rows.length; i++) {
-    var c = table.rows[i].c || [];
-    var get = function(idx){ return (c[idx] && c[idx].v != null) ? String(c[idx].v).trim() : ''; };
+  for (var i=0; i<table.rows.length; i++) {
+    var c   = table.rows[i].c || [];
+    var get = function(idx){ return (c[idx]&&c[idx].v!=null)?String(c[idx].v).trim():''; };
     var fecha = parseFecha(get(0));
     var tipo  = get(1).toUpperCase();
     var hora  = normHora(get(2));
-    if (!fecha || (tipo !== 'ENTRADA' && tipo !== 'SALIDA') || !hora) continue;
-    out.push({fecha: fecha, tipo: tipo, hora: hora});
+    if (!fecha||(tipo!=='ENTRADA'&&tipo!=='SALIDA')||!hora) continue;
+    out.push({fecha:fecha, tipo:tipo, hora:hora});
   }
   return out;
 }
-
 function parseFecha(s) {
   s = String(s||'').trim();
   var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -464,147 +707,142 @@ function horaToMins(s) {
 }
 function normHora(s) {
   var m = horaToMins(s);
-  if (m == null) return s||'';
+  if (m==null) return s||'';
   return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);
 }
 function minsToStr(m) {
-  if (m == null || m < 0) return '—';
+  if (m==null||m<0) return '—';
   return Math.floor(m/60)+'h '+('0'+(m%60)).slice(-2)+'min';
 }
-function isoDisplay(iso) {
-  var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
-}
+function isoDisplay(iso) { var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
 function dowName(iso) {
-  var p = iso.split('-').map(Number);
-  return DIAS_TILDE[new Date(p[0], p[1]-1, p[2]).getDay()];
-}
-function isWeekend(iso) {
-  var p = iso.split('-').map(Number);
-  var d = new Date(p[0],p[1]-1,p[2]).getDay();
-  return d===0||d===6;
+  var p=iso.split('-').map(Number);
+  return DIAS_TILDE[new Date(p[0],p[1]-1,p[2]).getDay()];
 }
 function calcDia(regs) {
-  var sorted = regs.slice().sort(function(a,b){ return (horaToMins(a.hora)||0)-(horaToMins(b.hora)||0); });
-  var ents = sorted.filter(function(r){ return r.tipo==='ENTRADA'; });
-  var sals = sorted.filter(function(r){ return r.tipo==='SALIDA'; });
-  var primera = ents.length ? ents[0].hora : null;
-  var ultima  = sals.length ? sals[sals.length-1].hora : null;
-  var mins = null;
-  if (primera && ultima) {
-    mins = (horaToMins(ultima)||0)-(horaToMins(primera)||0);
-    if (mins < 0) mins += 1440;
-  }
-  var estado = !primera ? 'sin-entrada' : !ultima ? 'sin-salida' : 'ok';
-  return {primera:primera, ultima:ultima, mins:mins, estado:estado};
+  var sorted=regs.slice().sort(function(a,b){return (horaToMins(a.hora)||0)-(horaToMins(b.hora)||0);});
+  var ents=sorted.filter(function(r){return r.tipo==='ENTRADA';});
+  var sals=sorted.filter(function(r){return r.tipo==='SALIDA';});
+  var primera=ents.length?ents[0].hora:null;
+  var ultima=sals.length?sals[sals.length-1].hora:null;
+  var mins=null;
+  if (primera&&ultima){mins=(horaToMins(ultima)||0)-(horaToMins(primera)||0);if(mins<0)mins+=1440;}
+  var estado=!primera?'sin-entrada':!ultima?'sin-salida':'ok';
+  return {primera:primera,ultima:ultima,mins:mins,estado:estado};
 }
 
-// ── EMPLEADOS ───────────────────────────────────────────────
+// ══════════════════════════════════════════
+// EMPLEADOS
+// ══════════════════════════════════════════
 async function cargarEmpleados() {
   try {
     var table = await fetchSheet('EMPLEADOS');
-    var rows  = table.rows || [];
+    var rows  = table.rows||[];
     var found = [];
     for (var i=0;i<rows.length;i++) {
-      var c = rows[i].c||[];
-      if (c[0]&&c[0].v) {
-        var v = String(c[0].v).trim();
-        if (v && !['nombre','empleado','name'].includes(v.toLowerCase())) found.push(v);
-      }
+      var c=rows[i].c||[];
+      if (c[0]&&c[0].v){var v=String(c[0].v).trim();if(v&&!['nombre','empleado','name'].includes(v.toLowerCase()))found.push(v);}
     }
-    empleados = found.length ? found : EMPLEADOS_DEFAULT;
-    setStatus('ok', empleados.length + ' empleados');
+    empleados = found.length?found:EMPLEADOS_DEFAULT;
+    setStatus('ok', empleados.length+' empleados');
   } catch(e) {
     empleados = EMPLEADOS_DEFAULT;
-    setStatus('ok', empleados.length + ' empleados');
+    setStatus('ok', empleados.length+' empleados');
   }
   renderEmpleados();
   document.getElementById('btn-gen').disabled = false;
-  updateSyncNote();
+
+  // Rellenar inputs de config con valores guardados
+  if (SCRIPT_URL) document.getElementById('cfg-url-input').value = SCRIPT_URL;
+  if (ADMIN_EMAIL) document.getElementById('cfg-email-input').value = ADMIN_EMAIL;
+  updateCfgNote();
 }
 
 function renderEmpleados() {
-  document.getElementById('emp-list').innerHTML = empleados.map(function(e) {
+  document.getElementById('emp-list').innerHTML = empleados.map(function(e){
     return '<label class="emp-row"><input type="checkbox" class="echk" value="'+esc(e)+'" checked><label>'+esc(e)+'</label></label>';
   }).join('');
 }
-function selAll()  { document.querySelectorAll('.echk').forEach(function(c){ c.checked=true; }); }
-function selNone() { document.querySelectorAll('.echk').forEach(function(c){ c.checked=false; }); }
+function selAll()  { document.querySelectorAll('.echk').forEach(function(c){c.checked=true;}); }
+function selNone() { document.querySelectorAll('.echk').forEach(function(c){c.checked=false;}); }
 
-// ── GENERAR ─────────────────────────────────────────────────
+// ══════════════════════════════════════════
+// GENERAR INFORME
+// ══════════════════════════════════════════
 async function generar() {
-  var sel   = Array.from(document.querySelectorAll('.echk:checked')).map(function(c){ return c.value; });
+  var sel   = Array.from(document.querySelectorAll('.echk:checked')).map(function(c){return c.value;});
   var desde = document.getElementById('f-desde').value;
-  var hasta  = document.getElementById('f-hasta').value;
+  var hasta = document.getElementById('f-hasta').value;
   if (!sel.length)      { toast('Selecciona al menos un empleado','err'); return; }
-  if (!desde || !hasta) { toast('Elige el período','err'); return; }
-  if (desde > hasta)    { toast('Fecha inicio > fin','err'); return; }
+  if (!desde||!hasta)   { toast('Elige el período','err'); return; }
+  if (desde>hasta)      { toast('Fecha inicio > fin','err'); return; }
 
   currentSel=sel; currentDesde=desde; currentHasta=hasta;
-  editData = {};
+  editData={};
 
-  for (var i=0; i<sel.length; i++) {
-    var emp = sel[i];
-    setLoader(true, 'Cargando ' + emp.split(' ')[0] + '...');
+  for (var i=0;i<sel.length;i++) {
+    var emp=sel[i];
+    setLoader(true,'Cargando '+emp.split(' ')[0]+'...');
     try {
       var table    = await fetchSheet(emp);
       var fichajes = parsearTabla(table);
-      var filt     = fichajes.filter(function(f){ return f.fecha>=desde && f.fecha<=hasta; });
+      var filt     = fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});
       var dmap     = {};
       for (var j=0;j<filt.length;j++) {
-        var f = filt[j];
+        var f=filt[j];
         if (!dmap[f.fecha]) dmap[f.fecha]=[];
-        dmap[f.fecha].push({tipo:f.tipo, hora:f.hora});
+        dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});
       }
-      editData[emp] = dmap;
-    } catch(e) {
-      editData[emp] = null;
-    }
+      editData[emp]=dmap;
+    } catch(e) { editData[emp]=null; }
   }
   setLoader(false);
+
+  // Mostrar página informes
+  switchTab('informes');
   renderReport();
 }
 
-// ── RENDER ──────────────────────────────────────────────────
-function getRango(desde, hasta) {
-  var out=[], cur=new Date(desde+'T00:00:00'), end=new Date(hasta+'T00:00:00');
-  while (cur<=end) { out.push(cur.toISOString().slice(0,10)); cur.setDate(cur.getDate()+1); }
-  return out;
-}
-
+// ══════════════════════════════════════════
+// RENDER INFORME
+// ══════════════════════════════════════════
 function renderReport() {
-  document.getElementById('empty').style.display = 'none';
-  var rep = document.getElementById('report');
-  rep.style.display = 'block';
-  var fechas = getRango(currentDesde, currentHasta);
-  rep.innerHTML = currentSel.map(function(emp){ return renderEmp(emp, fechas); }).join('');
+  document.getElementById('empty-inf').style.display='none';
+  var rep=document.getElementById('report');
+  rep.style.display='block';
+  rep.innerHTML=currentSel.map(function(emp){return renderEmp(emp);}).join('');
 }
 
-function renderEmp(emp, fechas) {
-  var dmap = editData[emp];
+function renderEmp(emp) {
+  var dmap=editData[emp];
   if (!dmap) {
     return '<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div>'
-      +'<div class="emp-meta" style="color:var(--red)">No se encontro la pestana en el sheet.</div></div>';
+      +'<div class="emp-meta" style="color:var(--red)">No se encontró la pestaña en el sheet.</div></div>';
   }
-  var totalMins=0,diasFich=0,sinSal=0,sinEnt=0;
-  for (var i=0;i<fechas.length;i++) {
-    var regs = dmap[fechas[i]]||[];
-    if (!regs.length) continue;
-    diasFich++;
-    var calc = calcDia(regs);
+  // Solo fechas con fichajes
+  var fechas=Object.keys(dmap).sort();
+  if (!fechas.length) {
+    return '<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div>'
+      +'<div class="emp-meta">Sin fichajes en el período seleccionado.</div></div>';
+  }
+
+  var totalMins=0,sinSal=0,sinEnt=0;
+  for (var i=0;i<fechas.length;i++){
+    var calc=calcDia(dmap[fechas[i]]||[]);
     if (calc.mins!=null) totalMins+=calc.mins;
     if (calc.estado==='sin-salida') sinSal++;
     if (calc.estado==='sin-entrada') sinEnt++;
   }
-  var pills = '<div class="pills">'
+  var pills='<div class="pills">'
     +'<div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div>'
-    +'<div class="pill">Con fichaje <strong>'+diasFich+'</strong></div>'
-    +(sinSal ? '<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>' : '')
-    +(sinEnt ? '<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>' : '')
+    +'<div class="pill">Días <strong>'+fechas.length+'</strong></div>'
+    +(sinSal?'<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>':'')
+    +(sinEnt?'<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>':'')
     +'</div>';
-  var cards = fechas.map(function(f){ return renderCard(emp,f,dmap[f]||[]); }).join('');
+  var cards=fechas.map(function(f){return renderCard(emp,f,dmap[f]||[]);}).join('');
   return '<div class="emp-block" data-emp="'+esc(emp)+'">'
     +'<div class="emp-name">'+esc(emp)+'</div>'
-    +'<div class="emp-meta">'+isoDisplay(fechas[0])+' → '+isoDisplay(fechas[fechas.length-1])+' · '+fechas.length+' días</div>'
+    +'<div class="emp-meta">'+isoDisplay(fechas[0])+' → '+isoDisplay(fechas[fechas.length-1])+' · '+fechas.length+' días con fichaje</div>'
     +pills
     +'<button class="export-btn" onclick="exportEmp(\''+esc(emp)+'\')">↓ Exportar Excel</button>'
     +'<div class="days">'+cards+'</div>'
@@ -612,46 +850,41 @@ function renderEmp(emp, fechas) {
 }
 
 function renderCard(emp, fecha, regs) {
-  var calc   = calcDia(regs);
-  var vacio  = regs.length === 0;
-  var cls    = '';
-  if (calc.estado==='sin-salida')  cls='has-error';
-  if (calc.estado==='sin-entrada') cls='has-warn';
-  if (vacio) cls='is-empty';
+  var calc  = calcDia(regs);
+  var cls   = calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
 
-  var chips = '';
-  if (vacio) {
-    chips = '<span class="c-emp">sin fichajes</span>';
-  } else {
-    if (calc.primera) chips += '<span class="chip c-in">▶ '+calc.primera+'</span>';
-    if (calc.ultima)  chips += '<span class="chip c-out">◼ '+calc.ultima+'</span>';
-    if (calc.mins!=null) chips += '<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-    if (calc.estado==='sin-salida')  chips += '<span class="chip c-err">sin salida</span>';
-    if (calc.estado==='sin-entrada') chips += '<span class="chip c-wrn">sin entrada</span>';
-  }
+  var chips='';
+  if (calc.primera) chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
+  if (calc.ultima)  chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
+  if (calc.mins!=null) chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
+  if (calc.estado==='sin-salida')  chips+='<span class="chip c-err">sin salida</span>';
+  if (calc.estado==='sin-entrada') chips+='<span class="chip c-wrn">sin entrada</span>';
 
-  var eId = empId(emp);
-  var filas = regs.map(function(r,i) {
-    var tcls = r.tipo==='ENTRADA' ? 't-in' : 't-out';
-    var siId = 'si-'+eId+'-'+fecha+'-'+i;
+  var eId=empId(emp);
+  var filas=regs.map(function(r,i){
+    var tcls=r.tipo==='ENTRADA'?'t-in':'t-out';
+    // Comprobar si hay solicitud pendiente para esta hora
+    var hasPending=solicitudes.some(function(s){
+      return s.emp===emp&&s.fecha===fecha&&s.tipo===r.tipo&&s.horaActual===r.hora&&s.estado==='pendiente';
+    });
+    var btnCls=hasPending?'hora-btn pending':'hora-btn';
+    var btnTitle=hasPending?'Solicitud pendiente':'Solicitar cambio de hora';
     return '<tr>'
       +'<td class="'+tcls+'">'+r.tipo+'</td>'
       +'<td>'
-        +'<span class="hora-display" onclick="startEdit(this,\''+esc(emp)+'\',\''+fecha+'\','+i+')">'+esc(r.hora)+'</span>'
-        +'<input class="hora-input" type="time" value="'+r.hora.slice(0,5)+'"'
-          +' onblur="saveEdit(this,\''+esc(emp)+'\',\''+fecha+'\','+i+')"'
-          +' onkeydown="keyEdit(event,this,\''+esc(emp)+'\',\''+fecha+'\','+i+')">'
-        +'<span class="save-ind" id="'+siId+'">✓</span>'
+        +'<button class="'+btnCls+'" title="'+btnTitle+'" '
+          +'onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',\''+r.tipo+'\',\''+r.hora+'\')">'
+          +r.hora+' <span class="pencil">✏</span>'
+        +'</button>'
       +'</td>'
-      +'<td><button class="btn-del" onclick="delRow(\''+esc(emp)+'\',\''+fecha+'\','+i+')">×</button></td>'
       +'</tr>';
   }).join('');
 
-  var tabla = regs.length
-    ? '<table class="ft"><thead><tr><th>Tipo</th><th>Hora</th><th></th></tr></thead><tbody>'+filas+'</tbody></table>'
-    : '<p style="font-size:.7rem;color:var(--ink3);margin-bottom:.65rem">Sin registros este día.</p>';
+  var tabla=regs.length
+    ?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar cambio)</span></th></tr></thead><tbody>'+filas+'</tbody></table>'
+    :'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
 
-  var cardId = 'dc-'+eId+'-'+fecha;
+  var cardId='dc-'+eId+'-'+fecha;
   return '<div class="day-card '+cls+'" id="'+cardId+'">'
     +'<div class="day-head" onclick="toggleCard(this.parentElement)">'
     +'<span class="day-dow">'+dowName(fecha)+'</span>'
@@ -659,139 +892,220 @@ function renderCard(emp, fecha, regs) {
     +'<div class="day-chips">'+chips+'</div>'
     +'<span class="day-chevron">▾</span>'
     +'</div>'
-    +'<div class="day-body">'
-    +tabla
-    +'<div class="day-actions">'
-    +'<button class="btn-add" onclick="addRow(\''+esc(emp)+'\',\''+fecha+'\',\'ENTRADA\')">+ Entrada</button>'
-    +'<button class="btn-add" onclick="addRow(\''+esc(emp)+'\',\''+fecha+'\',\'SALIDA\')">+ Salida</button>'
-    +'</div>'
-    +'<div class="edit-hint">Pulsa una hora para editarla · Enter confirma · Esc cancela</div>'
-    +'</div></div>';
+    +'<div class="day-body">'+tabla+'</div>'
+    +'</div>';
 }
 
-// ── INTERACCION ─────────────────────────────────────────────
 function toggleCard(card) { card.classList.toggle('open'); }
 
-function startEdit(span, emp, fecha, idx) {
-  var input = span.nextElementSibling;
-  span.classList.add('editing');
-  input.classList.add('editing');
-  input.focus(); input.select();
+// ══════════════════════════════════════════
+// MODAL SOLICITUD
+// ══════════════════════════════════════════
+function abrirModalSol(emp, fecha, tipo, horaActual) {
+  solActual = {emp:emp, fecha:fecha, tipo:tipo, horaActual:horaActual};
+  document.getElementById('sol-emp').value = emp;
+  document.getElementById('sol-detalle').value = isoDisplay(fecha)+' · '+tipo;
+  document.getElementById('sol-hora-actual').value = horaActual;
+  document.getElementById('sol-hora-nueva').value = horaActual.slice(0,5);
+  document.getElementById('sol-motivo').value = '';
+  document.getElementById('sol-email-emp').value = '';
+  document.getElementById('modal-sol').classList.add('on');
+}
+function cerrarModalSol() {
+  document.getElementById('modal-sol').classList.remove('on');
+  solActual=null;
 }
 
-async function saveEdit(input, emp, fecha, idx) {
-  var span = input.previousElementSibling;
-  var val  = input.value;
-  if (!val) { cancelEdit(input,span); return; }
-  var hora = normHora(val);
-  editData[emp][fecha][idx].hora = hora;
-  span.textContent = hora;
-  span.classList.remove('editing');
-  input.classList.remove('editing');
-  await syncDia(emp, fecha);
-  refreshCard(emp, fecha);
+async function enviarSolicitud() {
+  if (!solActual) return;
+  var horaNueva = document.getElementById('sol-hora-nueva').value;
+  var motivo    = document.getElementById('sol-motivo').value.trim();
+  var emailEmp  = document.getElementById('sol-email-emp').value.trim();
+  if (!horaNueva) { toast('Indica la hora nueva','err'); return; }
+  if (!motivo)    { toast('Indica el motivo','err'); return; }
+
+  horaNueva = normHora(horaNueva);
+
+  var sol = {
+    id:          'SOL-'+Date.now(),
+    emp:         solActual.emp,
+    fecha:       solActual.fecha,
+    tipo:        solActual.tipo,
+    horaActual:  solActual.horaActual,
+    horaNueva:   horaNueva,
+    motivo:      motivo,
+    emailEmp:    emailEmp,
+    estado:      'pendiente',
+    fechaReq:    new Date().toLocaleString('es-ES')
+  };
+
+  // Guardar localmente
+  solicitudes.push(sol);
+  updateBadge();
+
+  // Enviar al sheet via Apps Script
+  if (SCRIPT_URL) {
+    setLoader(true,'Enviando solicitud...');
+    var r = await callScript({action:'guardarSolicitud', ...sol});
+    setLoader(false);
+    if (r.ok) toast('Solicitud enviada ✓','ok');
+    else      toast('Guardada localmente (sin conexión al script)');
+  } else {
+    toast('Solicitud registrada (configura el Apps Script para sincronizar)');
+  }
+
+  cerrarModalSol();
+  // Refrescar la card para marcar la hora como pendiente
+  refreshCard(sol.emp, sol.fecha);
+  // Ir a solicitudes
+  setTimeout(function(){ switchTab('solicitudes'); }, 800);
 }
 
-function keyEdit(e, input, emp, fecha, idx) {
-  if (e.key==='Enter') { e.preventDefault(); input.blur(); }
-  if (e.key==='Escape') { cancelEdit(input, input.previousElementSibling); }
-}
-function cancelEdit(input, span) {
-  span.classList.remove('editing');
-  input.classList.remove('editing');
-}
-
-async function addRow(emp, fecha, tipo) {
-  if (!editData[emp][fecha]) editData[emp][fecha]=[];
-  editData[emp][fecha].push({tipo:tipo, hora: tipo==='ENTRADA'?'08:00':'17:00'});
-  refreshCard(emp, fecha);
-  await syncDia(emp, fecha);
-  toast('Añadido: '+tipo,'ok');
+// ══════════════════════════════════════════
+// SOLICITUDES
+// ══════════════════════════════════════════
+function updateBadge() {
+  var pendientes=solicitudes.filter(function(s){return s.estado==='pendiente';}).length;
+  var badge=document.getElementById('badge-sol');
+  if (pendientes>0) { badge.textContent=pendientes; badge.classList.remove('hidden'); }
+  else { badge.classList.add('hidden'); }
 }
 
-async function delRow(emp, fecha, idx) {
-  editData[emp][fecha].splice(idx,1);
-  refreshCard(emp, fecha);
-  await syncDia(emp, fecha);
-  toast('Registro eliminado');
+function filtrarSol(f, btn) {
+  solFiltro=f;
+  document.querySelectorAll('.flt-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderSolicitudes();
 }
 
+function renderSolicitudes() {
+  var lista=solicitudes.filter(function(s){return solFiltro==='todas'||s.estado===solFiltro;});
+  var el=document.getElementById('sol-list');
+  if (!lista.length) {
+    el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2>'
+      +'<p>'+(solFiltro==='todas'?'Pulsa cualquier hora en la vista de Informes para crear una solicitud.':'No hay solicitudes con este filtro.')+'</p></div>';
+    return;
+  }
+  // Más recientes primero
+  var sorted=lista.slice().reverse();
+  el.innerHTML=sorted.map(function(s){ return renderSolCard(s); }).join('');
+}
+
+function renderSolCard(s) {
+  var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
+  var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada','rechazada':'Rechazada'}[s.estado]||s.estado;
+  var acciones='';
+  if (s.estado==='pendiente') {
+    acciones='<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button>'
+      +'<button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>';
+  }
+  return '<div class="sol-card '+s.estado+'" id="sol-'+s.id+'">'
+    +'<div class="sol-info">'
+    +'<div class="sol-emp">'+esc(s.emp)+'</div>'
+    +'<div class="sol-detail">'
+    +'<span>Fecha:</span> '+isoDisplay(s.fecha)+' · '+dowName(s.fecha)+'<br>'
+    +'<span>Tipo:</span> '+s.tipo+'<br>'
+    +'<span>Cambio:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br>'
+    +'<span>Motivo:</span> '+esc(s.motivo)
+    +(s.emailEmp?'<br><span>Email emp.:</span> '+esc(s.emailEmp):'')
+    +'</div>'
+    +'<div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div>'
+    +'</div>'
+    +'<div class="sol-actions">'
+    +'<span class="sol-status '+stCls+'">'+stLabel+'</span>'
+    +acciones
+    +'</div>'
+    +'</div>';
+}
+
+async function aprobar(id) {
+  var sol=solicitudes.find(function(s){return s.id===id;});
+  if (!sol) return;
+  sol.estado='aprobada';
+  updateBadge();
+  renderSolicitudes();
+  // Actualizar dato local
+  if (editData[sol.emp]&&editData[sol.emp][sol.fecha]) {
+    var regs=editData[sol.emp][sol.fecha];
+    for (var i=0;i<regs.length;i++){
+      if (regs[i].tipo===sol.tipo&&regs[i].hora===sol.horaActual){
+        regs[i].hora=sol.horaNueva; break;
+      }
+    }
+    refreshCard(sol.emp, sol.fecha);
+  }
+  // Llamar al script
+  if (SCRIPT_URL) {
+    setLoader(true,'Aprobando...');
+    var r=await callScript({action:'aprobarSolicitud', id:sol.id, emp:sol.emp, fecha:sol.fecha,
+      tipo:sol.tipo, horaActual:sol.horaActual, horaNueva:sol.horaNueva, emailEmp:sol.emailEmp||''});
+    setLoader(false);
+    toast(r.ok?'Aprobado y guardado en el sheet ✓':'Aprobado localmente (error en script)', r.ok?'ok':'');
+  } else {
+    toast('Aprobado localmente (configura el Apps Script para sincronizar con el sheet)');
+  }
+}
+
+async function rechazar(id) {
+  var sol=solicitudes.find(function(s){return s.id===id;});
+  if (!sol) return;
+  sol.estado='rechazada';
+  updateBadge();
+  renderSolicitudes();
+  if (SCRIPT_URL) {
+    setLoader(true,'Rechazando...');
+    var r=await callScript({action:'rechazarSolicitud', id:sol.id, emp:sol.emp, fecha:sol.fecha,
+      tipo:sol.tipo, horaActual:sol.horaActual, emailEmp:sol.emailEmp||''});
+    setLoader(false);
+    toast('Solicitud rechazada');
+  } else {
+    toast('Rechazada localmente');
+  }
+}
+
+// ══════════════════════════════════════════
+// REFRESH CARD (después de aprobar/sol)
+// ══════════════════════════════════════════
 function refreshCard(emp, fecha) {
-  var id   = 'dc-'+empId(emp)+'-'+fecha;
-  var card = document.getElementById(id);
+  var id  ='dc-'+empId(emp)+'-'+fecha;
+  var card=document.getElementById(id);
   if (!card) return;
-  var wasOpen = card.classList.contains('open');
-  var regs    = editData[emp][fecha]||[];
-  var tmp     = document.createElement('div');
-  tmp.innerHTML = renderCard(emp, fecha, regs);
-  var nc = tmp.firstElementChild;
+  var wasOpen=card.classList.contains('open');
+  var regs=(editData[emp]&&editData[emp][fecha])||[];
+  var tmp=document.createElement('div');
+  tmp.innerHTML=renderCard(emp,fecha,regs);
+  var nc=tmp.firstElementChild;
   if (wasOpen) nc.classList.add('open');
   card.replaceWith(nc);
 }
 
-async function syncDia(emp, fecha) {
-  if (!SCRIPT_URL) return;
-  var regs = editData[emp][fecha]||[];
-  toast('Guardando en sheet...','',4000);
-  var ok = await writeToSheet(emp, fecha, regs);
-  toast(ok ? 'Guardado en Google Sheets ✓' : 'No se pudo guardar en el sheet', ok?'ok':'err');
-}
-
-// ── EXPORT ──────────────────────────────────────────────────
+// ══════════════════════════════════════════
+// EXPORT EXCEL
+// ══════════════════════════════════════════
 function exportEmp(emp) {
-  var dmap = editData[emp]; if (!dmap) return;
-  var wb   = XLSX.utils.book_new();
-  var rows = Object.keys(dmap).sort().map(function(f) {
-    var calc = calcDia(dmap[f]||[]);
-    return {'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};
+  var dmap=editData[emp]; if (!dmap) return;
+  var wb=XLSX.utils.book_new();
+  var rows=Object.keys(dmap).sort().map(function(f){
+    var calc=calcDia(dmap[f]||[]);
+    return {'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—',
+      'Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),
+      'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};
   });
-  var ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{wch:12},{wch:11},{wch:11},{wch:13},{wch:10},{wch:13}];
-  XLSX.utils.book_append_sheet(wb, ws, emp.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,'_'));
-  XLSX.writeFile(wb, 'Fichajes_'+emp.split(' ')[0]+'.xlsx');
+  var ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[{wch:12},{wch:11},{wch:11},{wch:13},{wch:10},{wch:13}];
+  XLSX.utils.book_append_sheet(wb,ws,emp.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,'_'));
+  XLSX.writeFile(wb,'Fichajes_'+emp.split(' ')[0]+'.xlsx');
   toast('Excel descargado','ok');
 }
 
-// ── MODAL ───────────────────────────────────────────────────
-function showModal() {
-  document.getElementById('script-input').value = SCRIPT_URL||'';
-  document.getElementById('modal-ov').classList.add('on');
-}
-function closeModal() { document.getElementById('modal-ov').classList.remove('on'); }
-function checkUrl(val) {
-  var el = document.getElementById('url-st');
-  if (!val) { el.textContent=''; return; }
-  if (val.startsWith('https://script.google.com/macros/s/')) {
-    el.textContent='✓ URL válida'; el.style.color='var(--green)';
-  } else {
-    el.textContent='Debe empezar por https://script.google.com/macros/s/'; el.style.color='var(--red)';
-  }
-}
-function saveUrl() {
-  var val = document.getElementById('script-input').value.trim();
-  if (!val.startsWith('https://script.google.com/macros/s/')) { toast('URL no válida','err'); return; }
-  SCRIPT_URL = val;
-  localStorage.setItem('fichajes_script_url', val);
-  updateSyncNote(); closeModal();
-  toast('Sincronización activada ✓','ok');
-}
-function updateSyncNote() {
-  var el = document.getElementById('sync-note');
-  if (SCRIPT_URL) {
-    el.innerHTML = '<strong style="color:var(--green)">✓ Sync activo</strong><br>Los cambios se guardan en Google Sheets.<br>'
-      +'<a href="#" onclick="showModal();return false" style="color:var(--ink3);font-size:.58rem">Cambiar configuración →</a>';
-  } else {
-    el.innerHTML = '<strong>Sync desactivado</strong><br>Para guardar cambios en el sheet, configura el Apps Script.'
-      +'<a href="#" onclick="showModal();return false" style="color:var(--green);text-decoration:underline;display:block;margin-top:3px">Ver instrucciones →</a>';
-  }
-}
-
-// ── INIT ────────────────────────────────────────────────────
-(function() {
-  var hoy = new Date();
-  var p1  = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-  document.getElementById('f-hasta').value = hoy.toISOString().slice(0,10);
-  document.getElementById('f-desde').value = p1.toISOString().slice(0,10);
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+(function(){
+  var hoy=new Date();
+  var p1=new Date(hoy.getFullYear(),hoy.getMonth(),1);
+  document.getElementById('f-hasta').value=hoy.toISOString().slice(0,10);
+  document.getElementById('f-desde').value=p1.toISOString().slice(0,10);
   cargarEmpleados();
 })();
 </script>
