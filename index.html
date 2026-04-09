@@ -74,8 +74,17 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
   display:flex;align-items:center;justify-content:space-between;
   position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(28,43,30,.18);
 }
+.hdr-left{display:flex;align-items:center;gap:18px}
 .hdr-logo{font-family:'Lora',serif;font-size:1.1rem;color:#fff;display:flex;align-items:center;gap:10px}
 .hdr-logo .dot{width:8px;height:8px;border-radius:50%;background:#7ecf95;flex-shrink:0}
+
+/* ── NOMBRE EMPLEADO EN HEADER ── */
+.hdr-emp-info{display:none;flex-direction:column;justify-content:center;line-height:1.25;border-left:1px solid rgba(255,255,255,.2);padding-left:18px}
+.hdr-emp-info.on{display:flex}
+.hdr-emp-nombre{font-family:'Lora',serif;font-size:1rem;color:#fff;font-weight:400}
+.hdr-emp-rol{font-size:.58rem;color:rgba(255,255,255,.65);letter-spacing:.08em;text-transform:uppercase}
+.hdr-emp-empresa{font-size:.58rem;color:rgba(255,255,255,.55);letter-spacing:.04em}
+
 .hdr-right{display:flex;align-items:center;gap:12px}
 .hdr-user{font-size:.63rem;color:rgba(255,255,255,.7);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn-logout{
@@ -129,7 +138,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .script-cfg{font-size:.6rem;color:var(--ink3);line-height:1.7;border:1px solid var(--border);border-radius:6px;padding:.65rem .75rem;background:var(--cream)}
 .script-cfg a{color:var(--green);text-decoration:underline;cursor:pointer}
 
-/* Vista empleado: sidebar reducida */
 .emp-side-info{background:var(--green3);border:1px solid var(--green4);border-radius:var(--r);padding:1rem;font-size:.7rem;color:var(--ink2);line-height:1.8}
 .emp-side-info strong{color:var(--green-acc)}
 
@@ -154,6 +162,48 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .pill.a{background:var(--amber-soft);border-color:#f5e0a0;color:var(--amber)}
 .export-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;font-size:.65rem;font-family:'DM Mono',monospace;background:#fff;border:1px solid var(--border2);border-radius:6px;color:var(--ink2);cursor:pointer;transition:all .12s;margin-bottom:1.2rem}
 .export-btn:hover{border-color:var(--green);color:var(--green);background:var(--green3)}
+
+/* ══ SUMMARY CARDS GRID ══ */
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:8px;
+  margin-bottom:1.5rem;
+}
+.sum-card{
+  background:#fff;border:1px solid var(--border);border-radius:10px;
+  padding:.75rem .85rem;cursor:pointer;transition:all .18s;
+  display:flex;flex-direction:column;gap:3px;
+  box-shadow:var(--shadow);
+}
+.sum-card:hover{border-color:var(--green4);background:var(--green3);box-shadow:var(--shadow2)}
+.sum-card.has-error{border-left:3px solid var(--red)}
+.sum-card.has-warn{border-left:3px solid var(--amber)}
+.sum-card.today{border-color:var(--green);box-shadow:0 0 0 2px var(--green4)}
+.sum-dow{font-family:'Lora',serif;font-size:.8rem;color:var(--ink2);text-transform:capitalize}
+.sum-date{font-size:.58rem;color:var(--ink3)}
+.sum-hours{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;color:var(--green-acc);margin-top:2px}
+.sum-hours.err{color:var(--red)}
+.sum-hours.warn{color:var(--amber)}
+.sum-hours.empty-day{color:var(--ink3);font-size:.72rem}
+
+/* ── BUSCADOR DE FECHAS ── */
+.date-search-bar{
+  display:flex;align-items:center;gap:10px;
+  background:#fff;border:1px solid var(--border);border-radius:8px;
+  padding:.55rem .85rem;margin-bottom:1.2rem;
+}
+.date-search-bar label{font-size:.6rem;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.date-search-bar input[type=date]{
+  font-family:'DM Mono',monospace;font-size:.72rem;background:transparent;
+  border:none;outline:none;color:var(--ink);cursor:pointer;
+}
+.btn-jump{
+  padding:4px 12px;font-size:.63rem;font-family:'DM Mono',monospace;
+  background:var(--green);color:#fff;border:none;border-radius:5px;
+  cursor:pointer;transition:background .12s;
+}
+.btn-jump:hover{background:var(--green-acc)}
 
 /* ── DAY CARDS ── */
 .days{display:flex;flex-direction:column;gap:8px}
@@ -260,6 +310,8 @@ pre{background:var(--cream);border:1px solid var(--border);border-radius:6px;pad
   .main{padding:1.25rem}
   .day-dow{width:90px}.day-date{width:72px}
   .sol-card{grid-template-columns:1fr}
+  .summary-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .hdr-emp-info{display:none !important}
 }
 </style>
 </head>
@@ -291,9 +343,17 @@ pre{background:var(--cream);border:1px solid var(--border);border-radius:6px;pad
 <div id="app">
 
 <header class="hdr">
-  <div class="hdr-logo"><span class="dot"></span>Fichajes · RRHH</div>
+  <div class="hdr-left">
+    <div class="hdr-logo"><span class="dot"></span>Fichajes · RRHH</div>
+    <!-- Nombre empleado en header (solo vista empleado) -->
+    <div class="hdr-emp-info" id="hdr-emp-info">
+      <div class="hdr-emp-nombre" id="hdr-emp-nombre">—</div>
+      <div class="hdr-emp-rol">Empleado/a</div>
+      <div class="hdr-emp-empresa">Buenas y Santas S.L.</div>
+    </div>
+  </div>
   <div class="hdr-right">
-    <div class="hdr-user">
+    <div class="hdr-user" id="hdr-user-admin" style="display:none">
       <span id="hdr-user-name">—</span>
       <span class="role-badge" id="hdr-role-badge"></span>
     </div>
@@ -485,11 +545,8 @@ const ADMIN_PIN  = '2136';
 let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || '';
 let ADMIN_EMAIL = localStorage.getItem('fichajes_admin_email') || ADMIN_MAIL;
 
-// Estado de sesión
-let session = null; // {role:'admin'|'empleado', nombre, email, empData:{email,pin,...}}
-let empleados = []; // [{nombre, email, pin}]
-
-// Estado de la app
+let session = null;
+let empleados = [];
 let editData   = {};
 let solicitudes = [];
 let esolicitudes = [];
@@ -590,7 +647,6 @@ async function doLogin() {
   btn.disabled = true;
   btn.textContent = 'Verificando...';
 
-  // Admin check
   if (email === ADMIN_MAIL && pin === ADMIN_PIN) {
     session = { role:'admin', nombre:'Luciana (Admin)', email: ADMIN_MAIL };
     btn.disabled = false; btn.textContent = 'Entrar';
@@ -598,7 +654,6 @@ async function doLogin() {
     return;
   }
 
-  // Cargar empleados si no están cargados
   if (!empleados.length) {
     try { await loadEmpleados(); }
     catch(e) {
@@ -609,7 +664,6 @@ async function doLogin() {
     }
   }
 
-  // Buscar empleado
   var emp = empleados.find(function(e){ return e.email.toLowerCase() === email; });
   if (!emp || String(emp.pin).trim() !== String(pin).trim()) {
     err.textContent = 'Email o PIN incorrectos.';
@@ -623,7 +677,6 @@ async function doLogin() {
   initEmpleado();
 }
 
-// Enter key para login
 document.addEventListener('keydown', function(e){
   if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none' && !document.getElementById('app').classList.contains('on')) {
     doLogin();
@@ -638,10 +691,12 @@ function doLogout() {
   document.getElementById('login-email').value = '';
   document.getElementById('login-pin').value = '';
   document.getElementById('login-err').classList.remove('on');
+  document.getElementById('hdr-emp-info').classList.remove('on');
+  document.getElementById('hdr-user-admin').style.display = 'none';
 }
 
 // ══════════════════════════════════════════
-// CARGA DE EMPLEADOS DESDE SHEET
+// CARGA DE EMPLEADOS
 // ══════════════════════════════════════════
 async function loadEmpleados() {
   var table = await fetchSheet('EMPLEADOS');
@@ -652,8 +707,8 @@ async function loadEmpleados() {
     var get = function(idx){ return (c[idx] && c[idx].v != null) ? String(c[idx].v).trim() : ''; };
     var nombre = get(0);
     if (!nombre || ['nombre','empleado','name'].includes(nombre.toLowerCase())) continue;
-    var pin   = get(3); // col D (index 3)
-    var email = get(4); // col E (index 4)
+    var pin   = get(3);
+    var email = get(4);
     found.push({ nombre: nombre, pin: pin, email: email.toLowerCase() });
   }
   empleados = found;
@@ -666,6 +721,7 @@ async function loadEmpleados() {
 async function initAdmin() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').classList.add('on');
+  document.getElementById('hdr-user-admin').style.display = 'flex';
   document.getElementById('hdr-user-name').textContent = session.nombre;
   document.getElementById('hdr-role-badge').textContent = 'Admin';
   document.getElementById('hdr-role-badge').className = 'role-badge role-admin';
@@ -674,7 +730,6 @@ async function initAdmin() {
   document.getElementById('admin-pages').style.display = 'block';
   document.getElementById('status-bar-hdr').style.display = 'flex';
 
-  // Fechas por defecto
   var hoy = new Date();
   var p1  = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
   document.getElementById('f-hasta').value = hoy.toISOString().slice(0,10);
@@ -701,24 +756,23 @@ async function initAdmin() {
 function initEmpleado() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').classList.add('on');
-  document.getElementById('hdr-user-name').textContent = session.nombre;
-  document.getElementById('hdr-role-badge').textContent = 'Empleado';
-  document.getElementById('hdr-role-badge').className = 'role-badge role-emp';
+
+  // Header con nombre completo del empleado
+  document.getElementById('hdr-emp-nombre').textContent = session.nombre;
+  document.getElementById('hdr-emp-info').classList.add('on');
+
   document.getElementById('nav-emp').style.display = 'flex';
   document.getElementById('side-emp').style.display = 'flex';
   document.getElementById('emp-pages').style.display = 'block';
 
-  // Info sidebar
   document.getElementById('emp-side-info').innerHTML =
     '<strong>'+esc(session.nombre)+'</strong><br>'+esc(session.email);
 
-  // Fechas por defecto
   var hoy = new Date();
   var p1  = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
   document.getElementById('ef-hasta').value = hoy.toISOString().slice(0,10);
   document.getElementById('ef-desde').value = p1.toISOString().slice(0,10);
 
-  // Ocultar campo email en modal (lo rellenamos automáticamente)
   document.getElementById('sol-email-row').style.display = 'none';
 
   erendSolicitudes();
@@ -797,38 +851,98 @@ async function empGenerar() {
   renderEmpReport();
 }
 
+// ══════════════════════════════════════════
+// EMPLEADO: RENDER INFORME (nuevo diseño)
+// ══════════════════════════════════════════
 function renderEmpReport() {
   document.getElementById('eempty-inf').style.display='none';
   var rep=document.getElementById('ereport');
   rep.style.display='block';
-  // Solo datos del empleado actual
   var dmap=empEditData;
-  var fechas=Object.keys(dmap).sort();
+  // Fechas en orden DESCENDENTE (más reciente primero)
+  var fechas=Object.keys(dmap).sort().reverse();
   if (!fechas.length){
     rep.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin fichajes</h2><p>No hay registros en el período seleccionado.</p></div>';
     return;
   }
-  var totalMins=0,sinSal=0,sinEnt=0;
+
+  var totalMins=0, sinSal=0, sinEnt=0;
+  var fechasAsc = fechas.slice().reverse();
   for (var i=0;i<fechas.length;i++){
     var calc=calcDia(dmap[fechas[i]]||[]);
     if(calc.mins!=null)totalMins+=calc.mins;
     if(calc.estado==='sin-salida')sinSal++;
     if(calc.estado==='sin-entrada')sinEnt++;
   }
+
   var pills='<div class="pills">'
     +'<div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div>'
     +'<div class="pill">Días <strong>'+fechas.length+'</strong></div>'
     +(sinSal?'<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>':'')
     +(sinEnt?'<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>':'')
     +'</div>';
+
+  // Grid de resumen por día
+  var summaryCards = buildSummaryGrid(fechas, dmap, '_emp');
+
+  // Buscador por fecha
+  var dateSearch = '<div class="date-search-bar">'
+    +'<label>Ir a fecha</label>'
+    +'<input type="date" id="emp-date-jump">'
+    +'<button class="btn-jump" onclick="jumpToDate(\'_emp\')">Ir</button>'
+    +'</div>';
+
+  // Cards de días (orden descendente, todas cerradas por defecto)
   var cards=fechas.map(function(f){return renderEmpCard(session.nombre,f,dmap[f]||[]);}).join('');
+
   rep.innerHTML='<div class="emp-block">'
     +'<div class="emp-name">'+esc(session.nombre)+'</div>'
-    +'<div class="emp-meta">'+isoDisplay(fechas[0])+' → '+isoDisplay(fechas[fechas.length-1])+'</div>'
+    +'<div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'
     +pills
+    +summaryCards
+    +dateSearch
     +'<button class="export-btn" onclick="exportEmp(\'_emp\')">↓ Exportar Excel</button>'
-    +'<div class="days">'+cards+'</div>'
+    +'<div class="days" id="emp-days-list">'+cards+'</div>'
     +'</div>';
+}
+
+// ── Resumen grid (mini tarjetas con horas del día) ──
+function buildSummaryGrid(fechas, dmap, empKey) {
+  var hoy = new Date().toISOString().slice(0,10);
+  var cards = fechas.map(function(f){
+    var calc = calcDia(dmap[f]||[]);
+    var statCls='';
+    var hoursDisplay='';
+    if (calc.estado==='sin-salida'){statCls='has-error'; hoursDisplay='<div class="sum-hours err">sin salida</div>';}
+    else if(calc.estado==='sin-entrada'){statCls='has-warn'; hoursDisplay='<div class="sum-hours warn">sin entrada</div>';}
+    else if(calc.mins!=null){hoursDisplay='<div class="sum-hours">'+minsToStr(calc.mins)+'</div>';}
+    else{hoursDisplay='<div class="sum-hours empty-day">sin datos</div>';}
+    var todayCls = f===hoy?' today':'';
+    return '<div class="sum-card '+statCls+todayCls+'" onclick="scrollToDay(\''+f+'\',\''+empKey+'\')" title="'+dowName(f)+' '+isoDisplay(f)+'">'
+      +'<div class="sum-dow">'+dowName(f).slice(0,3)+'</div>'
+      +'<div class="sum-date">'+isoDisplay(f)+'</div>'
+      +hoursDisplay
+      +'</div>';
+  }).join('');
+  return '<div class="summary-grid">'+cards+'</div>';
+}
+
+function scrollToDay(fecha, empKey) {
+  var prefix = empKey==='_emp' ? 'edc-'+empId(session.nombre) : 'dc-'+empId(empKey);
+  var cardId = prefix+'-'+fecha;
+  var card = document.getElementById(cardId);
+  if (!card) return;
+  card.classList.add('open');
+  setTimeout(function(){
+    card.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 50);
+}
+
+function jumpToDate(empKey) {
+  var inputId = empKey==='_emp' ? 'emp-date-jump' : 'adm-date-jump';
+  var fecha = document.getElementById(inputId).value;
+  if (!fecha) { toast('Selecciona una fecha','err'); return; }
+  scrollToDay(fecha, empKey);
 }
 
 function renderEmpCard(emp, fecha, regs) {
@@ -970,17 +1084,51 @@ function renderReport() {
 function renderEmp(emp) {
   var dmap=editData[emp];
   if(!dmap)return '<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta" style="color:var(--red)">No se encontró la pestaña en el sheet.</div></div>';
-  var fechas=Object.keys(dmap).sort();
+  // Descendente
+  var fechas=Object.keys(dmap).sort().reverse();
+  var fechasAsc=fechas.slice().reverse();
   if(!fechas.length)return '<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">Sin fichajes en el período.</div></div>';
   var totalMins=0,sinSal=0,sinEnt=0;
   for(var i=0;i<fechas.length;i++){var calc=calcDia(dmap[fechas[i]]||[]);if(calc.mins!=null)totalMins+=calc.mins;if(calc.estado==='sin-salida')sinSal++;if(calc.estado==='sin-entrada')sinEnt++;}
   var pills='<div class="pills"><div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div><div class="pill">Días <strong>'+fechas.length+'</strong></div>'+(sinSal?'<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>':'')+(sinEnt?'<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>':'')+'</div>';
+  var summaryCards = buildSummaryGridAdmin(fechas, dmap, emp);
+  var dateSearch = '<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="adm-date-jump-'+empId(emp)+'"><button class="btn-jump" onclick="jumpToDateAdmin(\''+esc(emp)+'\')">Ir</button></div>';
   var cards=fechas.map(function(f){return renderCard(emp,f,dmap[f]||[]);}).join('');
   return '<div class="emp-block" data-emp="'+esc(emp)+'"><div class="emp-name">'+esc(emp)+'</div>'
-    +'<div class="emp-meta">'+isoDisplay(fechas[0])+' → '+isoDisplay(fechas[fechas.length-1])+' · '+fechas.length+' días</div>'
-    +pills+'<button class="export-btn" onclick="exportEmp(\''+esc(emp)+'\')">↓ Exportar Excel</button>'
+    +'<div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+' · '+fechas.length+' días</div>'
+    +pills+summaryCards+dateSearch
+    +'<button class="export-btn" onclick="exportEmp(\''+esc(emp)+'\')">↓ Exportar Excel</button>'
     +'<div class="days">'+cards+'</div></div>';
 }
+
+function buildSummaryGridAdmin(fechas, dmap, emp) {
+  var hoy = new Date().toISOString().slice(0,10);
+  var cards = fechas.map(function(f){
+    var calc = calcDia(dmap[f]||[]);
+    var statCls='';
+    var hoursDisplay='';
+    if(calc.estado==='sin-salida'){statCls='has-error';hoursDisplay='<div class="sum-hours err">sin salida</div>';}
+    else if(calc.estado==='sin-entrada'){statCls='has-warn';hoursDisplay='<div class="sum-hours warn">sin entrada</div>';}
+    else if(calc.mins!=null){hoursDisplay='<div class="sum-hours">'+minsToStr(calc.mins)+'</div>';}
+    else{hoursDisplay='<div class="sum-hours empty-day">sin datos</div>';}
+    var todayCls=f===hoy?' today':'';
+    return '<div class="sum-card '+statCls+todayCls+'" onclick="scrollToDay(\''+f+'\',\''+esc(emp)+'\')" title="'+dowName(f)+' '+isoDisplay(f)+'">'
+      +'<div class="sum-dow">'+dowName(f).slice(0,3)+'</div>'
+      +'<div class="sum-date">'+isoDisplay(f)+'</div>'
+      +hoursDisplay
+      +'</div>';
+  }).join('');
+  return '<div class="summary-grid">'+cards+'</div>';
+}
+
+function jumpToDateAdmin(emp) {
+  var inputEl = document.getElementById('adm-date-jump-'+empId(emp));
+  if (!inputEl) return;
+  var fecha = inputEl.value;
+  if (!fecha) { toast('Selecciona una fecha','err'); return; }
+  scrollToDay(fecha, emp);
+}
+
 function renderCard(emp, fecha, regs) {
   var calc=calcDia(regs);
   var cls=calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
@@ -1018,12 +1166,10 @@ function abrirModalSol(emp, fecha, tipo, horaActual, isEmp) {
   document.getElementById('sol-hora-actual').value = horaActual;
   document.getElementById('sol-hora-nueva').value = horaActual.slice(0,5);
   document.getElementById('sol-motivo').value = '';
-  // Si es empleado, email automático
   if (solIsEmp) {
     document.getElementById('sol-email-emp').value = session.email;
     document.getElementById('sol-email-row').style.display='none';
   } else {
-    // Admin: buscar email del empleado
     var empObj = empleados.find(function(e){return e.nombre===emp;});
     document.getElementById('sol-email-emp').value = empObj ? empObj.email : '';
     document.getElementById('sol-email-row').style.display='flex';
@@ -1062,7 +1208,6 @@ async function enviarSolicitud() {
   }
   cerrarModalSol();
   if (solIsEmp) {
-    // refrescar card en vista empleado
     refreshEmpCard(sol.emp, sol.fecha);
     setTimeout(function(){eswitch('solicitudes');},800);
   } else {
@@ -1184,6 +1329,7 @@ function exportEmp(emp){
   var dmap= emp==='_emp' ? empEditData : editData[emp];
   if(!dmap)return;
   var wb=XLSX.utils.book_new();
+  // Exportar en orden ascendente (más antiguo primero)
   var rows=Object.keys(dmap).sort().map(function(f){
     var calc=calcDia(dmap[f]||[]);
     return{'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};
