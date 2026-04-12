@@ -583,10 +583,9 @@ function empId(emp) { return emp.replace(/[^a-zA-Z0-9]/g,'_'); }
 // ══════════════════════════════════════════
 // FETCH
 // ══════════════════════════════════════════
-async function fetchSheet(name) {
-  var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID
-    + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(name.trim())
-    + '&_t=' + Date.now();
+var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID
+    + '/gviz/tq?tqx=out:json&tq=select+*&sheet=' + encodeURIComponent(name.trim())
+    + '&rand=' + Math.random().toString(36).slice(2);
   var ctrl = new AbortController();
   var timer = setTimeout(function(){ ctrl.abort(); }, 12000);
   var res;
