@@ -420,18 +420,29 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function empId(emp){return emp.replace(/[^a-zA-Z0-9]/g,'_');}
 
 // ══ FETCH — directo desde Apps Script, sin gviz, sin caché ══
+// ══ JSONP helper — igual que fichar.html, evita CORS y caché ══
+function apiGetJSONP(params, timeoutMs) {
+  timeoutMs = timeoutMs || 15000;
+  return new Promise(function(resolve, reject) {
+    var cbName = '_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    var script = document.createElement('script');
+    var timer = setTimeout(function(){ cleanup(); reject(new Error('Timeout')); }, timeoutMs);
+    function cleanup(){ clearTimeout(timer); delete window[cbName]; if(script.parentNode)script.parentNode.removeChild(script); }
+    window[cbName] = function(data){ cleanup(); resolve(data); };
+    params.callback = cbName;
+    var qs = Object.keys(params).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
+    script.src = SCRIPT_URL + '?' + qs;
+    script.onerror = function(){ cleanup(); reject(new Error('Error de red')); };
+    document.head.appendChild(script);
+  });
+}
+
 async function fetchSheet(name) {
   if (!SCRIPT_URL) throw new Error('Configura la URL del Apps Script primero');
-  var url = SCRIPT_URL + '?action=getFichajes&nombre=' + encodeURIComponent(name.trim()) + '&_=' + Date.now();
-  var ctrl = new AbortController();
-  var timer = setTimeout(function(){ ctrl.abort(); }, 15000);
-  var res;
-  try { res = await fetch(url, {signal: ctrl.signal}); }
-  catch(e) { clearTimeout(timer); throw new Error('Sin conexión: ' + name); }
-  clearTimeout(timer);
-  var json = await res.json();
-  // El Apps Script devuelve array de arrays: [[fecha,tipo,hora,d,e,f],...]
-  return { rows: json.map(function(r){ return { c: r.map(function(v){ return {v: String(v||'')}; }) }; }) };
+  var data = await apiGetJSONP({ action: 'getFichajes', nombre: name.trim() });
+  var rows = Array.isArray(data) ? data : (data.data || []);
+  // Convertir al formato interno: [[fecha,tipo,hora,...], ...]
+  return { rows: rows.map(function(r){ return { c: r.map(function(v){ return {v: String(v||'')}; }) }; }) };
 }
 
 async function callScript(payload) {
@@ -442,12 +453,11 @@ async function callScript(payload) {
   } catch(e) { return {ok:false, msg:e.toString()}; }
 }
 
-// ══ CARGA DE EMPLEADOS — desde Apps Script ══
+// ══ CARGA DE EMPLEADOS — via JSONP ══
 async function loadEmpleados() {
   if (!SCRIPT_URL) throw new Error('Sin URL');
-  var url = SCRIPT_URL + '?action=getEmpleados&_=' + Date.now();
-  var res = await fetch(url);
-  var rows = await res.json();
+  var data = await apiGetJSONP({ action: 'getEmpleados' });
+  var rows = Array.isArray(data) ? data : (data.data || []);
   var found = [];
   for (var i=0; i<rows.length; i++) {
     var r = rows[i];
@@ -557,7 +567,7 @@ function parsearTabla(table){
     var get=function(idx){return(c[idx]&&c[idx].v!=null)?String(c[idx].v).trim():'';};
     var fecha=parseFecha(get(0));
     var tipo=get(1).toUpperCase();
-    var hora=normHora(get(2));
+    var hora=get(2).substring(0,5);
     if(!fecha||(tipo!=='ENTRADA'&&tipo!=='SALIDA')||!hora)continue;
     out.push({fecha:fecha,tipo:tipo,hora:hora});
   }
