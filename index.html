@@ -585,7 +585,8 @@ function empId(emp) { return emp.replace(/[^a-zA-Z0-9]/g,'_'); }
 // ══════════════════════════════════════════
 async function fetchSheet(name) {
   var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID
-    + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(name.trim());
+    + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(name.trim())
+    + '&_t=' + Date.now();
   var ctrl = new AbortController();
   var timer = setTimeout(function(){ ctrl.abort(); }, 12000);
   var res;
