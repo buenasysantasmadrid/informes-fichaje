@@ -1062,15 +1062,41 @@ function minsToStr(m){if(m==null||m<0)return '—';return Math.floor(m/60)+'h '+
 function isoDisplay(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function dowName(iso){var p=iso.split('-').map(Number);return DIAS_TILDE[new Date(p[0],p[1]-1,p[2]).getDay()];}
 function calcDia(regs){
-  var sorted=regs.slice().sort(function(a,b){return(horaToMins(a.hora)||0)-(horaToMins(b.hora)||0);});
-  var ents=sorted.filter(function(r){return r.tipo==='ENTRADA';});
-  var sals=sorted.filter(function(r){return r.tipo==='SALIDA';});
-  var primera=ents.length?ents[0].hora:null;
-  var ultima=sals.length?sals[sals.length-1].hora:null;
-  var mins=null;
-  if(primera&&ultima){mins=(horaToMins(ultima)||0)-(horaToMins(primera)||0);if(mins<0)mins+=1440;}
-  var estado=!primera?'sin-entrada':!ultima?'sin-salida':'ok';
-  return{primera:primera,ultima:ultima,mins:mins,estado:estado};
+  // Mantener el orden original del sheet (no reordenar por hora)
+  // Emparejar ENTRADA→SALIDA secuencialmente
+  var NUEVO_DIA = 120; // 02:00 → fichajes de madrugada van al final
+  var sorted = regs.slice().sort(function(a,b){
+    var am = (horaToMins(a.hora)||0); var bm = (horaToMins(b.hora)||0);
+    var an = am < NUEVO_DIA ? am+1440 : am;
+    var bn = bm < NUEVO_DIA ? bm+1440 : bm;
+    return an - bn;
+  });
+  var primera = null, ultima = null, mins = 0, hayEntrada = false, haySalida = false;
+  var entradaAbierta = null;
+  var turnoIncompleto = false;
+  for(var i=0;i<sorted.length;i++){
+    var r = sorted[i];
+    if(r.tipo==='ENTRADA'){
+      if(!primera) primera = r.hora;
+      entradaAbierta = r.hora;
+      hayEntrada = true;
+    } else if(r.tipo==='SALIDA'){
+      haySalida = true;
+      ultima = r.hora;
+      if(entradaAbierta !== null){
+        var me = horaToMins(entradaAbierta)||0;
+        var ms = horaToMins(r.hora)||0;
+        if(me < NUEVO_DIA) me += 1440;
+        if(ms < NUEVO_DIA) ms += 1440;
+        var dur = ms - me;
+        if(dur > 0) mins += dur;
+        entradaAbierta = null;
+      }
+    }
+  }
+  if(entradaAbierta !== null) turnoIncompleto = true;
+  var estado = !hayEntrada ? 'sin-entrada' : turnoIncompleto ? 'sin-salida' : 'ok';
+  return{primera:primera, ultima:ultima, mins: estado==='ok' ? mins : null, estado:estado};
 }
 
 // ══════════════════════════════════════════
