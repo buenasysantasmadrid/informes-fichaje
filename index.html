@@ -152,6 +152,9 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .hora-btn .pencil{font-size:.6rem;opacity:0;transition:opacity .15s}
 .hora-btn:hover .pencil{opacity:1}
 .hora-btn.pending{background:var(--amber-soft);border-color:#f5e0a0;color:var(--amber)}
+/* ── Botón "Corregir día" ── */
+.btn-corregir-dia{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;font-size:.65rem;font-family:'DM Mono',monospace;background:var(--green3);border:1px solid var(--green4);border-radius:5px;color:var(--green);cursor:pointer;transition:all .15s;margin-top:.4rem}
+.btn-corregir-dia:hover{background:var(--green4);color:var(--green-acc)}
 .sol-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
 .sol-title{font-family:'Lora',serif;font-size:1.4rem;font-weight:400;color:var(--green-acc)}
 .sol-filters{display:flex;gap:6px;flex-wrap:wrap}
@@ -163,7 +166,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .sol-card.rechazada{border-left:3px solid var(--red);opacity:.6}
 .sol-card.pendiente{border-left:3px solid var(--amber)}
 .sol-emp{font-family:'Lora',serif;font-size:1rem;font-weight:400;color:var(--green-acc);margin-bottom:.2rem}
-.sol-detail{font-size:.7rem;color:var(--ink2);line-height:1.8}
+.sol-detail{font-size:.7rem;color:var(--ink2);line-height:1.9}
 .sol-detail span{color:var(--ink3)}
 .sol-fecha-req{font-size:.6rem;color:var(--ink3);margin-top:.35rem}
 .sol-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
@@ -182,17 +185,28 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .cfg-input-row input:focus{border-color:var(--green)}
 .cfg-input-row button{padding:8px 18px;background:var(--green);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer}
 .cfg-url-st{font-size:.61rem;margin-top:4px}
+/* ── Modal ── */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(28,43,30,.45);z-index:800;align-items:center;justify-content:center}
 .modal-ov.on{display:flex}
-.modal-box{background:#fff;border-radius:12px;padding:2rem;max-width:500px;width:92%;box-shadow:0 20px 60px rgba(28,43,30,.2)}
+.modal-box{background:#fff;border-radius:12px;padding:2rem;max-width:560px;width:95%;box-shadow:0 20px 60px rgba(28,43,30,.2);max-height:90vh;overflow-y:auto}
 .modal-title{font-family:'Lora',serif;font-size:1.15rem;color:var(--green-acc);margin-bottom:1.25rem}
 .modal-row{display:flex;flex-direction:column;gap:4px;margin-bottom:.9rem}
 .modal-row label{font-size:.62rem;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase}
 .modal-row input,.modal-row textarea,.modal-row select{padding:8px 10px;font-family:'DM Mono',monospace;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;transition:border-color .15s}
 .modal-row input:focus,.modal-row textarea:focus{border-color:var(--green)}
 .modal-row textarea{resize:vertical;min-height:70px}
-.hora-change{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
-.hora-arrow{color:var(--ink3);font-size:.8rem;text-align:center}
+/* Fila de cambio hora/fecha: viejo → nuevo */
+.change-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.change-arrow{color:var(--ink3);font-size:.85rem;text-align:center;font-weight:500}
+/* Separador visual entre secciones del modal */
+.modal-sep{border:none;border-top:1px dashed var(--border2);margin:.75rem 0}
+.modal-section-label{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:.6rem;display:block}
+/* Bloque unificado de una jornada */
+.jornada-block{background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;margin-bottom:.75rem}
+.jornada-block .jb-title{font-size:.65rem;font-weight:500;color:var(--ink2);margin-bottom:.6rem;display:flex;align-items:center;gap:6px}
+.jornada-block .jb-title span{display:inline-block;width:8px;height:8px;border-radius:50%}
+.jornada-block .jb-title .dot-in{background:var(--green)}
+.jornada-block .jb-title .dot-out{background:var(--blue)}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
 .btn-cancel{padding:8px 16px;font-size:.7rem;font-family:'DM Mono',monospace;background:#fff;border:1px solid var(--border2);border-radius:6px;cursor:pointer;color:var(--ink2)}
 .btn-submit{padding:8px 18px;font-size:.7rem;font-family:'DM Mono',monospace;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer}
@@ -206,6 +220,9 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .toast.ok{background:var(--green)} .toast.err{background:var(--red)}
 .role-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.55rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500;margin-left:6px}
 .role-admin{background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
+/* Flecha de cambio en solicitudes */
+.cambio-arrow{color:var(--ink3);margin:0 4px}
+.cambio-nuevo{color:var(--green-acc);font-weight:500}
 @media(max-width:720px){
   .shell{grid-template-columns:1fr}
   .side{border-right:none;border-bottom:1px solid var(--border)}
@@ -214,6 +231,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
   .sol-card{grid-template-columns:1fr}
   .summary-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
   .hdr-emp-info{display:none !important}
+  .change-row{grid-template-columns:1fr auto 1fr}
 }
 </style>
 </head>
@@ -367,29 +385,70 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL DE SOLICITUD — unificado (simple + día completo)
+═══════════════════════════════════════════════════════════ -->
 <div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
   <div class="modal-box">
-    <div class="modal-title">Solicitud de cambio</div>
+    <div class="modal-title" id="modal-sol-title">Solicitud de cambio</div>
+
+    <!-- Empleado + email (solo admin) -->
     <div class="modal-row"><label>Empleado</label><input type="text" id="sol-emp" readonly style="background:var(--cream3)"></div>
-    <div class="modal-row"><label>Tipo de fichaje</label><input type="text" id="sol-detalle" readonly style="background:var(--cream3)"></div>
+    <div class="modal-row" id="sol-email-row"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
+
+    <!-- FECHA (común) -->
     <div class="modal-row">
       <label>Fecha <span style="color:var(--ink3)">(actual → nueva, opcional)</span></label>
-      <div class="hora-change">
+      <div class="change-row">
         <input type="text" id="sol-fecha-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
-        <div class="hora-arrow">→</div>
+        <div class="change-arrow">→</div>
         <input type="date" id="sol-fecha-nueva">
       </div>
     </div>
-    <div class="modal-row">
-      <label>Hora <span style="color:var(--ink3)">(actual → nueva, opcional)</span></label>
-      <div class="hora-change">
-        <input type="text" id="sol-hora-actual" readonly style="background:var(--cream3);text-align:center">
-        <div class="hora-arrow">→</div>
-        <input type="time" id="sol-hora-nueva">
+
+    <hr class="modal-sep">
+
+    <!-- Modo SIMPLE (una sola hora) -->
+    <div id="modal-modo-simple">
+      <span class="modal-section-label">Corrección de fichaje</span>
+      <div class="modal-row">
+        <label>Tipo · Hora <span style="color:var(--ink3)">(actual → nueva)</span></label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="text" id="sol-detalle" readonly style="background:var(--cream3);width:80px;text-align:center;font-size:.7rem">
+          <div class="change-row" style="flex:1;min-width:160px">
+            <input type="text" id="sol-hora-actual" readonly style="background:var(--cream3);text-align:center">
+            <div class="change-arrow">→</div>
+            <input type="time" id="sol-hora-nueva">
+          </div>
+        </div>
       </div>
     </div>
-    <div class="modal-row" id="sol-email-row"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
+
+    <!-- Modo DÍA COMPLETO (entrada + salida) -->
+    <div id="modal-modo-dia" style="display:none">
+      <span class="modal-section-label">Corrección de jornada completa</span>
+
+      <div class="jornada-block">
+        <div class="jb-title"><span class="dot-in"></span> Entrada</div>
+        <div class="change-row">
+          <input type="text" id="sol-entrada-actual" readonly style="background:var(--cream3);text-align:center">
+          <div class="change-arrow">→</div>
+          <input type="time" id="sol-entrada-nueva">
+        </div>
+      </div>
+
+      <div class="jornada-block">
+        <div class="jb-title"><span class="dot-out"></span> Salida</div>
+        <div class="change-row">
+          <input type="text" id="sol-salida-actual" readonly style="background:var(--cream3);text-align:center">
+          <div class="change-arrow">→</div>
+          <input type="time" id="sol-salida-nueva">
+        </div>
+      </div>
+    </div>
+
     <div class="modal-row"><label>Motivo <span style="color:var(--ink3)">(opcional)</span></label><textarea id="sol-motivo" placeholder="Motivo del cambio..."></textarea></div>
+
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cerrarModalSol()">Cancelar</button>
       <button class="btn-submit" onclick="enviarSolicitud()">Enviar solicitud</button>
@@ -406,12 +465,16 @@ const DIAS_TILDE = ['domingo','lunes','martes','miércoles','jueves','viernes','
 const ADMIN_MAIL = 'luciana@buenasysantas.es';
 const ADMIN_PIN  = '2136';
 
-let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec';
+let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec';
 let ADMIN_EMAIL = localStorage.getItem('fichajes_admin_email') || ADMIN_MAIL;
 
 let session = null, empleados = [], editData = {}, solicitudes = [], esolicitudes = [];
 let solFiltro = 'todas', esolFiltro = 'todas';
 let currentSel, currentDesde, currentHasta, empEditData = {}, solActual = null;
+
+// solActual puede ser:
+//   { modo:'simple',  emp, fecha, tipo, horaActual, isEmp }
+//   { modo:'dia',     emp, fecha, entrada:{hora}, salida:{hora}, isEmp }
 
 // ── UI helpers ──
 function toast(msg,cls,dur){dur=dur||2800;var t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(cls?' '+cls:'');clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast';},dur);}
@@ -468,7 +531,6 @@ async function loadEmpleados() {
   return found;
 }
 
-// ── CARGA DE SOLICITUDES DESDE SHEET ──
 async function loadSolicitudes(empNombre) {
   if (!SCRIPT_URL) return [];
   try {
@@ -603,18 +665,15 @@ function parsearTabla(table){
   return out;
 }
 
-// FIX: parseFecha ahora también maneja strings largos tipo "Mon Apr 13 2026 09:00:00 GMT+0200"
 function parseFecha(s){
   s=String(s||'').trim();
   var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
   m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return s.slice(0,10);
   m=s.match(/^Date\((\d+),(\d+),(\d+)\)$/);if(m)return m[1]+'-'+('0'+(+m[2]+1)).slice(-2)+'-'+('0'+m[3]).slice(-2);
-  // FIX: string largo de Date.toString()
   if(s.length>15){var d=new Date(s);if(!isNaN(d.getTime())){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}}
   return null;
 }
 
-// FIX: helper que garantiza ISO antes de llamar a isoDisplay/dowName
 function safeISO(s){
   var p=parseFecha(String(s||'').trim());
   return p||String(s||'').slice(0,10);
@@ -749,12 +808,23 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
   if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
   if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
+
+  // Filas individuales
   var filas=regs.map(function(r){
     var tcls=r.tipo==='ENTRADA'?'t-in':'t-out';
     var hasPending=esolicitudes.some(function(s){return s.emp===emp&&safeISO(s.fecha)===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
     return '<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',\''+r.tipo+'\',\''+r.hora+'\',true)">'+r.hora+' <span class="pencil">✏</span></button></td></tr>';
   }).join('');
-  var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar corrección)</span></th></tr></thead><tbody>'+filas+'</tbody></table>':'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
+
+  // Botón "Corregir día completo" si hay entrada Y salida
+  var entrada=regs.find(function(r){return r.tipo==='ENTRADA';});
+  var salida=regs.find(function(r){return r.tipo==='SALIDA';});
+  var btnDia='';
+  if(entrada&&salida){
+    btnDia='<button class="btn-corregir-dia" onclick="abrirModalDia(\''+esc(emp)+'\',\''+fecha+'\',\''+entrada.hora+'\',\''+salida.hora+'\',true)">✏ Corregir entrada y salida</button>';
+  }
+
+  var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar corrección)</span></th></tr></thead><tbody>'+filas+'</tbody></table>'+btnDia:'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
   var cardId='edc-'+empId(emp)+'-'+fecha;
   return '<div class="day-card '+cls+'" id="'+cardId+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
@@ -774,26 +844,12 @@ function eswitch(tab){
 function updateEbadge(){var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('ebadge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
 function efiltrarSol(f,btn){esolFiltro=f;document.querySelectorAll('#epage-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');erendSolicitudes();}
 
+// ── RENDER SOLICITUDES EMPLEADO ──
 function erendSolicitudes(){
   var lista=esolicitudes.filter(function(s){return esolFiltro==='todas'||s.estado===esolFiltro;});
   var el=document.getElementById('esol-list');
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>'+(esolFiltro==='todas'?'Pulsa cualquier hora en Mis fichajes para solicitar una corrección.':'No hay solicitudes con este filtro.')+'</p></div>';return;}
-  el.innerHTML=lista.slice().reverse().map(function(s){
-    var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
-    var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
-    // FIX: usar safeISO para normalizar la fecha antes de formatear
-    var fechaISO=safeISO(s.fecha);
-    var fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
-    var hayFechaNueva=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    return '<div class="sol-card '+s.estado+'"><div class="sol-info"><div class="sol-detail">'
-      +'<span>Fecha:</span> '+isoDisplay(fechaISO)+' · '+dowName(fechaISO)+'<br>'
-      +'<span>Tipo:</span> '+s.tipo+'<br>'
-      +(hayFechaNueva?'<span>Fecha nueva:</span> <strong>'+isoDisplay(fechaNuevaISO)+'</strong><br>':'')
-      +'<span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br>'
-      +'<span>Motivo:</span> '+esc(s.motivo)
-      +'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div>'
-      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span></div></div>';
-  }).join('');
+  el.innerHTML=lista.slice().reverse().map(function(s){return renderSolCard(s,false);}).join('');
 }
 
 // ── ADMIN: RENDER INFORME ──
@@ -824,6 +880,7 @@ function buildSummaryGridAdmin(fechas,dmap,emp){
   return'<div class="summary-grid">'+cards+'</div>';
 }
 function jumpToDateAdmin(emp){var inputEl=document.getElementById('adm-date-jump-'+empId(emp));if(!inputEl)return;var fecha=inputEl.value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,emp);}
+
 function renderCard(emp,fecha,regs){
   var calc=calcDia(regs),cls=calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
   var chips='';
@@ -832,62 +889,124 @@ function renderCard(emp,fecha,regs){
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
   if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
   if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
+
   var filas=regs.map(function(r){
     var tcls=r.tipo==='ENTRADA'?'t-in':'t-out';
     var hasPending=solicitudes.some(function(s){return s.emp===emp&&safeISO(s.fecha)===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
     return'<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',\''+r.tipo+'\',\''+r.hora+'\',false)">'+r.hora+' <span class="pencil">✏</span></button>'+(r.modificado?' <span style="font-size:.62rem;color:var(--amber)">✏</span>':'')+'</td></tr>';
   }).join('');
-  var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar cambio)</span></th></tr></thead><tbody>'+filas+'</tbody></table>':'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
+
+  // Botón "Corregir día completo"
+  var entrada=regs.find(function(r){return r.tipo==='ENTRADA';});
+  var salida=regs.find(function(r){return r.tipo==='SALIDA';});
+  var btnDia='';
+  if(entrada&&salida){
+    btnDia='<button class="btn-corregir-dia" onclick="abrirModalDia(\''+esc(emp)+'\',\''+fecha+'\',\''+entrada.hora+'\',\''+salida.hora+'\',false)">✏ Corregir entrada y salida</button>';
+  }
+
+  var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar cambio)</span></th></tr></thead><tbody>'+filas+'</tbody></table>'+btnDia:'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
   return'<div class="day-card '+cls+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
 function toggleCard(card){card.classList.toggle('open');}
 
-// ── MODAL SOLICITUD ──
-var solIsEmp=false;
-function abrirModalSol(emp,fecha,tipo,horaActual,isEmp){
-  solIsEmp=!!isEmp;
-  // fecha aquí ya es ISO yyyy-mm-dd (viene de los keys de dmap)
-  solActual={emp:emp,fecha:fecha,tipo:tipo,horaActual:horaActual};
-  document.getElementById('sol-emp').value=emp;
-  document.getElementById('sol-detalle').value=tipo;
-  // FIX: mostrar fecha como dd/mm/yyyy (legible), no como string ISO crudo
-  document.getElementById('sol-fecha-actual').value=isoDisplay(fecha);
-  document.getElementById('sol-fecha-nueva').value=fecha;
-  document.getElementById('sol-hora-actual').value=horaActual;
-  document.getElementById('sol-hora-nueva').value=horaActual.slice(0,5);
-  document.getElementById('sol-motivo').value='';
-  if(solIsEmp){document.getElementById('sol-email-emp').value=session.email;document.getElementById('sol-email-row').style.display='none';}
-  else{var empObj=empleados.find(function(e){return e.nombre===emp;});document.getElementById('sol-email-emp').value=empObj?empObj.email:'';document.getElementById('sol-email-row').style.display='flex';}
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL SOLICITUD — helpers de apertura
+// ══════════════════════════════════════════════════════════════════════════════
+
+function _prepModalBase(emp, fecha, isEmp) {
+  document.getElementById('sol-emp').value = emp;
+  document.getElementById('sol-fecha-actual').value = isoDisplay(fecha);
+  document.getElementById('sol-fecha-nueva').value  = fecha;
+  document.getElementById('sol-motivo').value = '';
+  if(isEmp){
+    document.getElementById('sol-email-emp').value = session.email;
+    document.getElementById('sol-email-row').style.display = 'none';
+  } else {
+    var empObj = empleados.find(function(e){ return e.nombre===emp; });
+    document.getElementById('sol-email-emp').value = empObj ? empObj.email : '';
+    document.getElementById('sol-email-row').style.display = 'flex';
+  }
+}
+
+// Abre el modal en modo SIMPLE (un solo fichaje)
+function abrirModalSol(emp, fecha, tipo, horaActual, isEmp) {
+  solActual = { modo:'simple', emp:emp, fecha:fecha, tipo:tipo, horaActual:horaActual, isEmp:!!isEmp };
+  _prepModalBase(emp, fecha, isEmp);
+  document.getElementById('modal-sol-title').textContent = 'Solicitud de cambio · ' + tipo.charAt(0) + tipo.slice(1).toLowerCase();
+  document.getElementById('sol-detalle').value = tipo;
+  document.getElementById('sol-hora-actual').value = horaActual;
+  document.getElementById('sol-hora-nueva').value  = horaActual.slice(0,5);
+  document.getElementById('modal-modo-simple').style.display = 'block';
+  document.getElementById('modal-modo-dia').style.display    = 'none';
   document.getElementById('modal-sol').classList.add('on');
 }
+
+// Abre el modal en modo DÍA COMPLETO (entrada + salida)
+function abrirModalDia(emp, fecha, horaEntrada, horaSalida, isEmp) {
+  solActual = { modo:'dia', emp:emp, fecha:fecha, isEmp:!!isEmp,
+                entrada:{ horaActual:horaEntrada }, salida:{ horaActual:horaSalida } };
+  _prepModalBase(emp, fecha, isEmp);
+  document.getElementById('modal-sol-title').textContent = 'Solicitud de cambio · Jornada completa';
+  document.getElementById('sol-entrada-actual').value = horaEntrada;
+  document.getElementById('sol-entrada-nueva').value  = horaEntrada.slice(0,5);
+  document.getElementById('sol-salida-actual').value  = horaSalida;
+  document.getElementById('sol-salida-nueva').value   = horaSalida.slice(0,5);
+  document.getElementById('modal-modo-simple').style.display = 'none';
+  document.getElementById('modal-modo-dia').style.display    = 'block';
+  document.getElementById('modal-sol').classList.add('on');
+}
+
 function cerrarModalSol(){document.getElementById('modal-sol').classList.remove('on');solActual=null;}
 
+// ── ENVIAR SOLICITUD ──
 async function enviarSolicitud(){
-  if(!solActual)return;
-  var horaNueva=document.getElementById('sol-hora-nueva').value;
-  var fechaNueva=document.getElementById('sol-fecha-nueva').value;
-  var motivo=document.getElementById('sol-motivo').value.trim();
-  var emailEmp=document.getElementById('sol-email-emp').value.trim();
-  horaNueva=horaNueva?normHora(horaNueva):solActual.horaActual;
-  fechaNueva=fechaNueva?fechaNueva:solActual.fecha;
-  if(horaNueva===normHora(solActual.horaActual)&&fechaNueva===solActual.fecha){toast('No hay ningún cambio respecto al original','err');return;}
-  var sol={
-    id:'SOL-'+Date.now(),
-    emp:solActual.emp,
-    fecha:solActual.fecha,         // ISO yyyy-mm-dd
-    fechaNueva:fechaNueva,         // ISO yyyy-mm-dd
-    tipo:solActual.tipo,
-    horaActual:normHora(solActual.horaActual),
-    horaNueva:horaNueva,
-    motivo:motivo||'—',
-    emailEmp:solIsEmp?session.email:emailEmp,
-    estado:'pendiente',
-    fechaReq:new Date().toLocaleString('es-ES')
+  if(!solActual) return;
+  var motivo    = document.getElementById('sol-motivo').value.trim();
+  var emailEmp  = document.getElementById('sol-email-emp').value.trim();
+  var fechaNueva = document.getElementById('sol-fecha-nueva').value || solActual.fecha;
+
+  var payload = {
+    action:     'guardarSolicitud',
+    emp:        solActual.emp,
+    fecha:      solActual.fecha,
+    fechaNueva: fechaNueva,
+    motivo:     motivo || '—',
+    emailEmp:   solActual.isEmp ? session.email : emailEmp,
+    estado:     'pendiente',
+    fechaReq:   new Date().toLocaleString('es-ES')
   };
+
+  if (solActual.modo === 'simple') {
+    var horaNueva = normHora(document.getElementById('sol-hora-nueva').value) || solActual.horaActual;
+    if(horaNueva === normHora(solActual.horaActual) && fechaNueva === solActual.fecha){
+      toast('No hay ningún cambio respecto al original','err'); return;
+    }
+    payload.tipo       = solActual.tipo;
+    payload.horaActual = normHora(solActual.horaActual);
+    payload.horaNueva  = horaNueva;
+  } else {
+    // modo dia
+    var entradaNueva = normHora(document.getElementById('sol-entrada-nueva').value) || solActual.entrada.horaActual;
+    var salidaNueva  = normHora(document.getElementById('sol-salida-nueva').value)  || solActual.salida.horaActual;
+    if(entradaNueva === normHora(solActual.entrada.horaActual)
+    && salidaNueva  === normHora(solActual.salida.horaActual)
+    && fechaNueva   === solActual.fecha){
+      toast('No hay ningún cambio respecto al original','err'); return;
+    }
+    payload.tipo              = 'DÍA';
+    payload.horaActual        = normHora(solActual.entrada.horaActual) + ' / ' + normHora(solActual.salida.horaActual);
+    payload.horaNueva         = entradaNueva + ' / ' + salidaNueva;
+    payload.horaActualEntrada = normHora(solActual.entrada.horaActual);
+    payload.horaNuevaEntrada  = entradaNueva;
+    payload.horaActualSalida  = normHora(solActual.salida.horaActual);
+    payload.horaNuevaSalida   = salidaNueva;
+  }
+
   cerrarModalSol();
   setLoader(true,'Enviando solicitud...');
-  await callScript(Object.assign({action:'guardarSolicitud'},sol));
-  if(solIsEmp){
+  await callScript(payload);
+
+  if(solActual && solActual.isEmp || (payload && payload.emailEmp === session.email)){
     esolicitudes = await loadSolicitudes(session.nombre);
     updateEbadge();
     setLoader(false);
@@ -896,13 +1015,60 @@ async function enviarSolicitud(){
   } else {
     solicitudes = await loadSolicitudes();
     updateBadge();
-    if(editData[sol.emp]&&editData[sol.emp][sol.fecha]){
-      refreshCard(sol.emp,sol.fecha);
-    }
     setLoader(false);
     toast('Solicitud enviada ✓','ok');
     setTimeout(function(){switchTab('solicitudes');},600);
   }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER TARJETAS DE SOLICITUD (compartido admin + empleado)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function renderSolCard(s, isAdmin) {
+  var stCls   = {'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado] || 'ss-pendiente';
+  var stLabel = {'pendiente':'Pendiente','aprobada':isAdmin?'Aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado] || s.estado;
+
+  var fechaISO     = safeISO(s.fecha);
+  var fechaNuevaISO = safeISO(s.fechaNueva || s.fecha);
+  var hayFechaNueva = fechaNuevaISO && fechaNuevaISO !== fechaISO;
+
+  // Construcción del bloque de cambios
+  var cambiosHtml = '';
+  if (s.tipo === 'DÍA' && s.horaActualEntrada && s.horaActualSalida) {
+    // Solicitud de jornada completa
+    cambiosHtml = '<span>Entrada:</span> <strong>'+esc(s.horaActualEntrada)+'</strong>'
+      +' <span class="cambio-arrow">→</span> <span class="cambio-nuevo">'+esc(s.horaNuevaEntrada)+'</span><br>'
+      +'<span>Salida:</span> <strong>'+esc(s.horaActualSalida)+'</strong>'
+      +' <span class="cambio-arrow">→</span> <span class="cambio-nuevo">'+esc(s.horaNuevaSalida)+'</span>';
+  } else {
+    // Solicitud simple
+    cambiosHtml = '<span>Hora:</span> <strong>'+esc(s.horaActual)+'</strong>'
+      +' <span class="cambio-arrow">→</span> <span class="cambio-nuevo">'+esc(s.horaNueva)+'</span>';
+  }
+
+  var acciones = (isAdmin && s.estado==='pendiente')
+    ? '<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button>'
+      +'<button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>'
+    : '';
+
+  return '<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
+    +'<div class="sol-info">'
+    +(isAdmin ? '<div class="sol-emp">'+esc(s.emp)+'</div>' : '')
+    +'<div class="sol-detail">'
+    // Fecha: siempre mostramos vieja → nueva si cambia
+    +'<span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'
+    +(hayFechaNueva ? ' <span class="cambio-arrow">→</span> <span class="cambio-nuevo">'+isoDisplay(fechaNuevaISO)+'</span>' : '')
+    +' · '+dowName(fechaISO)+'<br>'
+    +'<span>Tipo:</span> '+esc(s.tipo)+'<br>'
+    + cambiosHtml
+    +(s.motivo && s.motivo!=='—' ? '<br><span>Motivo:</span> '+esc(s.motivo) : '')
+    +(isAdmin && s.emailEmp ? '<br><span>Email:</span> '+esc(s.emailEmp) : '')
+    +'</div>'
+    +'<div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div>'
+    +'</div>'
+    +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div>'
+    +'</div>';
 }
 
 // ── ADMIN: SOLICITUDES ──
@@ -921,76 +1087,69 @@ function renderSolicitudes(){
   var lista=solicitudes.filter(function(s){return solFiltro==='todas'||s.estado===solFiltro;});
   var el=document.getElementById('sol-list');
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>'+(solFiltro==='todas'?'Aquí aparecen todas las solicitudes enviadas por los empleados.':'No hay solicitudes con este filtro.')+'</p></div>';return;}
-  el.innerHTML=lista.slice().reverse().map(function(s){
-    var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
-    var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada','rechazada':'Rechazada'}[s.estado]||s.estado;
-    var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
-    // FIX: usar safeISO para normalizar la fecha antes de formatear
-    var fechaISO=safeISO(s.fecha);
-    var fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
-    var hayFechaNueva=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
-      +'<div class="sol-info">'
-      +'<div class="sol-emp">'+esc(s.emp)+'</div>'
-      +'<div class="sol-detail">'
-      +'<span>Fecha:</span> '+isoDisplay(fechaISO)+' · '+dowName(fechaISO)+'<br>'
-      +'<span>Tipo:</span> '+s.tipo+'<br>'
-      +(hayFechaNueva?'<span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong> → <strong>'+isoDisplay(fechaNuevaISO)+'</strong><br>':'')
-      +'<span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br>'
-      +'<span>Motivo:</span> '+esc(s.motivo)
-      +(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')
-      +'</div>'
-      +'<div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div>'
-      +'</div>'
-      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div>'
-      +'</div>';
-  }).join('');
+  el.innerHTML=lista.slice().reverse().map(function(s){return renderSolCard(s,true);}).join('');
 }
 
 async function aprobar(id){
   var sol=solicitudes.find(function(s){return s.id===id;});if(!sol)return;
   setLoader(true,'Aprobando y actualizando sheet...');
   await callScript({
-    action:'aprobarSolicitud',
-    id:sol.id,
-    emp:sol.emp,
-    fecha:safeISO(sol.fecha),           // FIX: garantizar ISO antes de enviar
-    fechaNueva:safeISO(sol.fechaNueva||sol.fecha),
-    tipo:sol.tipo,
-    horaActual:sol.horaActual,
-    horaNueva:sol.horaNueva,
-    emailEmp:sol.emailEmp||''
+    action:           'aprobarSolicitud',
+    id:               sol.id,
+    emp:              sol.emp,
+    fecha:            safeISO(sol.fecha),
+    fechaNueva:       safeISO(sol.fechaNueva || sol.fecha),
+    tipo:             sol.tipo,
+    horaActual:       sol.horaActual,
+    horaNueva:        sol.horaNueva,
+    horaActualEntrada: sol.horaActualEntrada || '',
+    horaNuevaEntrada:  sol.horaNuevaEntrada  || '',
+    horaActualSalida:  sol.horaActualSalida  || '',
+    horaNuevaSalida:   sol.horaNuevaSalida   || '',
+    emailEmp:         sol.emailEmp || ''
   });
   await new Promise(function(r){setTimeout(r,1500);});
   solicitudes = await loadSolicitudes();
   updateBadge();
   renderSolicitudes();
-  // Actualizar la vista del informe si el empleado está cargado
+
+  // Actualizar vista informe si el empleado está cargado
   if(editData[sol.emp]){
-    var fechaOrig=safeISO(sol.fecha);
-    var fechaNueva=safeISO(sol.fechaNueva||sol.fecha);
-    var regs=editData[sol.emp][fechaOrig];
-    if(regs){
-      for(var i=0;i<regs.length;i++){
-        if(regs[i].tipo===sol.tipo&&normHora(regs[i].hora)===normHora(sol.horaActual)){
-          if(fechaNueva!==fechaOrig){
-            regs.splice(i,1);
-            if(!editData[sol.emp][fechaNueva])editData[sol.emp][fechaNueva]=[];
-            editData[sol.emp][fechaNueva].push({tipo:sol.tipo,hora:sol.horaNueva,modificado:true});
-            refreshCard(sol.emp,fechaOrig);
-            refreshCard(sol.emp,fechaNueva);
-          }else{
-            regs[i].hora=sol.horaNueva;
-            regs[i].modificado=true;
-            refreshCard(sol.emp,fechaOrig);
-          }
-          break;
-        }
-      }
+    var fechaOrig  = safeISO(sol.fecha);
+    var fechaNueva = safeISO(sol.fechaNueva || sol.fecha);
+
+    if(sol.tipo === 'DÍA') {
+      // Jornada completa: actualizar entrada y salida
+      _updateLocalReg(sol.emp, fechaOrig, fechaNueva, 'ENTRADA', sol.horaActualEntrada, sol.horaNuevaEntrada);
+      _updateLocalReg(sol.emp, fechaOrig, fechaNueva, 'SALIDA',  sol.horaActualSalida,  sol.horaNuevaSalida);
+      refreshCard(sol.emp, fechaOrig);
+      if(fechaNueva !== fechaOrig) refreshCard(sol.emp, fechaNueva);
+    } else {
+      _updateLocalReg(sol.emp, fechaOrig, fechaNueva, sol.tipo, sol.horaActual, sol.horaNueva);
+      refreshCard(sol.emp, fechaOrig);
+      if(fechaNueva !== fechaOrig) refreshCard(sol.emp, fechaNueva);
     }
   }
   setLoader(false);
   toast('Aprobado y guardado en el sheet ✓','ok');
+}
+
+function _updateLocalReg(emp, fechaOrig, fechaNueva, tipo, horaActual, horaNueva) {
+  var regs = editData[emp] && editData[emp][fechaOrig];
+  if(!regs) return;
+  for(var i=0;i<regs.length;i++){
+    if(regs[i].tipo===tipo && normHora(regs[i].hora)===normHora(horaActual)){
+      if(fechaNueva !== fechaOrig){
+        regs.splice(i,1);
+        if(!editData[emp][fechaNueva]) editData[emp][fechaNueva]=[];
+        editData[emp][fechaNueva].push({tipo:tipo, hora:horaNueva, modificado:true});
+      } else {
+        regs[i].hora = horaNueva;
+        regs[i].modificado = true;
+      }
+      break;
+    }
+  }
 }
 
 async function rechazar(id){
@@ -1013,17 +1172,6 @@ function refreshCard(emp,fecha){
   var regs=(editData[emp]&&editData[emp][fecha])||[];
   var tmp=document.createElement('div');
   tmp.innerHTML=renderCard(emp,fecha,regs);
-  var nc=tmp.firstElementChild;
-  if(wasOpen)nc.classList.add('open');
-  card.replaceWith(nc);
-}
-function refreshEmpCard(emp,fecha){
-  var id='edc-'+empId(emp)+'-'+fecha;
-  var card=document.getElementById(id);if(!card)return;
-  var wasOpen=card.classList.contains('open');
-  var regs=(empEditData[fecha])||[];
-  var tmp=document.createElement('div');
-  tmp.innerHTML=renderEmpCard(emp,fecha,regs);
   var nc=tmp.firstElementChild;
   if(wasOpen)nc.classList.add('open');
   card.replaceWith(nc);
