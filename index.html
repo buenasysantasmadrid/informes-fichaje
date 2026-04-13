@@ -372,7 +372,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 </div>
 </div>
 
-<!-- MODAL SOLICITUD: entrada y salida con fechas independientes -->
+<!-- MODAL SOLICITUD -->
 <div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
   <div class="modal-box">
     <div class="modal-title">Solicitud de cambio</div>
@@ -597,7 +597,6 @@ async function initEmpleado(){
   esolicitudes = await loadSolicitudes(session.nombre);
   updateEbadge();
   erendSolicitudes();
-  // Cargar fichajes automáticamente al entrar
   await empGenerar();
 }
 
@@ -737,7 +736,6 @@ function renderEmpReport(){
   var pills='<div class="pills"><div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div><div class="pill">Días <strong>'+fechas.length+'</strong></div>'+(sinSal?'<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>':'')+(sinEnt?'<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>':'')+'</div>';
   var summaryCards=buildSummaryGrid(fechas,dmap,'_emp');
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump"><button class="btn-jump" onclick="jumpToDate(\'_emp\')">Ir</button></div>';
-  // Sin botón export para empleados
   var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
   rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+pills+summaryCards+dateSearch+'<div class="days" id="emp-days-list">'+cards+'</div></div>';
 }
@@ -770,6 +768,7 @@ function jumpToDate(empKey){
   scrollToDay(fecha,empKey);
 }
 
+// ── BUG FIX 2: renderEmpCard recibe tipo y hora del registro específico ──
 function renderEmpCard(emp,fecha,regs){
   var calc=calcDia(regs),cls=calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
   var chips='';
@@ -781,7 +780,8 @@ function renderEmpCard(emp,fecha,regs){
   var filas=regs.map(function(r){
     var tcls=r.tipo==='ENTRADA'?'t-in':'t-out';
     var hasPending=esolicitudes.some(function(s){return s.emp===emp&&safeISO(s.fecha)===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
-    return '<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',true)">'+r.hora+' <span class="pencil">✏</span></button></td></tr>';
+    // FIX: pasa r.tipo y r.hora para que el modal sepa qué registro específico se tocó
+    return '<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',true,\''+r.tipo+'\',\''+r.hora+'\')">'+r.hora+' <span class="pencil">✏</span></button></td></tr>';
   }).join('');
   var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar corrección)</span></th></tr></thead><tbody>'+filas+'</tbody></table>':'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
   var cardId='edc-'+empId(emp)+'-'+fecha;
@@ -851,6 +851,8 @@ function buildSummaryGridAdmin(fechas,dmap,emp){
   return'<div class="summary-grid">'+cards+'</div>';
 }
 function jumpToDateAdmin(emp){var inputEl=document.getElementById('adm-date-jump-'+empId(emp));if(!inputEl)return;var fecha=inputEl.value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,emp);}
+
+// ── BUG FIX 2: renderCard recibe tipo y hora del registro específico ──
 function renderCard(emp,fecha,regs){
   var calc=calcDia(regs),cls=calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
   var chips='';
@@ -859,12 +861,11 @@ function renderCard(emp,fecha,regs){
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
   if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
   if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
-  // Detectar si hay pendiente para cualquier tipo del día
-  var hayPendiente=regs.some(function(r){return solicitudes.some(function(s){return s.emp===emp&&safeISO(s.fecha)===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});});
   var filas=regs.map(function(r){
     var tcls=r.tipo==='ENTRADA'?'t-in':'t-out';
     var hasPending=solicitudes.some(function(s){return s.emp===emp&&safeISO(s.fecha)===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
-    return'<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',false)">'+r.hora+' <span class="pencil">✏</span></button>'+(r.modificado?' <span style="font-size:.62rem;color:var(--amber)">✏</span>':'')+'</td></tr>';
+    // FIX: pasa r.tipo y r.hora para que el modal sepa qué registro específico se tocó
+    return'<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',false,\''+r.tipo+'\',\''+r.hora+'\')">'+r.hora+' <span class="pencil">✏</span></button>'+(r.modificado?' <span style="font-size:.62rem;color:var(--amber)">✏</span>':'')+'</td></tr>';
   }).join('');
   var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar cambio)</span></th></tr></thead><tbody>'+filas+'</tbody></table>':'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
   return'<div class="day-card '+cls+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
@@ -872,32 +873,23 @@ function renderCard(emp,fecha,regs){
 function toggleCard(card){card.classList.toggle('open');}
 
 // ── SEPARADORES DE SEMANA ──
-// Devuelve el número ISO de semana (lunes=inicio)
 function isoWeek(iso){
   var p=iso.split('-').map(Number);
   var d=new Date(p[0],p[1]-1,p[2]);
-  var day=d.getDay()||7; // 1=lun..7=dom
+  var day=d.getDay()||7;
   d.setDate(d.getDate()+4-day);
   var yearStart=new Date(d.getFullYear(),0,1);
   return Math.ceil(((d-yearStart)/86400000+1)/7)+'_'+d.getFullYear();
 }
 
-// Construye la lista de tarjetas con separadores de semana entre semanas
-// fechas: array ordenado desc (más reciente primero)
-// dmap: mapa fecha→regs
-// isEmp: true si es vista empleado
 function buildCardsConSemana(fechas, dmap, emp, isEmp){
   var html='';
   var semActual=null;
   var semMins=0;
-  // Procesamos de más reciente a más antiguo (fechas ya está desc)
   for(var i=0;i<fechas.length;i++){
     var f=fechas[i];
     var semana=isoWeek(f);
-    // Detectar cambio de semana: cuando llegamos a una fecha que pertenece a semana anterior
-    // Como vamos desc, la semana cambia cuando semana < semActual
     if(semActual!==null && semana!==semActual){
-      // Insertar separador con total de la semana anterior (semActual)
       html+='<div class="week-sep"><span class="week-lbl">Semana anterior · '+minsToStr(semMins)+'</span></div>';
       semMins=0;
     }
@@ -910,42 +902,52 @@ function buildCardsConSemana(fechas, dmap, emp, isEmp){
       html+=renderCard(emp,f,dmap[f]||[]);
     }
   }
-  // Separador al final (semana más antigua)
   if(semActual!==null){
     html+='<div class="week-sep"><span class="week-lbl">Semana · '+minsToStr(semMins)+'</span></div>';
   }
   return html;
 }
 
-// ── MODAL SOLICITUD ──
+// ── BUG FIX 1+2: abrirModalSol recibe el tipo y hora del fichaje pulsado ──
 var solIsEmp=false;
-function abrirModalSol(emp, fecha, isEmp) {
+function abrirModalSol(emp, fecha, isEmp, tipoTocado, horaTocada) {
   solIsEmp = !!isEmp;
   var dmap = isEmp ? empEditData : (editData[emp] || {});
   var regs = (dmap[fecha] || []).slice();
 
-  // Buscar entrada y salida
-  var entrada = regs.find(function(r){ return r.tipo === 'ENTRADA'; });
-  var salida  = regs.find(function(r){ return r.tipo === 'SALIDA'; });
+  // FIX BUG 2: usar el tipo y hora específicos del botón pulsado
+  // para seleccionar el registro correcto cuando hay varios del mismo tipo en el día
+  var entrada, salida;
+  if (tipoTocado === 'ENTRADA') {
+    entrada = regs.find(function(r){ return r.tipo==='ENTRADA' && normHora(r.hora)===normHora(horaTocada); })
+           || regs.find(function(r){ return r.tipo==='ENTRADA'; });
+    salida  = regs.find(function(r){ return r.tipo==='SALIDA'; });
+  } else if (tipoTocado === 'SALIDA') {
+    salida  = regs.find(function(r){ return r.tipo==='SALIDA' && normHora(r.hora)===normHora(horaTocada); })
+           || regs.find(function(r){ return r.tipo==='SALIDA'; });
+    entrada = regs.find(function(r){ return r.tipo==='ENTRADA'; });
+  } else {
+    entrada = regs.find(function(r){ return r.tipo==='ENTRADA'; });
+    salida  = regs.find(function(r){ return r.tipo==='SALIDA'; });
+  }
 
   solActual = { emp: emp, fecha: fecha };
 
   document.getElementById('sol-emp').value = emp;
 
-  // Entrada: fecha y hora actuales
+  // Entrada
   var horaEntradaActual = entrada ? entrada.hora : '—';
   document.getElementById('sol-fecha-entrada-actual').value = isoDisplay(fecha);
   document.getElementById('sol-fecha-entrada-nueva').value  = fecha;
   document.getElementById('sol-hora-entrada-actual').value  = horaEntradaActual;
   document.getElementById('sol-hora-entrada-nueva').value   = entrada ? entrada.hora.slice(0,5) : '';
 
-  // Salida: la salida puede ser el mismo día o el día siguiente (turno de noche)
+  // Salida (detectar si es turno de noche = día siguiente)
   var horaSalidaActual = salida ? salida.hora : '—';
-  // Si la hora de salida es < 2h (umbral noche), la fecha real de salida es el día siguiente
   var fechaSalidaISO = fecha;
   if(salida){
     var sm = horaToMins(salida.hora)||0;
-    if(sm < 120){ // turno de noche: salida en madrugada = día siguiente
+    if(sm < 120){
       var p=fecha.split('-').map(Number);
       var ds=new Date(p[0],p[1]-1,p[2]);
       ds.setDate(ds.getDate()+1);
@@ -972,7 +974,7 @@ function abrirModalSol(emp, fecha, isEmp) {
 }
 function cerrarModalSol(){document.getElementById('modal-sol').classList.remove('on');solActual=null;}
 
-// Enviar puede generar 1 o 2 solicitudes (entrada y/o salida si cambian)
+// ── BUG FIX 1: enviarSolicitud con try/catch completo para que el loader nunca se quede colgado ──
 async function enviarSolicitud(){
   if(!solActual)return;
   var motivo   = document.getElementById('sol-motivo').value.trim();
@@ -984,15 +986,12 @@ async function enviarSolicitud(){
 
   var horaSalidaActual   = document.getElementById('sol-hora-salida-actual').value;
   var horaSalidaNueva    = normHora(document.getElementById('sol-hora-salida-nueva').value);
-  // La fecha actual de salida se lee del campo actual (puede ser día siguiente)
-  var fechaSalidaActual  = document.getElementById('sol-fecha-salida-actual').value; // dd/mm/yyyy display
+  var fechaSalidaActual  = document.getElementById('sol-fecha-salida-actual').value;
   var fechaSalidaNueva   = document.getElementById('sol-fecha-salida-nueva').value || solActual.fecha;
 
-  // Detectar qué cambió
   var cambiaEntrada      = horaEntradaActual !== '—' && horaEntradaNueva && horaEntradaNueva !== normHora(horaEntradaActual);
   var cambiaFechaEntrada = horaEntradaActual !== '—' && fechaEntradaNueva !== solActual.fecha;
   var cambiaSalida       = horaSalidaActual  !== '—' && horaSalidaNueva  && horaSalidaNueva  !== normHora(horaSalidaActual);
-  // Para salida, la fecha "original" que mostramos puede ser día siguiente; comparar con lo que había
   var fechaSalidaOrigISO = parseFecha(fechaSalidaActual) || solActual.fecha;
   var cambiaFechaSalida  = horaSalidaActual  !== '—' && fechaSalidaNueva !== fechaSalidaOrigISO;
 
@@ -1027,7 +1026,7 @@ async function enviarSolicitud(){
       action:'guardarSolicitud',
       id:'SOL-'+(Date.now()+1)+'S',
       emp:solActual.emp,
-      fecha:fechaSalidaOrigISO,       // fecha donde está registrada la salida
+      fecha:fechaSalidaOrigISO,
       fechaNueva:fechaSalidaNueva,
       tipo:'SALIDA',
       horaActual:normHora(horaSalidaActual),
@@ -1045,22 +1044,29 @@ async function enviarSolicitud(){
     return;
   }
 
-  for(var i=0;i<solicitudesAEnviar.length;i++){
-    await callScript(solicitudesAEnviar[i]);
-  }
-
-  if(solIsEmp){
-    esolicitudes = await loadSolicitudes(session.nombre);
-    updateEbadge();
+  // FIX BUG 1: try/catch completo — el loader SIEMPRE se cierra pase lo que pase
+  try {
+    for(var i=0;i<solicitudesAEnviar.length;i++){
+      await callScript(solicitudesAEnviar[i]);
+    }
+    // Esperar un momento para que el script procese antes de releer
+    await new Promise(function(r){setTimeout(r,1000);});
+    if(solIsEmp){
+      esolicitudes = await loadSolicitudes(session.nombre);
+      updateEbadge();
+      setLoader(false);
+      toast('Solicitud'+(solicitudesAEnviar.length>1?'es':'')+' enviada'+(solicitudesAEnviar.length>1?'s':'')+' ✓','ok');
+      setTimeout(function(){eswitch('solicitudes');},600);
+    } else {
+      solicitudes = await loadSolicitudes();
+      updateBadge();
+      setLoader(false);
+      toast('Solicitud'+(solicitudesAEnviar.length>1?'es':'')+' enviada'+(solicitudesAEnviar.length>1?'s':'')+' ✓','ok');
+      setTimeout(function(){switchTab('solicitudes');},600);
+    }
+  } catch(e) {
     setLoader(false);
-    toast('Solicitud'+(solicitudesAEnviar.length>1?'es':'')+' enviada'+(solicitudesAEnviar.length>1?'s':'')+' ✓','ok');
-    setTimeout(function(){eswitch('solicitudes');},600);
-  } else {
-    solicitudes = await loadSolicitudes();
-    updateBadge();
-    setLoader(false);
-    toast('Solicitud'+(solicitudesAEnviar.length>1?'es':'')+' enviada'+(solicitudesAEnviar.length>1?'s':'')+' ✓','ok');
-    setTimeout(function(){switchTab('solicitudes');},600);
+    toast('Error al enviar: '+e.message,'err');
   }
 }
 
@@ -1107,58 +1113,68 @@ function renderSolicitudes(){
 async function aprobar(id){
   var sol=solicitudes.find(function(s){return s.id===id;});if(!sol)return;
   setLoader(true,'Aprobando y actualizando sheet...');
-  await callScript({
-    action:'aprobarSolicitud',
-    id:sol.id,
-    emp:sol.emp,
-    fecha:safeISO(sol.fecha),
-    fechaNueva:safeISO(sol.fechaNueva||sol.fecha),
-    tipo:sol.tipo,
-    horaActual:sol.horaActual,
-    horaNueva:sol.horaNueva,
-    emailEmp:sol.emailEmp||''
-  });
-  await new Promise(function(r){setTimeout(r,1500);});
-  solicitudes = await loadSolicitudes();
-  updateBadge();
-  renderSolicitudes();
-  if(editData[sol.emp]){
-    var fechaOrig=safeISO(sol.fecha);
-    var fechaNueva=safeISO(sol.fechaNueva||sol.fecha);
-    var regs=editData[sol.emp][fechaOrig];
-    if(regs){
-      for(var i=0;i<regs.length;i++){
-        if(regs[i].tipo===sol.tipo&&normHora(regs[i].hora)===normHora(sol.horaActual)){
-          if(fechaNueva!==fechaOrig){
-            regs.splice(i,1);
-            if(!editData[sol.emp][fechaNueva])editData[sol.emp][fechaNueva]=[];
-            editData[sol.emp][fechaNueva].push({tipo:sol.tipo,hora:sol.horaNueva,modificado:true});
-            refreshCard(sol.emp,fechaOrig);
-            refreshCard(sol.emp,fechaNueva);
-          }else{
-            regs[i].hora=sol.horaNueva;
-            regs[i].modificado=true;
-            refreshCard(sol.emp,fechaOrig);
+  try {
+    await callScript({
+      action:'aprobarSolicitud',
+      id:sol.id,
+      emp:sol.emp,
+      fecha:safeISO(sol.fecha),
+      fechaNueva:safeISO(sol.fechaNueva||sol.fecha),
+      tipo:sol.tipo,
+      horaActual:sol.horaActual,
+      horaNueva:sol.horaNueva,
+      emailEmp:sol.emailEmp||''
+    });
+    await new Promise(function(r){setTimeout(r,1500);});
+    solicitudes = await loadSolicitudes();
+    updateBadge();
+    renderSolicitudes();
+    if(editData[sol.emp]){
+      var fechaOrig=safeISO(sol.fecha);
+      var fechaNueva=safeISO(sol.fechaNueva||sol.fecha);
+      var regs=editData[sol.emp][fechaOrig];
+      if(regs){
+        for(var i=0;i<regs.length;i++){
+          if(regs[i].tipo===sol.tipo&&normHora(regs[i].hora)===normHora(sol.horaActual)){
+            if(fechaNueva!==fechaOrig){
+              regs.splice(i,1);
+              if(!editData[sol.emp][fechaNueva])editData[sol.emp][fechaNueva]=[];
+              editData[sol.emp][fechaNueva].push({tipo:sol.tipo,hora:sol.horaNueva,modificado:true});
+              refreshCard(sol.emp,fechaOrig);
+              refreshCard(sol.emp,fechaNueva);
+            }else{
+              regs[i].hora=sol.horaNueva;
+              regs[i].modificado=true;
+              refreshCard(sol.emp,fechaOrig);
+            }
+            break;
           }
-          break;
         }
       }
     }
+    setLoader(false);
+    toast('Aprobado y guardado en el sheet ✓','ok');
+  } catch(e) {
+    setLoader(false);
+    toast('Error al aprobar: '+e.message,'err');
   }
-  setLoader(false);
-  toast('Aprobado y guardado en el sheet ✓','ok');
 }
 
 async function rechazar(id){
   var sol=solicitudes.find(function(s){return s.id===id;});if(!sol)return;
   setLoader(true,'Rechazando...');
-  await callScript({action:'rechazarSolicitud',id:sol.id,emp:sol.emp,fecha:safeISO(sol.fecha),tipo:sol.tipo,horaActual:sol.horaActual,emailEmp:sol.emailEmp||''});
-  await new Promise(function(r){setTimeout(r,1200);});
-  solicitudes = await loadSolicitudes();
-  updateBadge();
-  renderSolicitudes();
-  setLoader(false);
-  toast('Solicitud rechazada');
+  try {
+    await callScript({action:'rechazarSolicitud',id:sol.id,emp:sol.emp,fecha:safeISO(sol.fecha),tipo:sol.tipo,horaActual:sol.horaActual,emailEmp:sol.emailEmp||''});
+    await new Promise(function(r){setTimeout(r,1200);});
+    solicitudes = await loadSolicitudes();
+    updateBadge();
+    renderSolicitudes();
+    setLoader(false);
+    toast('Solicitud rechazada');
+  } catch(e) {
+    setLoader(false);
+    toast('Error al rechazar: '+e.message,'err');
+  }
 }
 
 // ── REFRESH CARDS ──
