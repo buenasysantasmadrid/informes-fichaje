@@ -122,6 +122,9 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .btn-jump{padding:4px 12px;font-size:.63rem;font-family:'DM Mono',monospace;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;transition:background .12s;}
 .btn-jump:hover{background:var(--green-acc)}
 .days{display:flex;flex-direction:column;gap:8px}
+.week-sep{display:flex;align-items:center;gap:10px;margin:6px 0 2px;padding:0 2px}
+.week-sep::before,.week-sep::after{content:'';flex:1;height:1px;background:var(--border2)}
+.week-lbl{font-size:.6rem;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:var(--green3);color:var(--green-acc);border:1px solid var(--green4);border-radius:20px;padding:3px 12px;font-weight:500}
 .day-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s}
 .day-card:hover{box-shadow:var(--shadow2)}
 .day-card.has-error{border-left:3px solid var(--red)}
@@ -369,24 +372,22 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 </div>
 </div>
 
-<!-- MODAL SOLICITUD: ahora muestra entrada Y salida del día completo -->
+<!-- MODAL SOLICITUD: entrada y salida con fechas independientes -->
 <div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
   <div class="modal-box">
     <div class="modal-title">Solicitud de cambio</div>
     <div class="modal-row"><label>Empleado</label><input type="text" id="sol-emp" readonly style="background:var(--cream3)"></div>
 
-    <!-- Fecha del día (común para todo el modal) -->
-    <div class="modal-row">
-      <label>Fecha <span style="color:var(--ink3)">(actual → nueva, opcional)</span></label>
-      <div class="hora-change">
-        <input type="text" id="sol-fecha-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
-        <div class="hora-arrow">→</div>
-        <input type="date" id="sol-fecha-nueva">
-      </div>
-    </div>
-
     <hr class="modal-divider">
     <span class="modal-section-lbl">Entrada</span>
+    <div class="modal-row">
+      <label>Fecha entrada <span style="color:var(--ink3)">(actual → nueva, opcional)</span></label>
+      <div class="hora-change">
+        <input type="text" id="sol-fecha-entrada-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
+        <div class="hora-arrow">→</div>
+        <input type="date" id="sol-fecha-entrada-nueva">
+      </div>
+    </div>
     <div class="modal-row">
       <label>Hora entrada <span style="color:var(--ink3)">(actual → nueva)</span></label>
       <div class="hora-change">
@@ -398,6 +399,14 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 
     <hr class="modal-divider">
     <span class="modal-section-lbl">Salida</span>
+    <div class="modal-row">
+      <label>Fecha salida <span style="color:var(--ink3)">(actual → nueva, opcional)</span></label>
+      <div class="hora-change">
+        <input type="text" id="sol-fecha-salida-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
+        <div class="hora-arrow">→</div>
+        <input type="date" id="sol-fecha-salida-nueva">
+      </div>
+    </div>
     <div class="modal-row">
       <label>Hora salida <span style="color:var(--ink3)">(actual → nueva)</span></label>
       <div class="hora-change">
@@ -588,6 +597,8 @@ async function initEmpleado(){
   esolicitudes = await loadSolicitudes(session.nombre);
   updateEbadge();
   erendSolicitudes();
+  // Cargar fichajes automáticamente al entrar
+  await empGenerar();
 }
 
 // ── ADMIN: TABS ──
@@ -726,8 +737,9 @@ function renderEmpReport(){
   var pills='<div class="pills"><div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div><div class="pill">Días <strong>'+fechas.length+'</strong></div>'+(sinSal?'<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>':'')+(sinEnt?'<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>':'')+'</div>';
   var summaryCards=buildSummaryGrid(fechas,dmap,'_emp');
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump"><button class="btn-jump" onclick="jumpToDate(\'_emp\')">Ir</button></div>';
-  var cards=fechas.map(function(f){return renderEmpCard(session.nombre,f,dmap[f]||[]);}).join('');
-  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+pills+summaryCards+dateSearch+'<button class="export-btn" onclick="exportEmp(\'_emp\')">↓ Exportar Excel</button><div class="days" id="emp-days-list">'+cards+'</div></div>';
+  // Sin botón export para empleados
+  var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
+  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+pills+summaryCards+dateSearch+'<div class="days" id="emp-days-list">'+cards+'</div></div>';
 }
 
 function buildSummaryGrid(fechas,dmap,empKey){
@@ -823,7 +835,7 @@ function renderEmp(emp){
   var pills='<div class="pills"><div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div><div class="pill">Días <strong>'+fechas.length+'</strong></div>'+(sinSal?'<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>':'')+(sinEnt?'<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>':'')+'</div>';
   var summaryCards=buildSummaryGridAdmin(fechas,dmap,emp);
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="adm-date-jump-'+empId(emp)+'"><button class="btn-jump" onclick="jumpToDateAdmin(\''+esc(emp)+'\')">Ir</button></div>';
-  var cards=fechas.map(function(f){return renderCard(emp,f,dmap[f]||[]);}).join('');
+  var cards=buildCardsConSemana(fechas,dmap,emp,false);
   return'<div class="emp-block" data-emp="'+esc(emp)+'"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+' · '+fechas.length+' días</div>'+pills+summaryCards+dateSearch+'<button class="export-btn" onclick="exportEmp(\''+esc(emp)+'\')">↓ Exportar Excel</button><div class="days">'+cards+'</div></div>';
 }
 function buildSummaryGridAdmin(fechas,dmap,emp){
@@ -859,7 +871,53 @@ function renderCard(emp,fecha,regs){
 }
 function toggleCard(card){card.classList.toggle('open');}
 
-// ── MODAL SOLICITUD: ahora recibe emp, fecha e isEmp; carga todas las horas del día ──
+// ── SEPARADORES DE SEMANA ──
+// Devuelve el número ISO de semana (lunes=inicio)
+function isoWeek(iso){
+  var p=iso.split('-').map(Number);
+  var d=new Date(p[0],p[1]-1,p[2]);
+  var day=d.getDay()||7; // 1=lun..7=dom
+  d.setDate(d.getDate()+4-day);
+  var yearStart=new Date(d.getFullYear(),0,1);
+  return Math.ceil(((d-yearStart)/86400000+1)/7)+'_'+d.getFullYear();
+}
+
+// Construye la lista de tarjetas con separadores de semana entre semanas
+// fechas: array ordenado desc (más reciente primero)
+// dmap: mapa fecha→regs
+// isEmp: true si es vista empleado
+function buildCardsConSemana(fechas, dmap, emp, isEmp){
+  var html='';
+  var semActual=null;
+  var semMins=0;
+  // Procesamos de más reciente a más antiguo (fechas ya está desc)
+  for(var i=0;i<fechas.length;i++){
+    var f=fechas[i];
+    var semana=isoWeek(f);
+    // Detectar cambio de semana: cuando llegamos a una fecha que pertenece a semana anterior
+    // Como vamos desc, la semana cambia cuando semana < semActual
+    if(semActual!==null && semana!==semActual){
+      // Insertar separador con total de la semana anterior (semActual)
+      html+='<div class="week-sep"><span class="week-lbl">Semana anterior · '+minsToStr(semMins)+'</span></div>';
+      semMins=0;
+    }
+    semActual=semana;
+    var calc=calcDia(dmap[f]||[]);
+    if(calc.mins!=null)semMins+=calc.mins;
+    if(isEmp){
+      html+=renderEmpCard(emp,f,dmap[f]||[]);
+    } else {
+      html+=renderCard(emp,f,dmap[f]||[]);
+    }
+  }
+  // Separador al final (semana más antigua)
+  if(semActual!==null){
+    html+='<div class="week-sep"><span class="week-lbl">Semana · '+minsToStr(semMins)+'</span></div>';
+  }
+  return html;
+}
+
+// ── MODAL SOLICITUD ──
 var solIsEmp=false;
 function abrirModalSol(emp, fecha, isEmp) {
   solIsEmp = !!isEmp;
@@ -873,18 +931,31 @@ function abrirModalSol(emp, fecha, isEmp) {
   solActual = { emp: emp, fecha: fecha };
 
   document.getElementById('sol-emp').value = emp;
-  document.getElementById('sol-fecha-actual').value = isoDisplay(fecha);
-  document.getElementById('sol-fecha-nueva').value = fecha;
 
-  // Entrada
+  // Entrada: fecha y hora actuales
   var horaEntradaActual = entrada ? entrada.hora : '—';
-  document.getElementById('sol-hora-entrada-actual').value = horaEntradaActual;
-  document.getElementById('sol-hora-entrada-nueva').value  = entrada ? entrada.hora.slice(0,5) : '';
+  document.getElementById('sol-fecha-entrada-actual').value = isoDisplay(fecha);
+  document.getElementById('sol-fecha-entrada-nueva').value  = fecha;
+  document.getElementById('sol-hora-entrada-actual').value  = horaEntradaActual;
+  document.getElementById('sol-hora-entrada-nueva').value   = entrada ? entrada.hora.slice(0,5) : '';
 
-  // Salida
+  // Salida: la salida puede ser el mismo día o el día siguiente (turno de noche)
   var horaSalidaActual = salida ? salida.hora : '—';
-  document.getElementById('sol-hora-salida-actual').value = horaSalidaActual;
-  document.getElementById('sol-hora-salida-nueva').value  = salida ? salida.hora.slice(0,5) : '';
+  // Si la hora de salida es < 2h (umbral noche), la fecha real de salida es el día siguiente
+  var fechaSalidaISO = fecha;
+  if(salida){
+    var sm = horaToMins(salida.hora)||0;
+    if(sm < 120){ // turno de noche: salida en madrugada = día siguiente
+      var p=fecha.split('-').map(Number);
+      var ds=new Date(p[0],p[1]-1,p[2]);
+      ds.setDate(ds.getDate()+1);
+      fechaSalidaISO=ds.getFullYear()+'-'+('0'+(ds.getMonth()+1)).slice(-2)+'-'+('0'+ds.getDate()).slice(-2);
+    }
+  }
+  document.getElementById('sol-fecha-salida-actual').value = isoDisplay(fechaSalidaISO);
+  document.getElementById('sol-fecha-salida-nueva').value  = fechaSalidaISO;
+  document.getElementById('sol-hora-salida-actual').value  = horaSalidaActual;
+  document.getElementById('sol-hora-salida-nueva').value   = salida ? salida.hora.slice(0,5) : '';
 
   document.getElementById('sol-motivo').value = '';
 
@@ -904,22 +975,28 @@ function cerrarModalSol(){document.getElementById('modal-sol').classList.remove(
 // Enviar puede generar 1 o 2 solicitudes (entrada y/o salida si cambian)
 async function enviarSolicitud(){
   if(!solActual)return;
-  var fechaNueva = document.getElementById('sol-fecha-nueva').value || solActual.fecha;
-  var motivo     = document.getElementById('sol-motivo').value.trim();
-  var emailEmp   = document.getElementById('sol-email-emp').value.trim();
+  var motivo   = document.getElementById('sol-motivo').value.trim();
+  var emailEmp = document.getElementById('sol-email-emp').value.trim();
 
-  var horaEntradaActual = document.getElementById('sol-hora-entrada-actual').value;
-  var horaEntradaNueva  = normHora(document.getElementById('sol-hora-entrada-nueva').value);
-  var horaSalidaActual  = document.getElementById('sol-hora-salida-actual').value;
-  var horaSalidaNueva   = normHora(document.getElementById('sol-hora-salida-nueva').value);
+  var horaEntradaActual  = document.getElementById('sol-hora-entrada-actual').value;
+  var horaEntradaNueva   = normHora(document.getElementById('sol-hora-entrada-nueva').value);
+  var fechaEntradaNueva  = document.getElementById('sol-fecha-entrada-nueva').value || solActual.fecha;
+
+  var horaSalidaActual   = document.getElementById('sol-hora-salida-actual').value;
+  var horaSalidaNueva    = normHora(document.getElementById('sol-hora-salida-nueva').value);
+  // La fecha actual de salida se lee del campo actual (puede ser día siguiente)
+  var fechaSalidaActual  = document.getElementById('sol-fecha-salida-actual').value; // dd/mm/yyyy display
+  var fechaSalidaNueva   = document.getElementById('sol-fecha-salida-nueva').value || solActual.fecha;
 
   // Detectar qué cambió
-  var cambiaEntrada = horaEntradaActual !== '—' && horaEntradaNueva && horaEntradaNueva !== normHora(horaEntradaActual);
-  var cambiaSalida  = horaSalidaActual  !== '—' && horaSalidaNueva  && horaSalidaNueva  !== normHora(horaSalidaActual);
-  var cambiaFecha   = fechaNueva !== solActual.fecha;
+  var cambiaEntrada      = horaEntradaActual !== '—' && horaEntradaNueva && horaEntradaNueva !== normHora(horaEntradaActual);
+  var cambiaFechaEntrada = horaEntradaActual !== '—' && fechaEntradaNueva !== solActual.fecha;
+  var cambiaSalida       = horaSalidaActual  !== '—' && horaSalidaNueva  && horaSalidaNueva  !== normHora(horaSalidaActual);
+  // Para salida, la fecha "original" que mostramos puede ser día siguiente; comparar con lo que había
+  var fechaSalidaOrigISO = parseFecha(fechaSalidaActual) || solActual.fecha;
+  var cambiaFechaSalida  = horaSalidaActual  !== '—' && fechaSalidaNueva !== fechaSalidaOrigISO;
 
-  // También considerar si sólo cambia la fecha (sin cambio de hora)
-  if (!cambiaEntrada && !cambiaSalida && !cambiaFecha) {
+  if (!cambiaEntrada && !cambiaSalida && !cambiaFechaEntrada && !cambiaFechaSalida) {
     toast('No hay ningún cambio respecto al original','err'); return;
   }
 
@@ -928,13 +1005,13 @@ async function enviarSolicitud(){
 
   var solicitudesAEnviar = [];
 
-  if ((cambiaEntrada || cambiaFecha) && horaEntradaActual !== '—') {
+  if ((cambiaEntrada || cambiaFechaEntrada) && horaEntradaActual !== '—') {
     solicitudesAEnviar.push({
       action:'guardarSolicitud',
       id:'SOL-'+Date.now()+'E',
       emp:solActual.emp,
       fecha:solActual.fecha,
-      fechaNueva:fechaNueva,
+      fechaNueva:fechaEntradaNueva,
       tipo:'ENTRADA',
       horaActual:normHora(horaEntradaActual),
       horaNueva:cambiaEntrada ? horaEntradaNueva : normHora(horaEntradaActual),
@@ -945,13 +1022,13 @@ async function enviarSolicitud(){
     });
   }
 
-  if ((cambiaSalida || cambiaFecha) && horaSalidaActual !== '—') {
+  if ((cambiaSalida || cambiaFechaSalida) && horaSalidaActual !== '—') {
     solicitudesAEnviar.push({
       action:'guardarSolicitud',
-      id:'SOL-'+Date.now()+'S',
+      id:'SOL-'+(Date.now()+1)+'S',
       emp:solActual.emp,
-      fecha:solActual.fecha,
-      fechaNueva:fechaNueva,
+      fecha:fechaSalidaOrigISO,       // fecha donde está registrada la salida
+      fechaNueva:fechaSalidaNueva,
       tipo:'SALIDA',
       horaActual:normHora(horaSalidaActual),
       horaNueva:cambiaSalida ? horaSalidaNueva : normHora(horaSalidaActual),
