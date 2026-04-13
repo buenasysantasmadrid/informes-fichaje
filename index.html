@@ -373,7 +373,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
     <div class="modal-row"><label>Empleado</label><input type="text" id="sol-emp" readonly style="background:var(--cream3)"></div>
     <div class="modal-row"><label>Tipo de fichaje</label><input type="text" id="sol-detalle" readonly style="background:var(--cream3)"></div>
     <div class="modal-row">
-      <label>Fecha actual → Fecha nueva <span style="color:var(--ink3)">(opcional)</span></label>
+      <label>Fecha <span style="color:var(--ink3)">(actual → nueva, opcional)</span></label>
       <div class="hora-change">
         <input type="text" id="sol-fecha-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
         <div class="hora-arrow">→</div>
@@ -381,7 +381,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       </div>
     </div>
     <div class="modal-row">
-      <label>Hora actual → Hora nueva <span style="color:var(--ink3)">(opcional)</span></label>
+      <label>Hora <span style="color:var(--ink3)">(actual → nueva, opcional)</span></label>
       <div class="hora-change">
         <input type="text" id="sol-hora-actual" readonly style="background:var(--cream3);text-align:center">
         <div class="hora-arrow">→</div>
@@ -406,7 +406,6 @@ const DIAS_TILDE = ['domingo','lunes','martes','miércoles','jueves','viernes','
 const ADMIN_MAIL = 'luciana@buenasysantas.es';
 const ADMIN_PIN  = '2136';
 
-// URL hardcodeada — también se puede sobreescribir desde Config
 let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec';
 let ADMIN_EMAIL = localStorage.getItem('fichajes_admin_email') || ADMIN_MAIL;
 
@@ -421,7 +420,7 @@ function setStatus(cls,msg){document.getElementById('sdot').className='sdot '+cl
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function empId(emp){return emp.replace(/[^a-zA-Z0-9]/g,'_');}
 
-// ══ JSONP helper ══
+// ── JSONP helper ──
 function apiGetJSONP(params, timeoutMs) {
   timeoutMs = timeoutMs || 15000;
   return new Promise(function(resolve, reject) {
@@ -453,7 +452,7 @@ async function callScript(payload) {
   } catch(e) { return {ok:false, msg:e.toString()}; }
 }
 
-// ══ CARGA DE EMPLEADOS ══
+// ── CARGA DE EMPLEADOS ──
 async function loadEmpleados() {
   if (!SCRIPT_URL) throw new Error('Sin URL');
   var data = await apiGetJSONP({ action: 'getEmpleados' });
@@ -469,7 +468,7 @@ async function loadEmpleados() {
   return found;
 }
 
-// ══ CARGA DE SOLICITUDES DESDE SHEET ══
+// ── CARGA DE SOLICITUDES DESDE SHEET ──
 async function loadSolicitudes(empNombre) {
   if (!SCRIPT_URL) return [];
   try {
@@ -480,7 +479,7 @@ async function loadSolicitudes(empNombre) {
   } catch(e) { return []; }
 }
 
-// ══ LOGIN ══
+// ── LOGIN ──
 async function doLogin() {
   var email=document.getElementById('login-email').value.trim().toLowerCase();
   var pin=document.getElementById('login-pin').value.trim();
@@ -523,7 +522,7 @@ function doLogout(){
   document.getElementById('emp-pages').style.display='none';
 }
 
-// ══ INIT ADMIN ══
+// ── INIT ADMIN ──
 async function initAdmin(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('on');
@@ -542,7 +541,6 @@ async function initAdmin(){
   try{
     if(!empleados.length) await loadEmpleados();
     renderEmpleados();
-    // Cargar solicitudes desde el sheet
     solicitudes = await loadSolicitudes();
     updateBadge();
     setStatus('ok', empleados.length+' empleados');
@@ -553,7 +551,7 @@ async function initAdmin(){
   updateCfgNote();
 }
 
-// ══ INIT EMPLEADO ══
+// ── INIT EMPLEADO ──
 async function initEmpleado(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('on');
@@ -567,20 +565,18 @@ async function initEmpleado(){
   document.getElementById('ef-hasta').value=hoy.toISOString().slice(0,10);
   document.getElementById('ef-desde').value=p1.toISOString().slice(0,10);
   document.getElementById('sol-email-row').style.display='none';
-  // Cargar solicitudes propias desde el sheet
   esolicitudes = await loadSolicitudes(session.nombre);
   updateEbadge();
   erendSolicitudes();
 }
 
-// ══ ADMIN: TABS ══
+// ── ADMIN: TABS ──
 function switchTab(tab){
   document.querySelectorAll('#nav-admin .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#admin-pages .page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('page-'+tab).classList.add('active');
   if(tab==='solicitudes'){
-    // Recargar desde sheet cada vez que se abre la pestaña
     loadSolicitudes().then(function(data){
       solicitudes=data; updateBadge(); renderSolicitudes();
     });
@@ -591,7 +587,7 @@ function renderEmpleados(){document.getElementById('emp-list').innerHTML=emplead
 function selAll(){document.querySelectorAll('.echk').forEach(function(c){c.checked=true;});}
 function selNone(){document.querySelectorAll('.echk').forEach(function(c){c.checked=false;});}
 
-// ══ PARSE ══
+// ── PARSE ──
 function parsearTabla(table){
   if(!table||!table.rows)return[];
   var out=[];
@@ -606,13 +602,24 @@ function parsearTabla(table){
   }
   return out;
 }
+
+// FIX: parseFecha ahora también maneja strings largos tipo "Mon Apr 13 2026 09:00:00 GMT+0200"
 function parseFecha(s){
   s=String(s||'').trim();
   var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
   m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return s.slice(0,10);
   m=s.match(/^Date\((\d+),(\d+),(\d+)\)$/);if(m)return m[1]+'-'+('0'+(+m[2]+1)).slice(-2)+'-'+('0'+m[3]).slice(-2);
+  // FIX: string largo de Date.toString()
+  if(s.length>15){var d=new Date(s);if(!isNaN(d.getTime())){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}}
   return null;
 }
+
+// FIX: helper que garantiza ISO antes de llamar a isoDisplay/dowName
+function safeISO(s){
+  var p=parseFecha(String(s||'').trim());
+  return p||String(s||'').slice(0,10);
+}
+
 function horaToMins(s){var m=String(s||'').match(/^(\d{1,2}):(\d{2})/);return m?(+m[1])*60+(+m[2]):null;}
 function normHora(s){var m=horaToMins(s);if(m==null)return s||'';return('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);}
 function minsToStr(m){if(m==null||m<0)return'—';return Math.floor(m/60)+'h '+('0'+(m%60)).slice(-2)+'min';}
@@ -647,7 +654,7 @@ function calcDia(regs){
   return{primera:primera,ultima:ultima,mins:estado==='ok'?totalMins:null,estado:estado};
 }
 
-// ══ ADMIN: GENERAR ══
+// ── ADMIN: GENERAR ──
 async function generar(){
   var sel=Array.from(document.querySelectorAll('.echk:checked')).map(function(c){return c.value;});
   var desde=document.getElementById('f-desde').value,hasta=document.getElementById('f-hasta').value;
@@ -667,13 +674,12 @@ async function generar(){
     }catch(e){editData[emp]=null;}
   }
   setLoader(false);
-  // Recargar solicitudes también al generar informe
   solicitudes = await loadSolicitudes();
   updateBadge();
   switchTab('informes');renderReport();
 }
 
-// ══ EMPLEADO: GENERAR ══
+// ── EMPLEADO: GENERAR ──
 async function empGenerar(){
   var desde=document.getElementById('ef-desde').value,hasta=document.getElementById('ef-hasta').value;
   if(!desde||!hasta){toast('Elige el período','err');return;}
@@ -686,14 +692,13 @@ async function empGenerar(){
     var dmap={};
     for(var j=0;j<filt.length;j++){var f=filt[j];if(!dmap[f.fecha])dmap[f.fecha]=[];dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});}
     empEditData=dmap;
-    // Recargar solicitudes propias
     esolicitudes = await loadSolicitudes(session.nombre);
     updateEbadge();
   }catch(e){toast('Error: '+e.message,'err');setLoader(false);return;}
   setLoader(false);eswitch('fichajes');renderEmpReport();
 }
 
-// ══ RENDER EMPLEADO ══
+// ── RENDER EMPLEADO ──
 function renderEmpReport(){
   document.getElementById('eempty-inf').style.display='none';
   var rep=document.getElementById('ereport');rep.style.display='block';
@@ -746,7 +751,7 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
   var filas=regs.map(function(r){
     var tcls=r.tipo==='ENTRADA'?'t-in':'t-out';
-    var hasPending=esolicitudes.some(function(s){return s.emp===emp&&s.fecha===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
+    var hasPending=esolicitudes.some(function(s){return s.emp===emp&&safeISO(s.fecha)===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
     return '<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',\''+r.tipo+'\',\''+r.hora+'\',true)">'+r.hora+' <span class="pencil">✏</span></button></td></tr>';
   }).join('');
   var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar corrección)</span></th></tr></thead><tbody>'+filas+'</tbody></table>':'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
@@ -754,14 +759,13 @@ function renderEmpCard(emp,fecha,regs){
   return '<div class="day-card '+cls+'" id="'+cardId+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
 
-// ══ EMPLEADO: TABS / SOLICITUDES ══
+// ── EMPLEADO: TABS / SOLICITUDES ──
 function eswitch(tab){
   document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#emp-pages .page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('etab-'+tab).classList.add('active');
   document.getElementById('epage-'+tab).classList.add('active');
   if(tab==='solicitudes'){
-    // Recargar desde sheet
     loadSolicitudes(session.nombre).then(function(data){
       esolicitudes=data; updateEbadge(); erendSolicitudes();
     });
@@ -769,6 +773,7 @@ function eswitch(tab){
 }
 function updateEbadge(){var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('ebadge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
 function efiltrarSol(f,btn){esolFiltro=f;document.querySelectorAll('#epage-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');erendSolicitudes();}
+
 function erendSolicitudes(){
   var lista=esolicitudes.filter(function(s){return esolFiltro==='todas'||s.estado===esolFiltro;});
   var el=document.getElementById('esol-list');
@@ -776,11 +781,22 @@ function erendSolicitudes(){
   el.innerHTML=lista.slice().reverse().map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
-    return '<div class="sol-card '+s.estado+'"><div class="sol-info"><div class="sol-detail"><span>Fecha:</span> '+isoDisplay(s.fecha)+' · '+dowName(s.fecha)+'<br><span>Tipo:</span> '+s.tipo+'<br>'+(s.fechaNueva&&s.fechaNueva!==s.fecha?'<span>Fecha nueva:</span> <strong>'+isoDisplay(s.fechaNueva)+'</strong><br>':'')+'<span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span></div></div>';
+    // FIX: usar safeISO para normalizar la fecha antes de formatear
+    var fechaISO=safeISO(s.fecha);
+    var fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
+    var hayFechaNueva=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
+    return '<div class="sol-card '+s.estado+'"><div class="sol-info"><div class="sol-detail">'
+      +'<span>Fecha:</span> '+isoDisplay(fechaISO)+' · '+dowName(fechaISO)+'<br>'
+      +'<span>Tipo:</span> '+s.tipo+'<br>'
+      +(hayFechaNueva?'<span>Fecha nueva:</span> <strong>'+isoDisplay(fechaNuevaISO)+'</strong><br>':'')
+      +'<span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br>'
+      +'<span>Motivo:</span> '+esc(s.motivo)
+      +'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div>'
+      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span></div></div>';
   }).join('');
 }
 
-// ══ ADMIN: RENDER INFORME ══
+// ── ADMIN: RENDER INFORME ──
 function renderReport(){document.getElementById('empty-inf').style.display='none';var rep=document.getElementById('report');rep.style.display='block';rep.innerHTML=currentSel.map(function(emp){return renderEmp(emp);}).join('');}
 function renderEmp(emp){
   var dmap=editData[emp];
@@ -818,7 +834,7 @@ function renderCard(emp,fecha,regs){
   if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
   var filas=regs.map(function(r){
     var tcls=r.tipo==='ENTRADA'?'t-in':'t-out';
-    var hasPending=solicitudes.some(function(s){return s.emp===emp&&s.fecha===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
+    var hasPending=solicitudes.some(function(s){return s.emp===emp&&safeISO(s.fecha)===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
     return'<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',\''+r.tipo+'\',\''+r.hora+'\',false)">'+r.hora+' <span class="pencil">✏</span></button>'+(r.modificado?' <span style="font-size:.62rem;color:var(--amber)">✏</span>':'')+'</td></tr>';
   }).join('');
   var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar cambio)</span></th></tr></thead><tbody>'+filas+'</tbody></table>':'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
@@ -826,12 +842,15 @@ function renderCard(emp,fecha,regs){
 }
 function toggleCard(card){card.classList.toggle('open');}
 
-// ══ MODAL SOLICITUD ══
+// ── MODAL SOLICITUD ──
 var solIsEmp=false;
 function abrirModalSol(emp,fecha,tipo,horaActual,isEmp){
-  solIsEmp=!!isEmp;solActual={emp:emp,fecha:fecha,tipo:tipo,horaActual:horaActual};
+  solIsEmp=!!isEmp;
+  // fecha aquí ya es ISO yyyy-mm-dd (viene de los keys de dmap)
+  solActual={emp:emp,fecha:fecha,tipo:tipo,horaActual:horaActual};
   document.getElementById('sol-emp').value=emp;
   document.getElementById('sol-detalle').value=tipo;
+  // FIX: mostrar fecha como dd/mm/yyyy (legible), no como string ISO crudo
   document.getElementById('sol-fecha-actual').value=isoDisplay(fecha);
   document.getElementById('sol-fecha-nueva').value=fecha;
   document.getElementById('sol-hora-actual').value=horaActual;
@@ -855,8 +874,8 @@ async function enviarSolicitud(){
   var sol={
     id:'SOL-'+Date.now(),
     emp:solActual.emp,
-    fecha:solActual.fecha,
-    fechaNueva:fechaNueva,
+    fecha:solActual.fecha,         // ISO yyyy-mm-dd
+    fechaNueva:fechaNueva,         // ISO yyyy-mm-dd
     tipo:solActual.tipo,
     horaActual:normHora(solActual.horaActual),
     horaNueva:horaNueva,
@@ -868,7 +887,6 @@ async function enviarSolicitud(){
   cerrarModalSol();
   setLoader(true,'Enviando solicitud...');
   await callScript(Object.assign({action:'guardarSolicitud'},sol));
-  // Recargar desde sheet para tener el estado real
   if(solIsEmp){
     esolicitudes = await loadSolicitudes(session.nombre);
     updateEbadge();
@@ -878,7 +896,6 @@ async function enviarSolicitud(){
   } else {
     solicitudes = await loadSolicitudes();
     updateBadge();
-    // Refrescar la card del informe
     if(editData[sol.emp]&&editData[sol.emp][sol.fecha]){
       refreshCard(sol.emp,sol.fecha);
     }
@@ -888,7 +905,7 @@ async function enviarSolicitud(){
   }
 }
 
-// ══ ADMIN: SOLICITUDES ══
+// ── ADMIN: SOLICITUDES ──
 function updateBadge(){
   var pend=solicitudes.filter(function(s){return s.estado==='pendiente';}).length;
   var b=document.getElementById('badge-sol');
@@ -908,34 +925,50 @@ function renderSolicitudes(){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
-    return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'"><div class="sol-info"><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Fecha:</span> '+isoDisplay(s.fecha)+' · '+dowName(s.fecha)+'<br><span>Tipo:</span> '+s.tipo+'<br>'+(s.fechaNueva&&s.fechaNueva!==s.fecha?'<span>Fecha:</span> <strong>'+isoDisplay(s.fecha)+'</strong> → <strong>'+isoDisplay(s.fechaNueva)+'</strong><br>':'')+'<span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
+    // FIX: usar safeISO para normalizar la fecha antes de formatear
+    var fechaISO=safeISO(s.fecha);
+    var fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
+    var hayFechaNueva=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
+    return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
+      +'<div class="sol-info">'
+      +'<div class="sol-emp">'+esc(s.emp)+'</div>'
+      +'<div class="sol-detail">'
+      +'<span>Fecha:</span> '+isoDisplay(fechaISO)+' · '+dowName(fechaISO)+'<br>'
+      +'<span>Tipo:</span> '+s.tipo+'<br>'
+      +(hayFechaNueva?'<span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong> → <strong>'+isoDisplay(fechaNuevaISO)+'</strong><br>':'')
+      +'<span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br>'
+      +'<span>Motivo:</span> '+esc(s.motivo)
+      +(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')
+      +'</div>'
+      +'<div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div>'
+      +'</div>'
+      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div>'
+      +'</div>';
   }).join('');
 }
 
 async function aprobar(id){
   var sol=solicitudes.find(function(s){return s.id===id;});if(!sol)return;
   setLoader(true,'Aprobando y actualizando sheet...');
-  // Llamar al script para aprobar (actualiza sheet del empleado y SOLICITUDES)
   await callScript({
     action:'aprobarSolicitud',
     id:sol.id,
     emp:sol.emp,
-    fecha:sol.fecha,
-    fechaNueva:sol.fechaNueva||sol.fecha,
+    fecha:safeISO(sol.fecha),           // FIX: garantizar ISO antes de enviar
+    fechaNueva:safeISO(sol.fechaNueva||sol.fecha),
     tipo:sol.tipo,
     horaActual:sol.horaActual,
     horaNueva:sol.horaNueva,
     emailEmp:sol.emailEmp||''
   });
-  // Esperar un momento para que el sheet se actualice
   await new Promise(function(r){setTimeout(r,1500);});
-  // Recargar solicitudes desde sheet
   solicitudes = await loadSolicitudes();
   updateBadge();
   renderSolicitudes();
   // Actualizar la vista del informe si el empleado está cargado
   if(editData[sol.emp]){
-    var fechaOrig=sol.fecha, fechaNueva=sol.fechaNueva||sol.fecha;
+    var fechaOrig=safeISO(sol.fecha);
+    var fechaNueva=safeISO(sol.fechaNueva||sol.fecha);
     var regs=editData[sol.emp][fechaOrig];
     if(regs){
       for(var i=0;i<regs.length;i++){
@@ -963,7 +996,7 @@ async function aprobar(id){
 async function rechazar(id){
   var sol=solicitudes.find(function(s){return s.id===id;});if(!sol)return;
   setLoader(true,'Rechazando...');
-  await callScript({action:'rechazarSolicitud',id:sol.id,emp:sol.emp,fecha:sol.fecha,tipo:sol.tipo,horaActual:sol.horaActual,emailEmp:sol.emailEmp||''});
+  await callScript({action:'rechazarSolicitud',id:sol.id,emp:sol.emp,fecha:safeISO(sol.fecha),tipo:sol.tipo,horaActual:sol.horaActual,emailEmp:sol.emailEmp||''});
   await new Promise(function(r){setTimeout(r,1200);});
   solicitudes = await loadSolicitudes();
   updateBadge();
@@ -972,7 +1005,7 @@ async function rechazar(id){
   toast('Solicitud rechazada');
 }
 
-// ══ REFRESH CARDS ══
+// ── REFRESH CARDS ──
 function refreshCard(emp,fecha){
   var id='dc-'+empId(emp)+'-'+fecha;
   var card=document.getElementById(id);if(!card)return;
@@ -996,7 +1029,7 @@ function refreshEmpCard(emp,fecha){
   card.replaceWith(nc);
 }
 
-// ══ EXPORT ══
+// ── EXPORT ──
 function exportEmp(emp){
   var dmap=emp==='_emp'?empEditData:editData[emp];if(!dmap)return;
   var wb=XLSX.utils.book_new();
@@ -1012,7 +1045,7 @@ function exportEmp(emp){
   toast('Excel descargado','ok');
 }
 
-// ══ CONFIG ══
+// ── CONFIG ──
 function checkCfgUrl(val){var el=document.getElementById('cfg-url-st');if(!val){el.textContent='';return;}if(val.startsWith('https://script.google.com/macros/s/')){el.textContent='✓ URL válida';el.style.color='var(--green)';}else{el.textContent='La URL debe empezar por https://script.google.com/macros/s/';el.style.color='var(--red)';}}
 function saveCfgUrl(){var val=document.getElementById('cfg-url-input').value.trim();if(!val.startsWith('https://script.google.com/macros/s/')){toast('URL no válida','err');return;}SCRIPT_URL=val;localStorage.setItem('fichajes_script_url',val);updateCfgNote();toast('Apps Script configurado ✓','ok');}
 function saveEmail(){var val=document.getElementById('cfg-email-input').value.trim();if(!val||!val.includes('@')){toast('Email no válido','err');return;}ADMIN_EMAIL=val;localStorage.setItem('fichajes_admin_email',val);toast('Email guardado ✓','ok');}
