@@ -139,6 +139,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .c-dur{background:var(--cream2);color:var(--ink2);border:1px solid var(--border2)}
 .c-err{background:var(--red-soft);color:var(--red);border:1px solid #f5c6c2}
 .c-wrn{background:var(--amber-soft);color:var(--amber);border:1px solid #f5e0a0}
+.c-long{background:var(--red-soft);color:var(--red);border:1px solid #f5c6c2;font-weight:600}
 .day-chevron{margin-left:auto;color:var(--ink3);font-size:.65rem;transition:transform .2s;padding-left:8px}
 .day-card.open .day-chevron{transform:rotate(180deg)}
 .day-body{display:none;border-top:1px solid var(--border);background:var(--cream);padding:1rem 1.2rem}
@@ -150,12 +151,37 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .ft tbody tr:hover td{background:rgba(45,106,63,.025)}
 .t-in{color:var(--green);font-weight:500}
 .t-out{color:var(--blue);font-weight:500}
+.t-long{color:var(--red);font-weight:600}
 .turno-sep td{border-top:2px dashed var(--border2)!important;padding-top:10px!important}
 .hora-btn{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:5px;font-family:'DM Mono',monospace;font-size:.76rem;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--ink);transition:all .15s}
 .hora-btn:hover{background:var(--green3);border-color:var(--green4);color:var(--green)}
 .hora-btn .pencil{font-size:.6rem;opacity:0;transition:opacity .15s}
 .hora-btn:hover .pencil{opacity:1}
 .hora-btn.pending{background:var(--amber-soft);border-color:#f5e0a0;color:var(--amber)}
+.hora-btn.approved{background:var(--green3);border-color:var(--green4);color:var(--green)}
+.hora-btn.approved .edit-mark{font-size:.6rem;opacity:1}
+.hora-btn-long{color:var(--red)!important}
+.hora-btn-long:hover{background:var(--red-soft)!important;border-color:#f5c6c2!important;color:var(--red)!important}
+/* ── CALENDAR PICKER ── */
+.cal-picker{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:#fff}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--cream2);border-bottom:1px solid var(--border)}
+.cal-nav-btn{background:none;border:none;cursor:pointer;color:var(--ink2);font-size:.85rem;padding:2px 6px;border-radius:4px;transition:background .12s}
+.cal-nav-btn:hover{background:var(--green3);color:var(--green)}
+.cal-month-lbl{font-family:'Lora',serif;font-size:.82rem;color:var(--ink);text-transform:capitalize}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:6px}
+.cal-dow{font-size:.52rem;color:var(--ink3);text-align:center;letter-spacing:.06em;text-transform:uppercase;padding:3px 0}
+.cal-day{font-size:.68rem;text-align:center;padding:5px 2px;border-radius:5px;cursor:pointer;color:var(--ink2);transition:all .12s;line-height:1.2}
+.cal-day:hover{background:var(--green3);color:var(--green)}
+.cal-day.empty{cursor:default}
+.cal-day.empty:hover{background:none}
+.cal-day.in-range{background:var(--green3);color:var(--green)}
+.cal-day.sel-start,.cal-day.sel-end{background:var(--green);color:#fff;font-weight:600}
+.cal-day.today-cal{font-weight:700;color:var(--green-acc)}
+.cal-day.other-month{color:var(--ink3);opacity:.45}
+.cal-day.disabled{opacity:.25;cursor:not-allowed;pointer-events:none}
+.cal-hint{font-size:.58rem;color:var(--ink3);padding:4px 8px 6px;text-align:center}
+
+/* sol filters — admin keeps all, emp only "todas" */
 .sol-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
 .sol-title{font-family:'Lora',serif;font-size:1.4rem;font-weight:400;color:var(--green-acc)}
 .sol-filters{display:flex;gap:6px;flex-wrap:wrap}
@@ -293,13 +319,14 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
     <div class="script-cfg"><span id="cfg-status-txt">Sin configurar</span><br><a onclick="switchTab('config')">Configurar Apps Script →</a></div>
   </aside>
 
+  <!-- SIDEBAR EMPLEADO con calendario -->
   <aside class="side" id="side-emp" style="display:none">
     <div>
       <span class="lbl">Período</span>
-      <div class="date-row">
-        <div class="df"><span>Desde</span><input type="date" id="ef-desde"></div>
-        <div class="df"><span>Hasta</span><input type="date" id="ef-hasta"></div>
-      </div>
+      <div id="emp-cal-container"></div>
+      <!-- hidden inputs para compatibilidad -->
+      <input type="hidden" id="ef-desde">
+      <input type="hidden" id="ef-hasta">
     </div>
     <button class="btn-gen" id="ebtn-gen" onclick="empGenerar()">Ver mis fichajes</button>
     <div class="emp-side-info" id="emp-side-info"></div>
@@ -357,15 +384,10 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
         </div>
         <div id="ereport" style="display:none"></div>
       </div>
+      <!-- MIS SOLICITUDES: solo filtro "todas" -->
       <div class="page" id="epage-solicitudes">
         <div class="sol-header">
           <div class="sol-title">Mis solicitudes</div>
-          <div class="sol-filters">
-            <button class="flt-btn active" onclick="efiltrarSol('todas',this)">Todas</button>
-            <button class="flt-btn" onclick="efiltrarSol('pendiente',this)">Pendientes</button>
-            <button class="flt-btn" onclick="efiltrarSol('aprobada',this)">Aprobadas</button>
-            <button class="flt-btn" onclick="efiltrarSol('rechazada',this)">Rechazadas</button>
-          </div>
         </div>
         <div id="esol-list"></div>
       </div>
@@ -435,12 +457,16 @@ const DIAS_TILDE = ['domingo','lunes','martes','miércoles','jueves','viernes','
 const ADMIN_MAIL = 'luciana@buenasysantas.es';
 const ADMIN_PIN  = '2136';
 const UMBRAL_NOCHE = 120;
+const MAX_TURNO_MINS = 12 * 60; // 12 horas
 
-let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec';
+let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec';
 let ADMIN_EMAIL = localStorage.getItem('fichajes_admin_email') || ADMIN_MAIL;
 let session=null,empleados=[],editData={},solicitudes=[],esolicitudes=[];
 let solFiltro='todas',esolFiltro='todas';
 let currentSel,currentDesde,currentHasta,empEditData={},solActual=null;
+
+// ── Set de IDs de solicitudes aprobadas (para marcar ✏ en fichajes) ──
+let approvedSet = new Set();
 
 function toast(msg,cls,dur){dur=dur||2800;var t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(cls?' '+cls:'');clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast';},dur);}
 function setLoader(on,msg){document.getElementById('loader').classList.toggle('on',on);if(msg)document.getElementById('ltxt').textContent=msg;}
@@ -503,6 +529,17 @@ async function loadSolicitudes(empNombre){
   }catch(e){return[];}
 }
 
+// ── Rebuild approvedSet from solicitudes array ──
+function rebuildApprovedSet(sols){
+  approvedSet=new Set();
+  sols.forEach(function(s){
+    if(s.estado==='aprobada'){
+      // key: emp|fecha|tipo|horaAnterior
+      approvedSet.add(s.emp+'|'+safeISO(s.fecha)+'|'+s.tipo+'|'+normHora(s.horaActual));
+    }
+  });
+}
+
 // ── LOGIN ──
 async function doLogin(){
   var email=document.getElementById('login-email').value.trim().toLowerCase();
@@ -520,7 +557,7 @@ async function doLogin(){
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!document.getElementById('app').classList.contains('on'))doLogin();});
 
 function doLogout(){
-  session=null;empleados=[];editData={};solicitudes=[];esolicitudes=[];empEditData={};currentSel=null;
+  session=null;empleados=[];editData={};solicitudes=[];esolicitudes=[];empEditData={};currentSel=null;approvedSet=new Set();
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').classList.remove('on');
   document.getElementById('login-email').value='';document.getElementById('login-pin').value='';
@@ -560,7 +597,11 @@ async function initEmpleado(){
   document.getElementById('ef-hasta').value=hoy.toISOString().slice(0,10);
   document.getElementById('ef-desde').value=p1.toISOString().slice(0,10);
   document.getElementById('sol-email-row').style.display='none';
-  esolicitudes=await loadSolicitudes(session.nombre);updateEbadge();erendSolicitudes();
+  // Inicializar el calendario
+  initCalPicker('emp-cal-container','ef-desde','ef-hasta',hoy.getFullYear(),hoy.getMonth());
+  esolicitudes=await loadSolicitudes(session.nombre);
+  rebuildApprovedSet(esolicitudes);
+  updateEbadge();erendSolicitudes();
   await empGenerar();
 }
 
@@ -573,6 +614,107 @@ function switchTab(tab){
 function renderEmpleados(){document.getElementById('emp-list').innerHTML=empleados.map(function(e){return'<label class="emp-row"><input type="checkbox" class="echk" value="'+esc(e.nombre)+'" checked><label>'+esc(e.nombre)+'</label></label>';}).join('');}
 function selAll(){document.querySelectorAll('.echk').forEach(function(c){c.checked=true;});}
 function selNone(){document.querySelectorAll('.echk').forEach(function(c){c.checked=false;});}
+
+// ══════════════════════════════════════════════════════════════════
+// CALENDAR RANGE PICKER
+// ══════════════════════════════════════════════════════════════════
+var calState = {
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(),
+  selStart: null,
+  selEnd: null,
+  picking: false, // false=nada, 'start'=esperando start, 'end'=esperando end
+  containerId: null,
+  inputDesde: null,
+  inputHasta: null
+};
+
+function initCalPicker(containerId, desdeId, hastaId, year, month){
+  calState.containerId = containerId;
+  calState.inputDesde = desdeId;
+  calState.inputHasta = hastaId;
+  calState.year = year;
+  calState.month = month;
+  // Leer valores actuales de los hidden inputs
+  var d1=document.getElementById(desdeId).value;
+  var d2=document.getElementById(hastaId).value;
+  calState.selStart = d1||null;
+  calState.selEnd   = d2||null;
+  renderCalPicker();
+}
+
+function renderCalPicker(){
+  var c=document.getElementById(calState.containerId);
+  if(!c)return;
+  var year=calState.year,month=calState.month;
+  var meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var dows=['lu','ma','mi','ju','vi','sá','do'];
+  var hoy=new Date().toISOString().slice(0,10);
+
+  var firstDay=new Date(year,month,1).getDay(); // 0=dom
+  // convertir a lu=0
+  var startOffset=(firstDay+6)%7;
+  var daysInMonth=new Date(year,month+1,0).getDate();
+
+  var html='<div class="cal-picker">';
+  html+='<div class="cal-nav">';
+  html+='<button class="cal-nav-btn" onclick="calMove(-1)">◀</button>';
+  html+='<span class="cal-month-lbl">'+meses[month]+' '+year+'</span>';
+  html+='<button class="cal-nav-btn" onclick="calMove(1)">▶</button>';
+  html+='</div>';
+  html+='<div class="cal-grid">';
+  // headers
+  dows.forEach(function(d){html+='<div class="cal-dow">'+d+'</div>';});
+  // empty cells
+  for(var e=0;e<startOffset;e++)html+='<div class="cal-day empty"></div>';
+  // days
+  for(var d=1;d<=daysInMonth;d++){
+    var iso=year+'-'+('0'+(month+1)).slice(-2)+'-'+('0'+d).slice(-2);
+    var cls='cal-day';
+    if(iso===hoy)cls+=' today-cal';
+    if(calState.selStart&&calState.selEnd){
+      var s=calState.selStart,en=calState.selEnd;
+      if(s>en){var tmp=s;s=en;en=tmp;}
+      if(iso===s)cls+=' sel-start';
+      else if(iso===en)cls+=' sel-end';
+      else if(iso>s&&iso<en)cls+=' in-range';
+    }else if(calState.selStart&&iso===calState.selStart){
+      cls+=' sel-start';
+    }
+    html+='<div class="'+cls+'" onclick="calDayClick(\''+iso+'\')">'+d+'</div>';
+  }
+  html+='</div>';
+  // hint
+  var hint='';
+  if(!calState.selStart)hint='Pulsa para elegir inicio';
+  else if(!calState.selEnd)hint='Pulsa para elegir fin';
+  else{hint=isoDisplay(calState.selStart)+' → '+isoDisplay(calState.selEnd);}
+  html+='<div class="cal-hint">'+hint+'</div>';
+  html+='</div>';
+  c.innerHTML=html;
+}
+
+function calMove(dir){
+  calState.month+=dir;
+  if(calState.month<0){calState.month=11;calState.year--;}
+  if(calState.month>11){calState.month=0;calState.year++;}
+  renderCalPicker();
+}
+
+function calDayClick(iso){
+  if(!calState.selStart||calState.selEnd){
+    // Empezar selección nueva
+    calState.selStart=iso;calState.selEnd=null;
+  }else{
+    // Ya tenemos start, fijar end
+    if(iso<calState.selStart){calState.selEnd=calState.selStart;calState.selStart=iso;}
+    else{calState.selEnd=iso;}
+    // Actualizar hidden inputs
+    document.getElementById(calState.inputDesde).value=calState.selStart;
+    document.getElementById(calState.inputHasta).value=calState.selEnd;
+  }
+  renderCalPicker();
+}
 
 // ── PARSE / HELPERS ──
 function parsearTabla(table){
@@ -638,6 +780,17 @@ function emparejarTurnos(regs,fechaDia){
   return turnos;
 }
 
+// ── Calcular duración de un turno en minutos ──
+function calcTurnoMins(turno){
+  if(!turno.entrada||!turno.salida)return null;
+  var me=horaToMins(turno.entrada.hora)||0;
+  var ms=horaToMins(turno.salida.hora)||0;
+  if(me<UMBRAL_NOCHE)me+=1440;
+  if(ms<UMBRAL_NOCHE)ms+=1440;
+  var dur=ms-me;
+  return dur>0?dur:null;
+}
+
 function calcDia(regs){
   var UMBRAL=UMBRAL_NOCHE;
   var sorted=regs.slice().sort(function(a,b){var am=horaToMins(a.hora)||0,bm=horaToMins(b.hora)||0;if(am<UMBRAL)am+=1440;if(bm<UMBRAL)bm+=1440;return am-bm;});
@@ -669,14 +822,16 @@ async function generar(){
 
 async function empGenerar(){
   var desde=document.getElementById('ef-desde').value,hasta=document.getElementById('ef-hasta').value;
-  if(!desde||!hasta){toast('Elige el período','err');return;}
+  if(!desde||!hasta){toast('Selecciona el período en el calendario','err');return;}
   if(desde>hasta){toast('Fecha inicio > fin','err');return;}
   setLoader(true,'Cargando fichajes...');empEditData={};
   try{
     var table=await fetchSheet(session.nombre);var fichajes=parsearTabla(table);
     var filt=fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});
     var dmap={};for(var j=0;j<filt.length;j++){var f=filt[j];if(!dmap[f.fecha])dmap[f.fecha]=[];dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});}
-    empEditData=dmap;esolicitudes=await loadSolicitudes(session.nombre);updateEbadge();
+    empEditData=dmap;esolicitudes=await loadSolicitudes(session.nombre);
+    rebuildApprovedSet(esolicitudes);
+    updateEbadge();
   }catch(e){toast('Error: '+e.message,'err');setLoader(false);return;}
   setLoader(false);eswitch('fichajes');renderEmpReport();
 }
@@ -687,25 +842,10 @@ function renderEmpReport(){
   var rep=document.getElementById('ereport');rep.style.display='block';
   var dmap=empEditData,fechas=Object.keys(dmap).sort().reverse();
   if(!fechas.length){rep.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin fichajes</h2><p>No hay registros en el período seleccionado.</p></div>';return;}
-  var totalMins=0,sinSal=0,sinEnt=0,fechasAsc=fechas.slice().reverse();
-  for(var i=0;i<fechas.length;i++){var calc=calcDia(dmap[fechas[i]]||[]);if(calc.mins!=null)totalMins+=calc.mins;if(calc.estado==='sin-salida')sinSal++;if(calc.estado==='sin-entrada')sinEnt++;}
-  var pills='<div class="pills"><div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div><div class="pill">Días <strong>'+fechas.length+'</strong></div>'+(sinSal?'<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>':'')+(sinEnt?'<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>':'')+'</div>';
-  var summaryCards=buildSummaryGrid(fechas,dmap,'_emp');
+  var fechasAsc=fechas.slice().reverse();
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump"><button class="btn-jump" onclick="jumpToDate(\'_emp\')">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
-  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+pills+summaryCards+dateSearch+'<div class="days" id="emp-days-list">'+cards+'</div></div>';
-}
-
-function buildSummaryGrid(fechas,dmap,empKey){
-  var hoy=new Date().toISOString().slice(0,10);
-  return'<div class="summary-grid">'+fechas.map(function(f){
-    var calc=calcDia(dmap[f]||[]),statCls='',hoursDisplay='';
-    if(calc.estado==='sin-salida'){statCls='has-error';hoursDisplay='<div class="sum-hours err">sin salida</div>';}
-    else if(calc.estado==='sin-entrada'){statCls='has-warn';hoursDisplay='<div class="sum-hours warn">sin entrada</div>';}
-    else if(calc.mins!=null){hoursDisplay='<div class="sum-hours">'+minsToStr(calc.mins)+'</div>';}
-    else{hoursDisplay='<div class="sum-hours empty-day">sin datos</div>';}
-    return'<div class="sum-card '+statCls+(f===hoy?' today':'')+'" onclick="scrollToDay(\''+f+'\',\''+empKey+'\')" title="'+dowName(f)+' '+isoDisplay(f)+'"><div class="sum-dow">'+dowName(f).slice(0,3)+'</div><div class="sum-date">'+isoDisplay(f)+'</div>'+hoursDisplay+'</div>';
-  }).join('')+'</div>';
+  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days" id="emp-days-list">'+cards+'</div></div>';
 }
 
 function scrollToDay(fecha,empKey){
@@ -715,26 +855,40 @@ function scrollToDay(fecha,empKey){
 }
 function jumpToDate(empKey){var inputId=empKey==='_emp'?'emp-date-jump':'adm-date-jump';var fecha=document.getElementById(inputId).value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,empKey);}
 
+// ── buildFilasTurnos: detecta turno >12h y marca aprobados ──
 function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   var turnos=emparejarTurnos(regs,fecha);
   if(!turnos.length)return'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
   var html='<table class="ft"><thead><tr><th>Turno</th><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar cambio)</span></th></tr></thead><tbody>';
   for(var t=0;t<turnos.length;t++){
     var turno=turnos[t],turnoNum=t+1,sepCls=t>0?' class="turno-sep"':'';
+    var turnoMins=calcTurnoMins(turno);
+    var isLong=(turnoMins!=null&&turnoMins>MAX_TURNO_MINS);
     if(turno.entrada){
       var hasPendE=solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';});
+      var hasApprE=approvedSet.has(emp+'|'+turno.fechaEntrada+'|ENTRADA|'+normHora(turno.entrada.hora));
+      var btnCls='hora-btn'+(hasPendE?' pending':hasApprE?' approved':'')+(isLong?' hora-btn-long':'');
+      var markE=hasApprE?'<span class="edit-mark">✏</span>':'<span class="pencil">✏</span>';
+      var tdTipo='<td class="t-in'+(isLong?' t-long':'')+'">ENTRADA'+(isLong?' 🔴':' ')+'</td>';
       html+='<tr'+sepCls+'><td style="font-size:.6rem;color:var(--ink3);white-space:nowrap">T'+turnoNum+'</td>';
-      html+='<td class="t-in">ENTRADA</td>';
-      html+='<td><button class="hora-btn'+(hasPendE?' pending':'')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.entrada.hora+' <span class="pencil">✏</span></button></td></tr>';
+      html+=tdTipo;
+      html+='<td><button class="'+btnCls+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.entrada.hora+' '+markE+'</button></td></tr>';
     }
     if(turno.salida){
       var hasPendS=solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';});
+      var hasApprS=approvedSet.has(emp+'|'+turno.fechaSalida+'|SALIDA|'+normHora(turno.salida.hora));
       var sepS=turno.entrada?'':sepCls;
       var tdNum=turno.entrada?'<td></td>':'<td style="font-size:.6rem;color:var(--ink3);white-space:nowrap">T'+turnoNum+'</td>';
-      html+='<tr'+sepS+'>'+tdNum+'<td class="t-out">SALIDA</td>';
-      html+='<td><button class="hora-btn'+(hasPendS?' pending':'')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.salida.hora+' <span class="pencil">✏</span></button></td></tr>';
+      var btnClsS='hora-btn'+(hasPendS?' pending':hasApprS?' approved':'')+(isLong?' hora-btn-long':'');
+      var markS=hasApprS?'<span class="edit-mark">✏</span>':'<span class="pencil">✏</span>';
+      var tdTipoS='<td class="t-out'+(isLong?' t-long':'')+'">SALIDA'+(isLong?' 🔴':' ')+'</td>';
+      html+='<tr'+sepS+'>'+tdNum+tdTipoS;
+      html+='<td><button class="'+btnClsS+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.salida.hora+' '+markS+'</button></td></tr>';
     }
   }
+  // Si algún turno supera 12h, mostrar aviso
+  var hayLong=turnos.some(function(tr){var tm=calcTurnoMins(tr);return tm!=null&&tm>MAX_TURNO_MINS;});
+  if(hayLong){html+='<tr><td colspan="3" style="padding:6px 10px;font-size:.65rem;color:var(--red);background:var(--red-soft);border-radius:0 0 6px 6px">⚠ Turno de más de 12 horas — revisa si es correcto</td></tr>';}
   return html+'</tbody></table>';
 }
 
@@ -757,21 +911,46 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
   if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
   if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
+  // Chip si hay turno largo
+  var turnos=emparejarTurnos(regs,fecha);
+  var hayLong=turnos.some(function(tr){var tm=calcTurnoMins(tr);return tm!=null&&tm>MAX_TURNO_MINS;});
+  if(hayLong)chips+='<span class="chip c-long">+12h ⚠</span>';
   var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
   return'<div class="day-card '+cls+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
 function toggleCard(card){card.classList.toggle('open');}
 
 function isoWeek(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]),day=d.getDay()||7;d.setDate(d.getDate()+4-day);var ys=new Date(d.getFullYear(),0,1);return Math.ceil(((d-ys)/86400000+1)/7)+'_'+d.getFullYear();}
+
+// ── buildCardsConSemana: separador ANTES de cada semana (no después) ──
 function buildCardsConSemana(fechas,dmap,emp,isEmp){
-  var html='',semActual=null,semMins=0;
+  // fechas viene en orden descendente (más reciente primero)
+  // Agrupar por semana manteniendo orden
+  var grupos=[]; // [{semana, mins, cards}]
+  var semActual=null;
+  var semMins=0;
+  var semCards=[];
+
   for(var i=0;i<fechas.length;i++){
     var f=fechas[i],semana=isoWeek(f);
-    if(semActual!==null&&semana!==semActual){html+='<div class="week-sep"><span class="week-lbl">Semana anterior · '+minsToStr(semMins)+'</span></div>';semMins=0;}
-    semActual=semana;var calc=calcDia(dmap[f]||[]);if(calc.mins!=null)semMins+=calc.mins;
-    html+=isEmp?renderEmpCard(emp,f,dmap[f]||[]):renderCard(emp,f,dmap[f]||[]);
+    if(semActual!==null&&semana!==semActual){
+      grupos.push({semana:semActual,mins:semMins,cards:semCards.slice()});
+      semMins=0;semCards=[];
+    }
+    semActual=semana;
+    var calc=calcDia(dmap[f]||[]);
+    if(calc.mins!=null)semMins+=calc.mins;
+    semCards.push(isEmp?renderEmpCard(emp,f,dmap[f]||[]):renderCard(emp,f,dmap[f]||[]));
   }
-  if(semActual!==null)html+='<div class="week-sep"><span class="week-lbl">Semana · '+minsToStr(semMins)+'</span></div>';
+  if(semActual!==null)grupos.push({semana:semActual,mins:semMins,cards:semCards.slice()});
+
+  // Renderizar: separador ARRIBA de cada semana, luego los cards
+  var html='';
+  for(var g=0;g<grupos.length;g++){
+    var gr=grupos[g];
+    html+='<div class="week-sep"><span class="week-lbl">Total semana · '+minsToStr(gr.mins)+'</span></div>';
+    html+=gr.cards.join('');
+  }
   return html;
 }
 
@@ -806,9 +985,6 @@ function abrirModalSol(emp,fecha,isEmp,turnoIdx){
 }
 function cerrarModalSol(){document.getElementById('modal-sol').classList.remove('on');solActual=null;}
 
-// ── ENVIAR — CORREGIDO ──
-// setLoader(false) se llama SIEMPRE antes de la recarga de solicitudes,
-// para que un fallo/timeout en la recarga no deje la UI bloqueada.
 async function enviarSolicitud(){
   if(!solActual)return;
   var motivo=document.getElementById('sol-motivo').value.trim();
@@ -849,15 +1025,14 @@ async function enviarSolicitud(){
     envioErr=e.message;
   }
 
-  // ── Quitar loader SIEMPRE aquí, antes de recargar solicitudes ──
   setLoader(false);
 
   if(envioOk){
     toast('Solicitud'+(toSend.length>1?'es':'')+' enviada'+(toSend.length>1?'s':'')+' ✓','ok');
-    // Recargar solicitudes en background (si falla, no importa)
     try{
       if(solIsEmp){
         esolicitudes=await loadSolicitudes(session.nombre);
+        rebuildApprovedSet(esolicitudes);
         updateEbadge();
         setTimeout(function(){eswitch('solicitudes');},600);
       }else{
@@ -865,7 +1040,7 @@ async function enviarSolicitud(){
         updateBadge();
         setTimeout(function(){switchTab('solicitudes');},600);
       }
-    }catch(e2){/* silencioso */}
+    }catch(e2){}
   }else{
     toast('Error al enviar: '+envioErr,'err');
   }
@@ -904,14 +1079,15 @@ function eswitch(tab){
   document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#emp-pages .page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('etab-'+tab).classList.add('active');document.getElementById('epage-'+tab).classList.add('active');
-  if(tab==='solicitudes'){loadSolicitudes(session.nombre).then(function(data){esolicitudes=data;updateEbadge();erendSolicitudes();});}
+  if(tab==='solicitudes'){loadSolicitudes(session.nombre).then(function(data){esolicitudes=data;rebuildApprovedSet(esolicitudes);updateEbadge();erendSolicitudes();});}
 }
 function updateEbadge(){var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('ebadge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
-function efiltrarSol(f,btn){esolFiltro=f;document.querySelectorAll('#epage-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');erendSolicitudes();}
+
+// ── Mis solicitudes: solo mostrar todas, sin filtros de estado ──
 function erendSolicitudes(){
-  var lista=esolicitudes.filter(function(s){return esolFiltro==='todas'||s.estado===esolFiltro;});
+  var lista=esolicitudes.slice();
   var el=document.getElementById('esol-list');
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>'+(esolFiltro==='todas'?'Pulsa cualquier hora en Mis fichajes para solicitar una corrección.':'No hay solicitudes con este filtro.')+'</p></div>';return;}
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>Pulsa cualquier hora en Mis fichajes para solicitar una corrección.</p></div>';return;}
   el.innerHTML=lista.slice().reverse().map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
