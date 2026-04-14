@@ -374,7 +374,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 </div>
 </div>
 
-<!-- MODAL: muestra el turno completo (entrada + salida pareada) -->
+<!-- MODAL -->
 <div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
   <div class="modal-box">
     <div class="modal-title">Solicitud de cambio de turno</div>
@@ -448,7 +448,7 @@ function setStatus(cls,msg){document.getElementById('sdot').className='sdot '+cl
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function empId(emp){return emp.replace(/[^a-zA-Z0-9]/g,'_');}
 
-// ── JSONP — lectura Y escritura ──
+// ── JSONP ──
 function apiGetJSONP(params,timeoutMs){
   timeoutMs=timeoutMs||20000;
   return new Promise(function(resolve,reject){
@@ -468,7 +468,7 @@ function apiGetJSONP(params,timeoutMs){
 async function callScriptJSONP(payload){
   if(!SCRIPT_URL)return{ok:false,msg:'Sin URL'};
   try{
-    var res=await apiGetJSONP({action:payload.action,data:JSON.stringify(payload)},25000);
+    var res=await apiGetJSONP({action:payload.action,data:JSON.stringify(payload)},40000);
     return res;
   }catch(e){return{ok:false,msg:e.toString()};}
 }
@@ -498,7 +498,7 @@ async function loadSolicitudes(empNombre){
   try{
     var params={action:'getSolicitudes'};
     if(empNombre)params.emp=empNombre;
-    var data=await apiGetJSONP(params);
+    var data=await apiGetJSONP(params,15000);
     return Array.isArray(data)?data:[];
   }catch(e){return[];}
 }
@@ -604,9 +604,7 @@ function dowName(iso){var p=iso.split('-').map(Number);return DIAS_TILDE[new Dat
 function diaSiguiente(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 
 // ── EMPAREJAMIENTO DE TURNOS ──
-// Devuelve array de turnos: [{idx,entrada,salida,fechaEntrada,fechaSalida}]
-// Ordenado cronológicamente. Salida de madrugada = día siguiente.
-function emparejarTurnos(regs, fechaDia){
+function emparejarTurnos(regs,fechaDia){
   var UMBRAL=UMBRAL_NOCHE;
   var sorted=regs.slice().map(function(r){return{r:r};});
   sorted.sort(function(a,b){
@@ -717,7 +715,6 @@ function scrollToDay(fecha,empKey){
 }
 function jumpToDate(empKey){var inputId=empKey==='_emp'?'emp-date-jump':'adm-date-jump';var fecha=document.getElementById(inputId).value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,empKey);}
 
-// Construye tabla con separadores por turno
 function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   var turnos=emparejarTurnos(regs,fecha);
   if(!turnos.length)return'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
@@ -790,14 +787,12 @@ function abrirModalSol(emp,fecha,isEmp,turnoIdx){
   solActual={emp:emp,fecha:fecha,turnoIdx:turnoIdx,turno:turno};
   document.getElementById('sol-emp').value=emp;
   document.getElementById('modal-turno-info').textContent='Turno '+(turnoIdx+1)+' de '+turnos.length+' · '+isoDisplay(fecha)+(turnos.length>1?' (hay '+turnos.length+' turnos este día)':'');
-  // Entrada
   var horaE=turno.entrada?turno.entrada.hora:'—';
   var fechaE=turno.fechaEntrada||fecha;
   document.getElementById('sol-fecha-entrada-actual').value=isoDisplay(fechaE);
   document.getElementById('sol-fecha-entrada-nueva').value=fechaE;
   document.getElementById('sol-hora-entrada-actual').value=horaE;
   document.getElementById('sol-hora-entrada-nueva').value=turno.entrada?horaE.slice(0,5):'';
-  // Salida
   var horaS=turno.salida?turno.salida.hora:'—';
   var fechaS=turno.fechaSalida||fecha;
   document.getElementById('sol-fecha-salida-actual').value=isoDisplay(fechaS);
@@ -811,7 +806,9 @@ function abrirModalSol(emp,fecha,isEmp,turnoIdx){
 }
 function cerrarModalSol(){document.getElementById('modal-sol').classList.remove('on');solActual=null;}
 
-// ── ENVIAR via JSONP ──
+// ── ENVIAR — CORREGIDO ──
+// setLoader(false) se llama SIEMPRE antes de la recarga de solicitudes,
+// para que un fallo/timeout en la recarga no deje la UI bloqueada.
 async function enviarSolicitud(){
   if(!solActual)return;
   var motivo=document.getElementById('sol-motivo').value.trim();
@@ -830,20 +827,48 @@ async function enviarSolicitud(){
   var cambiaS=horaSA!=='—'&&horaSN&&horaSN!==normHora(horaSA);
   var cambiaFS=horaSA!=='—'&&fechaSN!==fechaSOrig;
   if(!cambiaE&&!cambiaS&&!cambiaFE&&!cambiaFS){toast('No hay ningún cambio respecto al original','err');return;}
-  cerrarModalSol();setLoader(true,'Enviando solicitud...');
+
   var toSend=[];
   if((cambiaE||cambiaFE)&&horaEA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaEOrig,fechaNueva:fechaEN,tipo:'ENTRADA',horaActual:normHora(horaEA),horaNueva:cambiaE?horaEN:normHora(horaEA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp});}
   if((cambiaS||cambiaFS)&&horaSA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaSOrig,fechaNueva:fechaSN,tipo:'SALIDA',horaActual:normHora(horaSA),horaNueva:cambiaS?horaSN:normHora(horaSA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp});}
-  if(!toSend.length){setLoader(false);toast('No hay cambios que enviar','err');return;}
+  if(!toSend.length){toast('No hay cambios que enviar','err');return;}
+
+  cerrarModalSol();
+  setLoader(true,'Enviando solicitud...');
+
+  var envioOk=false;
+  var envioErr='';
   try{
     for(var i=0;i<toSend.length;i++){
       setLoader(true,'Enviando '+(i+1)+' de '+toSend.length+'...');
       var res=await callScriptJSONP(toSend[i]);
       if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'El script devolvió error');
     }
-    if(solIsEmp){esolicitudes=await loadSolicitudes(session.nombre);updateEbadge();setLoader(false);toast('Solicitud'+(toSend.length>1?'es':'')+' enviada'+(toSend.length>1?'s':'')+' ✓','ok');setTimeout(function(){eswitch('solicitudes');},600);}
-    else{solicitudes=await loadSolicitudes();updateBadge();setLoader(false);toast('Solicitud'+(toSend.length>1?'es':'')+' enviada'+(toSend.length>1?'s':'')+' ✓','ok');setTimeout(function(){switchTab('solicitudes');},600);}
-  }catch(e){setLoader(false);toast('Error al enviar: '+e.message,'err');}
+    envioOk=true;
+  }catch(e){
+    envioErr=e.message;
+  }
+
+  // ── Quitar loader SIEMPRE aquí, antes de recargar solicitudes ──
+  setLoader(false);
+
+  if(envioOk){
+    toast('Solicitud'+(toSend.length>1?'es':'')+' enviada'+(toSend.length>1?'s':'')+' ✓','ok');
+    // Recargar solicitudes en background (si falla, no importa)
+    try{
+      if(solIsEmp){
+        esolicitudes=await loadSolicitudes(session.nombre);
+        updateEbadge();
+        setTimeout(function(){eswitch('solicitudes');},600);
+      }else{
+        solicitudes=await loadSolicitudes();
+        updateBadge();
+        setTimeout(function(){switchTab('solicitudes');},600);
+      }
+    }catch(e2){/* silencioso */}
+  }else{
+    toast('Error al enviar: '+envioErr,'err');
+  }
 }
 
 // ── ADMIN: INFORME ──
@@ -914,24 +939,38 @@ function renderSolicitudes(){
 async function aprobar(id){
   var sol=solicitudes.find(function(s){return s.id===id;});if(!sol)return;
   setLoader(true,'Aprobando...');
+  var ok=false,err='';
   try{
     var res=await callScriptJSONP({action:'aprobarSolicitud',id:sol.id,emp:sol.emp,fecha:safeISO(sol.fecha),fechaNueva:safeISO(sol.fechaNueva||sol.fecha),tipo:sol.tipo,horaActual:sol.horaActual,horaNueva:sol.horaNueva,emailEmp:sol.emailEmp||''});
     if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'Error al aprobar');
-    solicitudes=await loadSolicitudes();updateBadge();renderSolicitudes();
+    ok=true;
+  }catch(e){err=e.message;}
+  setLoader(false);
+  if(ok){
     if(editData[sol.emp]){var fO=safeISO(sol.fecha),fN=safeISO(sol.fechaNueva||sol.fecha),regs=editData[sol.emp][fO];if(regs){for(var i=0;i<regs.length;i++){if(regs[i].tipo===sol.tipo&&normHora(regs[i].hora)===normHora(sol.horaActual)){if(fN!==fO){regs.splice(i,1);if(!editData[sol.emp][fN])editData[sol.emp][fN]=[];editData[sol.emp][fN].push({tipo:sol.tipo,hora:sol.horaNueva,modificado:true});refreshCard(sol.emp,fO);refreshCard(sol.emp,fN);}else{regs[i].hora=sol.horaNueva;regs[i].modificado=true;refreshCard(sol.emp,fO);}break;}}}}
-    setLoader(false);toast('Aprobado ✓','ok');
-  }catch(e){setLoader(false);toast('Error: '+e.message,'err');}
+    toast('Aprobado ✓','ok');
+    try{solicitudes=await loadSolicitudes();updateBadge();renderSolicitudes();}catch(e2){}
+  }else{
+    toast('Error: '+err,'err');
+  }
 }
 
 async function rechazar(id){
   var sol=solicitudes.find(function(s){return s.id===id;});if(!sol)return;
   setLoader(true,'Rechazando...');
+  var ok=false,err='';
   try{
     var res=await callScriptJSONP({action:'rechazarSolicitud',id:sol.id,emp:sol.emp,fecha:safeISO(sol.fecha),tipo:sol.tipo,horaActual:sol.horaActual,emailEmp:sol.emailEmp||''});
     if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'Error al rechazar');
-    solicitudes=await loadSolicitudes();updateBadge();renderSolicitudes();
-    setLoader(false);toast('Solicitud rechazada');
-  }catch(e){setLoader(false);toast('Error: '+e.message,'err');}
+    ok=true;
+  }catch(e){err=e.message;}
+  setLoader(false);
+  if(ok){
+    toast('Solicitud rechazada');
+    try{solicitudes=await loadSolicitudes();updateBadge();renderSolicitudes();}catch(e2){}
+  }else{
+    toast('Error: '+err,'err');
+  }
 }
 
 function refreshCard(emp,fecha){var id='dc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=(editData[emp]&&editData[emp][fecha])||[];var tmp=document.createElement('div');tmp.innerHTML=renderCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
