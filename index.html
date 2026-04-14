@@ -124,7 +124,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .days{display:flex;flex-direction:column;gap:8px}
 .week-sep{display:flex;align-items:center;gap:10px;margin:6px 0 2px;padding:0 2px}
 .week-sep::before,.week-sep::after{content:'';flex:1;height:1px;background:var(--border2)}
-.week-lbl{font-size:.6rem;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:var(--green3);color:var(--green-acc);border:1px solid var(--green4);border-radius:20px;padding:3px 12px;font-weight:500}
+.week-lbl{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:var(--green3);color:var(--green-acc);border:1px solid var(--green4);border-radius:20px;padding:3px 12px;font-weight:500}
 .day-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s}
 .day-card:hover{box-shadow:var(--shadow2)}
 .day-card.has-error{border-left:3px solid var(--red)}
@@ -150,6 +150,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .ft tbody tr:hover td{background:rgba(45,106,63,.025)}
 .t-in{color:var(--green);font-weight:500}
 .t-out{color:var(--blue);font-weight:500}
+.turno-sep td{border-top:2px dashed var(--border2)!important;padding-top:10px!important}
 .hora-btn{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:5px;font-family:'DM Mono',monospace;font-size:.76rem;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--ink);transition:all .15s}
 .hora-btn:hover{background:var(--green3);border-color:var(--green4);color:var(--green)}
 .hora-btn .pencil{font-size:.6rem;opacity:0;transition:opacity .15s}
@@ -188,10 +189,11 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(28,43,30,.45);z-index:800;align-items:center;justify-content:center}
 .modal-ov.on{display:flex}
 .modal-box{background:#fff;border-radius:12px;padding:2rem;max-width:540px;width:92%;box-shadow:0 20px 60px rgba(28,43,30,.2);max-height:90vh;overflow-y:auto}
-.modal-title{font-family:'Lora',serif;font-size:1.15rem;color:var(--green-acc);margin-bottom:1.25rem}
+.modal-title{font-family:'Lora',serif;font-size:1.15rem;color:var(--green-acc);margin-bottom:.3rem}
+.modal-turno-info{font-size:.68rem;color:var(--ink3);margin-bottom:1.25rem;padding:6px 10px;background:var(--cream2);border-radius:6px;border:1px solid var(--border)}
 .modal-row{display:flex;flex-direction:column;gap:4px;margin-bottom:.9rem}
 .modal-row label{font-size:.62rem;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase}
-.modal-row input,.modal-row textarea,.modal-row select{padding:8px 10px;font-family:'DM Mono',monospace;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;transition:border-color .15s}
+.modal-row input,.modal-row textarea{padding:8px 10px;font-family:'DM Mono',monospace;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;transition:border-color .15s}
 .modal-row input:focus,.modal-row textarea:focus{border-color:var(--green)}
 .modal-row textarea{resize:vertical;min-height:70px}
 .hora-change{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
@@ -372,12 +374,12 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 </div>
 </div>
 
-<!-- MODAL SOLICITUD -->
+<!-- MODAL: muestra el turno completo (entrada + salida pareada) -->
 <div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
   <div class="modal-box">
-    <div class="modal-title">Solicitud de cambio</div>
+    <div class="modal-title">Solicitud de cambio de turno</div>
+    <div class="modal-turno-info" id="modal-turno-info"></div>
     <div class="modal-row"><label>Empleado</label><input type="text" id="sol-emp" readonly style="background:var(--cream3)"></div>
-
     <hr class="modal-divider">
     <span class="modal-section-lbl">Entrada</span>
     <div class="modal-row">
@@ -396,7 +398,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
         <input type="time" id="sol-hora-entrada-nueva">
       </div>
     </div>
-
     <hr class="modal-divider">
     <span class="modal-section-lbl">Salida</span>
     <div class="modal-row">
@@ -415,7 +416,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
         <input type="time" id="sol-hora-salida-nueva">
       </div>
     </div>
-
     <hr class="modal-divider">
     <div class="modal-row" id="sol-email-row"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
     <div class="modal-row"><label>Motivo <span style="color:var(--ink3)">(opcional)</span></label><textarea id="sol-motivo" placeholder="Motivo del cambio..."></textarea></div>
@@ -434,103 +434,88 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 const DIAS_TILDE = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const ADMIN_MAIL = 'luciana@buenasysantas.es';
 const ADMIN_PIN  = '2136';
+const UMBRAL_NOCHE = 120;
 
 let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec';
 let ADMIN_EMAIL = localStorage.getItem('fichajes_admin_email') || ADMIN_MAIL;
+let session=null,empleados=[],editData={},solicitudes=[],esolicitudes=[];
+let solFiltro='todas',esolFiltro='todas';
+let currentSel,currentDesde,currentHasta,empEditData={},solActual=null;
 
-let session = null, empleados = [], editData = {}, solicitudes = [], esolicitudes = [];
-let solFiltro = 'todas', esolFiltro = 'todas';
-let currentSel, currentDesde, currentHasta, empEditData = {}, solActual = null;
-
-// ── UI helpers ──
 function toast(msg,cls,dur){dur=dur||2800;var t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(cls?' '+cls:'');clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast';},dur);}
 function setLoader(on,msg){document.getElementById('loader').classList.toggle('on',on);if(msg)document.getElementById('ltxt').textContent=msg;}
 function setStatus(cls,msg){document.getElementById('sdot').className='sdot '+cls;document.getElementById('stxt').textContent=msg;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function empId(emp){return emp.replace(/[^a-zA-Z0-9]/g,'_');}
 
-// ── JSONP helper ──
-function apiGetJSONP(params, timeoutMs) {
-  timeoutMs = timeoutMs || 15000;
-  return new Promise(function(resolve, reject) {
-    var cbName = '_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-    var script = document.createElement('script');
-    var timer = setTimeout(function(){ cleanup(); reject(new Error('Timeout')); }, timeoutMs);
-    function cleanup(){ clearTimeout(timer); delete window[cbName]; if(script.parentNode)script.parentNode.removeChild(script); }
-    window[cbName] = function(data){ cleanup(); resolve(data); };
-    params.callback = cbName;
-    var qs = Object.keys(params).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
-    script.src = SCRIPT_URL + '?' + qs;
-    script.onerror = function(){ cleanup(); reject(new Error('Error de red')); };
+// ── JSONP — lectura Y escritura ──
+function apiGetJSONP(params,timeoutMs){
+  timeoutMs=timeoutMs||20000;
+  return new Promise(function(resolve,reject){
+    var cbName='_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    var script=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('Timeout al conectar con el script'));},timeoutMs);
+    function cleanup(){clearTimeout(timer);delete window[cbName];if(script.parentNode)script.parentNode.removeChild(script);}
+    window[cbName]=function(data){cleanup();resolve(data);};
+    params.callback=cbName;
+    var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
+    script.src=SCRIPT_URL+'?'+qs;
+    script.onerror=function(){cleanup();reject(new Error('Error de red'));};
     document.head.appendChild(script);
   });
 }
 
-async function fetchSheet(name) {
-  if (!SCRIPT_URL) throw new Error('Configura la URL del Apps Script primero');
-  var data = await apiGetJSONP({ action: 'getFichajes', nombre: name.trim() });
-  var rows = Array.isArray(data) ? data : (data.data || []);
-  return { rows: rows.map(function(r){ return { c: r.map(function(v){ return {v: String(v||'')}; }) }; }) };
+async function callScriptJSONP(payload){
+  if(!SCRIPT_URL)return{ok:false,msg:'Sin URL'};
+  try{
+    var res=await apiGetJSONP({action:payload.action,data:JSON.stringify(payload)},25000);
+    return res;
+  }catch(e){return{ok:false,msg:e.toString()};}
 }
 
-async function callScript(payload) {
-  if (!SCRIPT_URL) return {ok:false};
-  try {
-    await fetch(SCRIPT_URL, { method:'POST', body:JSON.stringify(payload), mode:'no-cors' });
-    return {ok:true};
-  } catch(e) { return {ok:false, msg:e.toString()}; }
+async function fetchSheet(name){
+  if(!SCRIPT_URL)throw new Error('Configura la URL del Apps Script primero');
+  var data=await apiGetJSONP({action:'getFichajes',nombre:name.trim()});
+  var rows=Array.isArray(data)?data:(data.data||[]);
+  return{rows:rows.map(function(r){return{c:r.map(function(v){return{v:String(v||'')};})};})};
 }
 
-// ── CARGA DE EMPLEADOS ──
-async function loadEmpleados() {
-  if (!SCRIPT_URL) throw new Error('Sin URL');
-  var data = await apiGetJSONP({ action: 'getEmpleados' });
-  var rows = Array.isArray(data) ? data : (data.data || []);
-  var found = [];
-  for (var i=0; i<rows.length; i++) {
-    var r = rows[i];
-    var nombre = String(r[0]||'').trim();
-    if (!nombre || ['nombre','empleado','name'].indexOf(nombre.toLowerCase()) !== -1) continue;
-    found.push({ nombre:nombre, pin:String(r[3]||'').trim(), email:String(r[4]||'').trim().toLowerCase() });
+async function loadEmpleados(){
+  if(!SCRIPT_URL)throw new Error('Sin URL');
+  var data=await apiGetJSONP({action:'getEmpleados'});
+  var rows=Array.isArray(data)?data:(data.data||[]);
+  var found=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i],nombre=String(r[0]||'').trim();
+    if(!nombre||['nombre','empleado','name'].indexOf(nombre.toLowerCase())!==-1)continue;
+    found.push({nombre:nombre,pin:String(r[3]||'').trim(),email:String(r[4]||'').trim().toLowerCase()});
   }
-  empleados = found;
-  return found;
+  empleados=found;return found;
 }
 
-// ── CARGA DE SOLICITUDES DESDE SHEET ──
-async function loadSolicitudes(empNombre) {
-  if (!SCRIPT_URL) return [];
-  try {
-    var params = { action: 'getSolicitudes' };
-    if (empNombre) params.emp = empNombre;
-    var data = await apiGetJSONP(params);
-    return Array.isArray(data) ? data : [];
-  } catch(e) { return []; }
+async function loadSolicitudes(empNombre){
+  if(!SCRIPT_URL)return[];
+  try{
+    var params={action:'getSolicitudes'};
+    if(empNombre)params.emp=empNombre;
+    var data=await apiGetJSONP(params);
+    return Array.isArray(data)?data:[];
+  }catch(e){return[];}
 }
 
 // ── LOGIN ──
-async function doLogin() {
+async function doLogin(){
   var email=document.getElementById('login-email').value.trim().toLowerCase();
   var pin=document.getElementById('login-pin').value.trim();
-  var btn=document.getElementById('btn-login');
-  var err=document.getElementById('login-err');
+  var btn=document.getElementById('btn-login'),err=document.getElementById('login-err');
   err.classList.remove('on');
   if(!email||!pin){err.textContent='Rellena todos los campos.';err.classList.add('on');return;}
-  btn.disabled=true; btn.textContent='Verificando...';
-  if(email===ADMIN_MAIL&&pin===ADMIN_PIN){
-    session={role:'admin',nombre:'Luciana (Admin)',email:ADMIN_MAIL};
-    btn.disabled=false; btn.textContent='Entrar';
-    await initAdmin(); return;
-  }
-  if(!empleados.length){
-    try{await loadEmpleados();}
-    catch(e){err.textContent='Error conectando con Apps Script. Comprueba la URL en Config.';err.classList.add('on');btn.disabled=false;btn.textContent='Entrar';return;}
-  }
+  btn.disabled=true;btn.textContent='Verificando...';
+  if(email===ADMIN_MAIL&&pin===ADMIN_PIN){session={role:'admin',nombre:'Luciana (Admin)',email:ADMIN_MAIL};btn.disabled=false;btn.textContent='Entrar';await initAdmin();return;}
+  if(!empleados.length){try{await loadEmpleados();}catch(e){err.textContent='Error conectando con Apps Script.';err.classList.add('on');btn.disabled=false;btn.textContent='Entrar';return;}}
   var emp=empleados.find(function(e){return e.email.toLowerCase()===email;});
   if(!emp||String(emp.pin).trim()!==String(pin).trim()){err.textContent='Email o PIN incorrectos.';err.classList.add('on');btn.disabled=false;btn.textContent='Entrar';return;}
-  session={role:'empleado',nombre:emp.nombre,email:emp.email,empData:emp};
-  btn.disabled=false; btn.textContent='Entrar';
-  initEmpleado();
+  session={role:'empleado',nombre:emp.nombre,email:emp.email,empData:emp};btn.disabled=false;btn.textContent='Entrar';initEmpleado();
 }
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!document.getElementById('app').classList.contains('on'))doLogin();});
 
@@ -538,150 +523,137 @@ function doLogout(){
   session=null;empleados=[];editData={};solicitudes=[];esolicitudes=[];empEditData={};currentSel=null;
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').classList.remove('on');
-  document.getElementById('login-email').value='';
-  document.getElementById('login-pin').value='';
+  document.getElementById('login-email').value='';document.getElementById('login-pin').value='';
   document.getElementById('login-err').classList.remove('on');
   document.getElementById('hdr-emp-info').classList.remove('on');
   document.getElementById('hdr-user-admin').style.display='none';
-  document.getElementById('nav-admin').style.display='none';
-  document.getElementById('nav-emp').style.display='none';
-  document.getElementById('side-admin').style.display='none';
-  document.getElementById('side-emp').style.display='none';
-  document.getElementById('admin-pages').style.display='none';
-  document.getElementById('emp-pages').style.display='none';
+  document.getElementById('nav-admin').style.display='none';document.getElementById('nav-emp').style.display='none';
+  document.getElementById('side-admin').style.display='none';document.getElementById('side-emp').style.display='none';
+  document.getElementById('admin-pages').style.display='none';document.getElementById('emp-pages').style.display='none';
 }
 
-// ── INIT ADMIN ──
 async function initAdmin(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').classList.add('on');
-  document.getElementById('hdr-user-admin').style.display='flex';
-  document.getElementById('hdr-user-name').textContent=session.nombre;
-  document.getElementById('hdr-role-badge').textContent='Admin';
-  document.getElementById('hdr-role-badge').className='role-badge role-admin';
-  document.getElementById('nav-admin').style.display='flex';
-  document.getElementById('side-admin').style.display='flex';
-  document.getElementById('admin-pages').style.display='block';
-  document.getElementById('status-bar-hdr').style.display='flex';
+  document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('on');
+  document.getElementById('hdr-user-admin').style.display='flex';document.getElementById('hdr-user-name').textContent=session.nombre;
+  document.getElementById('hdr-role-badge').textContent='Admin';document.getElementById('hdr-role-badge').className='role-badge role-admin';
+  document.getElementById('nav-admin').style.display='flex';document.getElementById('side-admin').style.display='flex';
+  document.getElementById('admin-pages').style.display='block';document.getElementById('status-bar-hdr').style.display='flex';
   var hoy=new Date(),p1=new Date(hoy.getFullYear(),hoy.getMonth(),1);
   document.getElementById('f-hasta').value=hoy.toISOString().slice(0,10);
   document.getElementById('f-desde').value=p1.toISOString().slice(0,10);
   setStatus('spin','Cargando...');
-  try{
-    if(!empleados.length) await loadEmpleados();
-    renderEmpleados();
-    solicitudes = await loadSolicitudes();
-    updateBadge();
-    setStatus('ok', empleados.length+' empleados');
-  }catch(e){setStatus('err','Sin conexión');}
+  try{if(!empleados.length)await loadEmpleados();renderEmpleados();solicitudes=await loadSolicitudes();updateBadge();setStatus('ok',empleados.length+' empleados');}
+  catch(e){setStatus('err','Sin conexión');}
   document.getElementById('btn-gen').disabled=false;
-  if(SCRIPT_URL) document.getElementById('cfg-url-input').value=SCRIPT_URL;
-  if(ADMIN_EMAIL) document.getElementById('cfg-email-input').value=ADMIN_EMAIL;
+  if(SCRIPT_URL)document.getElementById('cfg-url-input').value=SCRIPT_URL;
+  if(ADMIN_EMAIL)document.getElementById('cfg-email-input').value=ADMIN_EMAIL;
   updateCfgNote();
 }
 
-// ── INIT EMPLEADO ──
 async function initEmpleado(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').classList.add('on');
-  document.getElementById('hdr-emp-nombre').textContent=session.nombre;
-  document.getElementById('hdr-emp-info').classList.add('on');
-  document.getElementById('nav-emp').style.display='flex';
-  document.getElementById('side-emp').style.display='flex';
+  document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('on');
+  document.getElementById('hdr-emp-nombre').textContent=session.nombre;document.getElementById('hdr-emp-info').classList.add('on');
+  document.getElementById('nav-emp').style.display='flex';document.getElementById('side-emp').style.display='flex';
   document.getElementById('emp-pages').style.display='block';
   document.getElementById('emp-side-info').innerHTML='<strong>'+esc(session.nombre)+'</strong><br>'+esc(session.email);
   var hoy=new Date(),p1=new Date(hoy.getFullYear(),hoy.getMonth(),1);
   document.getElementById('ef-hasta').value=hoy.toISOString().slice(0,10);
   document.getElementById('ef-desde').value=p1.toISOString().slice(0,10);
   document.getElementById('sol-email-row').style.display='none';
-  esolicitudes = await loadSolicitudes(session.nombre);
-  updateEbadge();
-  erendSolicitudes();
+  esolicitudes=await loadSolicitudes(session.nombre);updateEbadge();erendSolicitudes();
   await empGenerar();
 }
 
-// ── ADMIN: TABS ──
 function switchTab(tab){
   document.querySelectorAll('#nav-admin .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#admin-pages .page').forEach(function(p){p.classList.remove('active');});
-  document.getElementById('tab-'+tab).classList.add('active');
-  document.getElementById('page-'+tab).classList.add('active');
-  if(tab==='solicitudes'){
-    loadSolicitudes().then(function(data){
-      solicitudes=data; updateBadge(); renderSolicitudes();
-    });
-  }
+  document.getElementById('tab-'+tab).classList.add('active');document.getElementById('page-'+tab).classList.add('active');
+  if(tab==='solicitudes'){loadSolicitudes().then(function(data){solicitudes=data;updateBadge();renderSolicitudes();});}
 }
-
-function renderEmpleados(){document.getElementById('emp-list').innerHTML=empleados.map(function(e){return '<label class="emp-row"><input type="checkbox" class="echk" value="'+esc(e.nombre)+'" checked><label>'+esc(e.nombre)+'</label></label>';}).join('');}
+function renderEmpleados(){document.getElementById('emp-list').innerHTML=empleados.map(function(e){return'<label class="emp-row"><input type="checkbox" class="echk" value="'+esc(e.nombre)+'" checked><label>'+esc(e.nombre)+'</label></label>';}).join('');}
 function selAll(){document.querySelectorAll('.echk').forEach(function(c){c.checked=true;});}
 function selNone(){document.querySelectorAll('.echk').forEach(function(c){c.checked=false;});}
 
-// ── PARSE ──
+// ── PARSE / HELPERS ──
 function parsearTabla(table){
   if(!table||!table.rows)return[];
   var out=[];
   for(var i=0;i<table.rows.length;i++){
     var c=table.rows[i].c||[];
     var get=function(idx){return(c[idx]&&c[idx].v!=null)?String(c[idx].v).trim():'';};
-    var fecha=parseFecha(get(0));
-    var tipo=get(1).toUpperCase();
-    var hora=get(2).substring(0,5);
+    var fecha=parseFecha(get(0)),tipo=get(1).toUpperCase(),hora=get(2).substring(0,5);
     if(!fecha||(tipo!=='ENTRADA'&&tipo!=='SALIDA')||!hora)continue;
     out.push({fecha:fecha,tipo:tipo,hora:hora});
   }
   return out;
 }
-
 function parseFecha(s){
   s=String(s||'').trim();
   var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
   m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return s.slice(0,10);
   m=s.match(/^Date\((\d+),(\d+),(\d+)\)$/);if(m)return m[1]+'-'+('0'+(+m[2]+1)).slice(-2)+'-'+('0'+m[3]).slice(-2);
-  if(s.length>15){var d=new Date(s);if(!isNaN(d.getTime())){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}}
+  if(s.length>15){var d=new Date(s);if(!isNaN(d.getTime()))return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
   return null;
 }
-
-function safeISO(s){
-  var p=parseFecha(String(s||'').trim());
-  return p||String(s||'').slice(0,10);
-}
-
+function safeISO(s){var p=parseFecha(String(s||'').trim());return p||String(s||'').slice(0,10);}
 function horaToMins(s){var m=String(s||'').match(/^(\d{1,2}):(\d{2})/);return m?(+m[1])*60+(+m[2]):null;}
 function normHora(s){var m=horaToMins(s);if(m==null)return s||'';return('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);}
 function minsToStr(m){if(m==null||m<0)return'—';return Math.floor(m/60)+'h '+('0'+(m%60)).slice(-2)+'min';}
-function isoDisplay(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function isoDisplay(iso){if(!iso)return'';var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function dowName(iso){var p=iso.split('-').map(Number);return DIAS_TILDE[new Date(p[0],p[1]-1,p[2]).getDay()];}
+function diaSiguiente(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+
+// ── EMPAREJAMIENTO DE TURNOS ──
+// Devuelve array de turnos: [{idx,entrada,salida,fechaEntrada,fechaSalida}]
+// Ordenado cronológicamente. Salida de madrugada = día siguiente.
+function emparejarTurnos(regs, fechaDia){
+  var UMBRAL=UMBRAL_NOCHE;
+  var sorted=regs.slice().map(function(r){return{r:r};});
+  sorted.sort(function(a,b){
+    var am=horaToMins(a.r.hora)||0,bm=horaToMins(b.r.hora)||0;
+    if(am<UMBRAL)am+=1440;if(bm<UMBRAL)bm+=1440;return am-bm;
+  });
+  var turnos=[],usadas={},k=0;
+  while(k<sorted.length){
+    if(usadas[k]){k++;continue;}
+    var item=sorted[k];
+    if(item.r.tipo==='ENTRADA'){
+      usadas[k]=true;
+      var salidaIdx=-1;
+      for(var s=k+1;s<sorted.length;s++){if(!usadas[s]&&sorted[s].r.tipo==='SALIDA'){salidaIdx=s;break;}}
+      var turno={idx:turnos.length,entrada:item.r,salida:null,fechaEntrada:fechaDia,fechaSalida:fechaDia};
+      if(salidaIdx!==-1){
+        usadas[salidaIdx]=true;turno.salida=sorted[salidaIdx].r;
+        var sm=horaToMins(turno.salida.hora)||0;
+        if(sm<UMBRAL)turno.fechaSalida=diaSiguiente(fechaDia);
+      }
+      turnos.push(turno);
+    }else{
+      if(!usadas[k]){
+        usadas[k]=true;
+        var sm2=horaToMins(item.r.hora)||0;
+        turnos.push({idx:turnos.length,entrada:null,salida:item.r,fechaEntrada:fechaDia,fechaSalida:sm2<UMBRAL?diaSiguiente(fechaDia):fechaDia});
+      }
+    }
+    k++;
+  }
+  return turnos;
+}
 
 function calcDia(regs){
-  var UMBRAL=120;
-  var sorted=regs.slice().sort(function(a,b){
-    var am=horaToMins(a.hora)||0,bm=horaToMins(b.hora)||0;
-    if(am<UMBRAL)am+=1440;if(bm<UMBRAL)bm+=1440;
-    return am-bm;
-  });
+  var UMBRAL=UMBRAL_NOCHE;
+  var sorted=regs.slice().sort(function(a,b){var am=horaToMins(a.hora)||0,bm=horaToMins(b.hora)||0;if(am<UMBRAL)am+=1440;if(bm<UMBRAL)bm+=1440;return am-bm;});
   var primera=null,ultima=null,totalMins=0,entradaAbierta=null,hayEntrada=false,turnoAbierto=false;
   for(var i=0;i<sorted.length;i++){
     var r=sorted[i];
-    if(r.tipo==='ENTRADA'){
-      hayEntrada=true;
-      if(!primera)primera=r.hora;
-      var me=horaToMins(r.hora)||0;if(me<UMBRAL)me+=1440;
-      entradaAbierta=me;turnoAbierto=true;
-    }else if(r.tipo==='SALIDA'){
-      ultima=r.hora;
-      if(turnoAbierto&&entradaAbierta!==null){
-        var ms=horaToMins(r.hora)||0;if(ms<UMBRAL)ms+=1440;
-        var dur=ms-entradaAbierta;if(dur>0)totalMins+=dur;
-        entradaAbierta=null;turnoAbierto=false;
-      }
-    }
+    if(r.tipo==='ENTRADA'){hayEntrada=true;if(!primera)primera=r.hora;var me=horaToMins(r.hora)||0;if(me<UMBRAL)me+=1440;entradaAbierta=me;turnoAbierto=true;}
+    else if(r.tipo==='SALIDA'){ultima=r.hora;if(turnoAbierto&&entradaAbierta!==null){var ms=horaToMins(r.hora)||0;if(ms<UMBRAL)ms+=1440;var dur=ms-entradaAbierta;if(dur>0)totalMins+=dur;entradaAbierta=null;turnoAbierto=false;}}
   }
   var estado=!hayEntrada?'sin-entrada':turnoAbierto?'sin-salida':'ok';
   return{primera:primera,ultima:ultima,mins:estado==='ok'?totalMins:null,estado:estado};
 }
 
-// ── ADMIN: GENERAR ──
+// ── GENERAR ──
 async function generar(){
   var sel=Array.from(document.querySelectorAll('.echk:checked')).map(function(c){return c.value;});
   var desde=document.getElementById('f-desde').value,hasta=document.getElementById('f-hasta').value;
@@ -691,41 +663,27 @@ async function generar(){
   currentSel=sel;currentDesde=desde;currentHasta=hasta;editData={};
   for(var i=0;i<sel.length;i++){
     var emp=sel[i];setLoader(true,'Cargando '+emp.split(' ')[0]+'...');
-    try{
-      var table=await fetchSheet(emp);
-      var fichajes=parsearTabla(table);
-      var filt=fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});
-      var dmap={};
-      for(var j=0;j<filt.length;j++){var f=filt[j];if(!dmap[f.fecha])dmap[f.fecha]=[];dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});}
-      editData[emp]=dmap;
-    }catch(e){editData[emp]=null;}
+    try{var table=await fetchSheet(emp);var fichajes=parsearTabla(table);var filt=fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});var dmap={};for(var j=0;j<filt.length;j++){var f=filt[j];if(!dmap[f.fecha])dmap[f.fecha]=[];dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});}editData[emp]=dmap;}
+    catch(e){editData[emp]=null;}
   }
-  setLoader(false);
-  solicitudes = await loadSolicitudes();
-  updateBadge();
-  switchTab('informes');renderReport();
+  setLoader(false);solicitudes=await loadSolicitudes();updateBadge();switchTab('informes');renderReport();
 }
 
-// ── EMPLEADO: GENERAR ──
 async function empGenerar(){
   var desde=document.getElementById('ef-desde').value,hasta=document.getElementById('ef-hasta').value;
   if(!desde||!hasta){toast('Elige el período','err');return;}
   if(desde>hasta){toast('Fecha inicio > fin','err');return;}
   setLoader(true,'Cargando fichajes...');empEditData={};
   try{
-    var table=await fetchSheet(session.nombre);
-    var fichajes=parsearTabla(table);
+    var table=await fetchSheet(session.nombre);var fichajes=parsearTabla(table);
     var filt=fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});
-    var dmap={};
-    for(var j=0;j<filt.length;j++){var f=filt[j];if(!dmap[f.fecha])dmap[f.fecha]=[];dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});}
-    empEditData=dmap;
-    esolicitudes = await loadSolicitudes(session.nombre);
-    updateEbadge();
+    var dmap={};for(var j=0;j<filt.length;j++){var f=filt[j];if(!dmap[f.fecha])dmap[f.fecha]=[];dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});}
+    empEditData=dmap;esolicitudes=await loadSolicitudes(session.nombre);updateEbadge();
   }catch(e){toast('Error: '+e.message,'err');setLoader(false);return;}
   setLoader(false);eswitch('fichajes');renderEmpReport();
 }
 
-// ── RENDER EMPLEADO ──
+// ── RENDER ──
 function renderEmpReport(){
   document.getElementById('eempty-inf').style.display='none';
   var rep=document.getElementById('ereport');rep.style.display='block';
@@ -742,33 +700,58 @@ function renderEmpReport(){
 
 function buildSummaryGrid(fechas,dmap,empKey){
   var hoy=new Date().toISOString().slice(0,10);
-  var cards=fechas.map(function(f){
+  return'<div class="summary-grid">'+fechas.map(function(f){
     var calc=calcDia(dmap[f]||[]),statCls='',hoursDisplay='';
     if(calc.estado==='sin-salida'){statCls='has-error';hoursDisplay='<div class="sum-hours err">sin salida</div>';}
     else if(calc.estado==='sin-entrada'){statCls='has-warn';hoursDisplay='<div class="sum-hours warn">sin entrada</div>';}
     else if(calc.mins!=null){hoursDisplay='<div class="sum-hours">'+minsToStr(calc.mins)+'</div>';}
     else{hoursDisplay='<div class="sum-hours empty-day">sin datos</div>';}
-    var todayCls=f===hoy?' today':'';
-    return '<div class="sum-card '+statCls+todayCls+'" onclick="scrollToDay(\''+f+'\',\''+empKey+'\')" title="'+dowName(f)+' '+isoDisplay(f)+'"><div class="sum-dow">'+dowName(f).slice(0,3)+'</div><div class="sum-date">'+isoDisplay(f)+'</div>'+hoursDisplay+'</div>';
-  }).join('');
-  return '<div class="summary-grid">'+cards+'</div>';
+    return'<div class="sum-card '+statCls+(f===hoy?' today':'')+'" onclick="scrollToDay(\''+f+'\',\''+empKey+'\')" title="'+dowName(f)+' '+isoDisplay(f)+'"><div class="sum-dow">'+dowName(f).slice(0,3)+'</div><div class="sum-date">'+isoDisplay(f)+'</div>'+hoursDisplay+'</div>';
+  }).join('')+'</div>';
 }
 
 function scrollToDay(fecha,empKey){
   var prefix=empKey==='_emp'?'edc-'+empId(session.nombre):'dc-'+empId(empKey);
-  var card=document.getElementById(prefix+'-'+fecha);
-  if(!card)return;
-  card.classList.add('open');
-  setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});},50);
+  var card=document.getElementById(prefix+'-'+fecha);if(!card)return;
+  card.classList.add('open');setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});},50);
 }
-function jumpToDate(empKey){
-  var inputId=empKey==='_emp'?'emp-date-jump':'adm-date-jump';
-  var fecha=document.getElementById(inputId).value;
-  if(!fecha){toast('Selecciona una fecha','err');return;}
-  scrollToDay(fecha,empKey);
+function jumpToDate(empKey){var inputId=empKey==='_emp'?'emp-date-jump':'adm-date-jump';var fecha=document.getElementById(inputId).value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,empKey);}
+
+// Construye tabla con separadores por turno
+function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
+  var turnos=emparejarTurnos(regs,fecha);
+  if(!turnos.length)return'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
+  var html='<table class="ft"><thead><tr><th>Turno</th><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar cambio)</span></th></tr></thead><tbody>';
+  for(var t=0;t<turnos.length;t++){
+    var turno=turnos[t],turnoNum=t+1,sepCls=t>0?' class="turno-sep"':'';
+    if(turno.entrada){
+      var hasPendE=solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';});
+      html+='<tr'+sepCls+'><td style="font-size:.6rem;color:var(--ink3);white-space:nowrap">T'+turnoNum+'</td>';
+      html+='<td class="t-in">ENTRADA</td>';
+      html+='<td><button class="hora-btn'+(hasPendE?' pending':'')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.entrada.hora+' <span class="pencil">✏</span></button></td></tr>';
+    }
+    if(turno.salida){
+      var hasPendS=solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';});
+      var sepS=turno.entrada?'':sepCls;
+      var tdNum=turno.entrada?'<td></td>':'<td style="font-size:.6rem;color:var(--ink3);white-space:nowrap">T'+turnoNum+'</td>';
+      html+='<tr'+sepS+'>'+tdNum+'<td class="t-out">SALIDA</td>';
+      html+='<td><button class="hora-btn'+(hasPendS?' pending':'')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.salida.hora+' <span class="pencil">✏</span></button></td></tr>';
+    }
+  }
+  return html+'</tbody></table>';
 }
 
-// ── BUG FIX 2: renderEmpCard recibe tipo y hora del registro específico ──
+function renderCard(emp,fecha,regs){
+  var calc=calcDia(regs),cls=calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
+  var chips='';
+  if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
+  if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
+  if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
+  if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
+  if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
+  var tabla=buildFilasTurnos(emp,fecha,regs,false,solicitudes);
+  return'<div class="day-card '+cls+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
+}
 function renderEmpCard(emp,fecha,regs){
   var calc=calcDia(regs),cls=calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
   var chips='';
@@ -777,53 +760,93 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
   if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
   if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
-  var filas=regs.map(function(r){
-    var tcls=r.tipo==='ENTRADA'?'t-in':'t-out';
-    var hasPending=esolicitudes.some(function(s){return s.emp===emp&&safeISO(s.fecha)===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
-    // FIX: pasa r.tipo y r.hora para que el modal sepa qué registro específico se tocó
-    return '<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',true,\''+r.tipo+'\',\''+r.hora+'\')">'+r.hora+' <span class="pencil">✏</span></button></td></tr>';
-  }).join('');
-  var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar corrección)</span></th></tr></thead><tbody>'+filas+'</tbody></table>':'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
-  var cardId='edc-'+empId(emp)+'-'+fecha;
-  return '<div class="day-card '+cls+'" id="'+cardId+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
+  var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
+  return'<div class="day-card '+cls+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
+function toggleCard(card){card.classList.toggle('open');}
 
-// ── EMPLEADO: TABS / SOLICITUDES ──
-function eswitch(tab){
-  document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
-  document.querySelectorAll('#emp-pages .page').forEach(function(p){p.classList.remove('active');});
-  document.getElementById('etab-'+tab).classList.add('active');
-  document.getElementById('epage-'+tab).classList.add('active');
-  if(tab==='solicitudes'){
-    loadSolicitudes(session.nombre).then(function(data){
-      esolicitudes=data; updateEbadge(); erendSolicitudes();
-    });
+function isoWeek(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]),day=d.getDay()||7;d.setDate(d.getDate()+4-day);var ys=new Date(d.getFullYear(),0,1);return Math.ceil(((d-ys)/86400000+1)/7)+'_'+d.getFullYear();}
+function buildCardsConSemana(fechas,dmap,emp,isEmp){
+  var html='',semActual=null,semMins=0;
+  for(var i=0;i<fechas.length;i++){
+    var f=fechas[i],semana=isoWeek(f);
+    if(semActual!==null&&semana!==semActual){html+='<div class="week-sep"><span class="week-lbl">Semana anterior · '+minsToStr(semMins)+'</span></div>';semMins=0;}
+    semActual=semana;var calc=calcDia(dmap[f]||[]);if(calc.mins!=null)semMins+=calc.mins;
+    html+=isEmp?renderEmpCard(emp,f,dmap[f]||[]):renderCard(emp,f,dmap[f]||[]);
   }
-}
-function updateEbadge(){var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('ebadge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
-function efiltrarSol(f,btn){esolFiltro=f;document.querySelectorAll('#epage-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');erendSolicitudes();}
-
-function erendSolicitudes(){
-  var lista=esolicitudes.filter(function(s){return esolFiltro==='todas'||s.estado===esolFiltro;});
-  var el=document.getElementById('esol-list');
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>'+(esolFiltro==='todas'?'Pulsa cualquier hora en Mis fichajes para solicitar una corrección.':'No hay solicitudes con este filtro.')+'</p></div>';return;}
-  el.innerHTML=lista.slice().reverse().map(function(s){
-    var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
-    var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
-    var fechaISO=safeISO(s.fecha);
-    var fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
-    var hayFechaNueva=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    return '<div class="sol-card '+s.estado+'"><div class="sol-info"><div class="sol-detail">'
-      +'<span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFechaNueva?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br>'
-      +'<span>Tipo:</span> '+s.tipo+'<br>'
-      +'<span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br>'
-      +'<span>Motivo:</span> '+esc(s.motivo)
-      +'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div>'
-      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span></div></div>';
-  }).join('');
+  if(semActual!==null)html+='<div class="week-sep"><span class="week-lbl">Semana · '+minsToStr(semMins)+'</span></div>';
+  return html;
 }
 
-// ── ADMIN: RENDER INFORME ──
+// ── MODAL ──
+var solIsEmp=false;
+function abrirModalSol(emp,fecha,isEmp,turnoIdx){
+  solIsEmp=!!isEmp;
+  var dmap=isEmp?empEditData:(editData[emp]||{});
+  var regs=dmap[fecha]||[];
+  var turnos=emparejarTurnos(regs,fecha);
+  var turno=turnos[turnoIdx]||turnos[0];
+  if(!turno){toast('No se encontró el turno','err');return;}
+  solActual={emp:emp,fecha:fecha,turnoIdx:turnoIdx,turno:turno};
+  document.getElementById('sol-emp').value=emp;
+  document.getElementById('modal-turno-info').textContent='Turno '+(turnoIdx+1)+' de '+turnos.length+' · '+isoDisplay(fecha)+(turnos.length>1?' (hay '+turnos.length+' turnos este día)':'');
+  // Entrada
+  var horaE=turno.entrada?turno.entrada.hora:'—';
+  var fechaE=turno.fechaEntrada||fecha;
+  document.getElementById('sol-fecha-entrada-actual').value=isoDisplay(fechaE);
+  document.getElementById('sol-fecha-entrada-nueva').value=fechaE;
+  document.getElementById('sol-hora-entrada-actual').value=horaE;
+  document.getElementById('sol-hora-entrada-nueva').value=turno.entrada?horaE.slice(0,5):'';
+  // Salida
+  var horaS=turno.salida?turno.salida.hora:'—';
+  var fechaS=turno.fechaSalida||fecha;
+  document.getElementById('sol-fecha-salida-actual').value=isoDisplay(fechaS);
+  document.getElementById('sol-fecha-salida-nueva').value=fechaS;
+  document.getElementById('sol-hora-salida-actual').value=horaS;
+  document.getElementById('sol-hora-salida-nueva').value=turno.salida?horaS.slice(0,5):'';
+  document.getElementById('sol-motivo').value='';
+  if(solIsEmp){document.getElementById('sol-email-emp').value=session.email;document.getElementById('sol-email-row').style.display='none';}
+  else{var empObj=empleados.find(function(e){return e.nombre===emp;});document.getElementById('sol-email-emp').value=empObj?empObj.email:'';document.getElementById('sol-email-row').style.display='flex';}
+  document.getElementById('modal-sol').classList.add('on');
+}
+function cerrarModalSol(){document.getElementById('modal-sol').classList.remove('on');solActual=null;}
+
+// ── ENVIAR via JSONP ──
+async function enviarSolicitud(){
+  if(!solActual)return;
+  var motivo=document.getElementById('sol-motivo').value.trim();
+  var emailEmp=document.getElementById('sol-email-emp').value.trim();
+  var turno=solActual.turno;
+  var horaEA=document.getElementById('sol-hora-entrada-actual').value;
+  var horaEN=normHora(document.getElementById('sol-hora-entrada-nueva').value);
+  var fechaEN=document.getElementById('sol-fecha-entrada-nueva').value||solActual.fecha;
+  var horaSA=document.getElementById('sol-hora-salida-actual').value;
+  var horaSN=normHora(document.getElementById('sol-hora-salida-nueva').value);
+  var fechaSN=document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
+  var fechaEOrig=turno.fechaEntrada||solActual.fecha;
+  var fechaSOrig=turno.fechaSalida||solActual.fecha;
+  var cambiaE=horaEA!=='—'&&horaEN&&horaEN!==normHora(horaEA);
+  var cambiaFE=horaEA!=='—'&&fechaEN!==fechaEOrig;
+  var cambiaS=horaSA!=='—'&&horaSN&&horaSN!==normHora(horaSA);
+  var cambiaFS=horaSA!=='—'&&fechaSN!==fechaSOrig;
+  if(!cambiaE&&!cambiaS&&!cambiaFE&&!cambiaFS){toast('No hay ningún cambio respecto al original','err');return;}
+  cerrarModalSol();setLoader(true,'Enviando solicitud...');
+  var toSend=[];
+  if((cambiaE||cambiaFE)&&horaEA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaEOrig,fechaNueva:fechaEN,tipo:'ENTRADA',horaActual:normHora(horaEA),horaNueva:cambiaE?horaEN:normHora(horaEA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp});}
+  if((cambiaS||cambiaFS)&&horaSA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaSOrig,fechaNueva:fechaSN,tipo:'SALIDA',horaActual:normHora(horaSA),horaNueva:cambiaS?horaSN:normHora(horaSA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp});}
+  if(!toSend.length){setLoader(false);toast('No hay cambios que enviar','err');return;}
+  try{
+    for(var i=0;i<toSend.length;i++){
+      setLoader(true,'Enviando '+(i+1)+' de '+toSend.length+'...');
+      var res=await callScriptJSONP(toSend[i]);
+      if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'El script devolvió error');
+    }
+    if(solIsEmp){esolicitudes=await loadSolicitudes(session.nombre);updateEbadge();setLoader(false);toast('Solicitud'+(toSend.length>1?'es':'')+' enviada'+(toSend.length>1?'s':'')+' ✓','ok');setTimeout(function(){eswitch('solicitudes');},600);}
+    else{solicitudes=await loadSolicitudes();updateBadge();setLoader(false);toast('Solicitud'+(toSend.length>1?'es':'')+' enviada'+(toSend.length>1?'s':'')+' ✓','ok');setTimeout(function(){switchTab('solicitudes');},600);}
+  }catch(e){setLoader(false);toast('Error al enviar: '+e.message,'err');}
+}
+
+// ── ADMIN: INFORME ──
 function renderReport(){document.getElementById('empty-inf').style.display='none';var rep=document.getElementById('report');rep.style.display='block';rep.innerHTML=currentSel.map(function(emp){return renderEmp(emp);}).join('');}
 function renderEmp(emp){
   var dmap=editData[emp];
@@ -840,248 +863,41 @@ function renderEmp(emp){
 }
 function buildSummaryGridAdmin(fechas,dmap,emp){
   var hoy=new Date().toISOString().slice(0,10);
-  var cards=fechas.map(function(f){
+  return'<div class="summary-grid">'+fechas.map(function(f){
     var calc=calcDia(dmap[f]||[]),statCls='',hoursDisplay='';
     if(calc.estado==='sin-salida'){statCls='has-error';hoursDisplay='<div class="sum-hours err">sin salida</div>';}
     else if(calc.estado==='sin-entrada'){statCls='has-warn';hoursDisplay='<div class="sum-hours warn">sin entrada</div>';}
     else if(calc.mins!=null){hoursDisplay='<div class="sum-hours">'+minsToStr(calc.mins)+'</div>';}
     else{hoursDisplay='<div class="sum-hours empty-day">sin datos</div>';}
     return'<div class="sum-card '+statCls+(f===hoy?' today':'')+'" onclick="scrollToDay(\''+f+'\',\''+esc(emp)+'\')" title="'+dowName(f)+' '+isoDisplay(f)+'"><div class="sum-dow">'+dowName(f).slice(0,3)+'</div><div class="sum-date">'+isoDisplay(f)+'</div>'+hoursDisplay+'</div>';
+  }).join('')+'</div>';
+}
+function jumpToDateAdmin(emp){var el=document.getElementById('adm-date-jump-'+empId(emp));if(!el)return;var fecha=el.value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,emp);}
+
+// ── EMPLEADO TABS / SOLICITUDES ──
+function eswitch(tab){
+  document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('#emp-pages .page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('etab-'+tab).classList.add('active');document.getElementById('epage-'+tab).classList.add('active');
+  if(tab==='solicitudes'){loadSolicitudes(session.nombre).then(function(data){esolicitudes=data;updateEbadge();erendSolicitudes();});}
+}
+function updateEbadge(){var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('ebadge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
+function efiltrarSol(f,btn){esolFiltro=f;document.querySelectorAll('#epage-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');erendSolicitudes();}
+function erendSolicitudes(){
+  var lista=esolicitudes.filter(function(s){return esolFiltro==='todas'||s.estado===esolFiltro;});
+  var el=document.getElementById('esol-list');
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>'+(esolFiltro==='todas'?'Pulsa cualquier hora en Mis fichajes para solicitar una corrección.':'No hay solicitudes con este filtro.')+'</p></div>';return;}
+  el.innerHTML=lista.slice().reverse().map(function(s){
+    var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
+    var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
+    var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
+    return'<div class="sol-card '+s.estado+'"><div class="sol-info"><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFN?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br><span>Tipo:</span> '+s.tipo+'<br><span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span></div></div>';
   }).join('');
-  return'<div class="summary-grid">'+cards+'</div>';
-}
-function jumpToDateAdmin(emp){var inputEl=document.getElementById('adm-date-jump-'+empId(emp));if(!inputEl)return;var fecha=inputEl.value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,emp);}
-
-// ── BUG FIX 2: renderCard recibe tipo y hora del registro específico ──
-function renderCard(emp,fecha,regs){
-  var calc=calcDia(regs),cls=calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
-  var chips='';
-  if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
-  if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
-  if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
-  if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
-  var filas=regs.map(function(r){
-    var tcls=r.tipo==='ENTRADA'?'t-in':'t-out';
-    var hasPending=solicitudes.some(function(s){return s.emp===emp&&safeISO(s.fecha)===fecha&&s.tipo===r.tipo&&normHora(s.horaActual)===normHora(r.hora)&&s.estado==='pendiente';});
-    // FIX: pasa r.tipo y r.hora para que el modal sepa qué registro específico se tocó
-    return'<tr><td class="'+tcls+'">'+r.tipo+'</td><td><button class="'+(hasPending?'hora-btn pending':'hora-btn')+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\',false,\''+r.tipo+'\',\''+r.hora+'\')">'+r.hora+' <span class="pencil">✏</span></button>'+(r.modificado?' <span style="font-size:.62rem;color:var(--amber)">✏</span>':'')+'</td></tr>';
-  }).join('');
-  var tabla=regs.length?'<table class="ft"><thead><tr><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar cambio)</span></th></tr></thead><tbody>'+filas+'</tbody></table>':'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
-  return'<div class="day-card '+cls+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
-}
-function toggleCard(card){card.classList.toggle('open');}
-
-// ── SEPARADORES DE SEMANA ──
-function isoWeek(iso){
-  var p=iso.split('-').map(Number);
-  var d=new Date(p[0],p[1]-1,p[2]);
-  var day=d.getDay()||7;
-  d.setDate(d.getDate()+4-day);
-  var yearStart=new Date(d.getFullYear(),0,1);
-  return Math.ceil(((d-yearStart)/86400000+1)/7)+'_'+d.getFullYear();
 }
 
-function buildCardsConSemana(fechas, dmap, emp, isEmp){
-  var html='';
-  var semActual=null;
-  var semMins=0;
-  for(var i=0;i<fechas.length;i++){
-    var f=fechas[i];
-    var semana=isoWeek(f);
-    if(semActual!==null && semana!==semActual){
-      html+='<div class="week-sep"><span class="week-lbl">Semana anterior · '+minsToStr(semMins)+'</span></div>';
-      semMins=0;
-    }
-    semActual=semana;
-    var calc=calcDia(dmap[f]||[]);
-    if(calc.mins!=null)semMins+=calc.mins;
-    if(isEmp){
-      html+=renderEmpCard(emp,f,dmap[f]||[]);
-    } else {
-      html+=renderCard(emp,f,dmap[f]||[]);
-    }
-  }
-  if(semActual!==null){
-    html+='<div class="week-sep"><span class="week-lbl">Semana · '+minsToStr(semMins)+'</span></div>';
-  }
-  return html;
-}
-
-// ── BUG FIX 1+2: abrirModalSol recibe el tipo y hora del fichaje pulsado ──
-var solIsEmp=false;
-function abrirModalSol(emp, fecha, isEmp, tipoTocado, horaTocada) {
-  solIsEmp = !!isEmp;
-  var dmap = isEmp ? empEditData : (editData[emp] || {});
-  var regs = (dmap[fecha] || []).slice();
-
-  // FIX BUG 2: usar el tipo y hora específicos del botón pulsado
-  // para seleccionar el registro correcto cuando hay varios del mismo tipo en el día
-  var entrada, salida;
-  if (tipoTocado === 'ENTRADA') {
-    entrada = regs.find(function(r){ return r.tipo==='ENTRADA' && normHora(r.hora)===normHora(horaTocada); })
-           || regs.find(function(r){ return r.tipo==='ENTRADA'; });
-    salida  = regs.find(function(r){ return r.tipo==='SALIDA'; });
-  } else if (tipoTocado === 'SALIDA') {
-    salida  = regs.find(function(r){ return r.tipo==='SALIDA' && normHora(r.hora)===normHora(horaTocada); })
-           || regs.find(function(r){ return r.tipo==='SALIDA'; });
-    entrada = regs.find(function(r){ return r.tipo==='ENTRADA'; });
-  } else {
-    entrada = regs.find(function(r){ return r.tipo==='ENTRADA'; });
-    salida  = regs.find(function(r){ return r.tipo==='SALIDA'; });
-  }
-
-  solActual = { emp: emp, fecha: fecha };
-
-  document.getElementById('sol-emp').value = emp;
-
-  // Entrada
-  var horaEntradaActual = entrada ? entrada.hora : '—';
-  document.getElementById('sol-fecha-entrada-actual').value = isoDisplay(fecha);
-  document.getElementById('sol-fecha-entrada-nueva').value  = fecha;
-  document.getElementById('sol-hora-entrada-actual').value  = horaEntradaActual;
-  document.getElementById('sol-hora-entrada-nueva').value   = entrada ? entrada.hora.slice(0,5) : '';
-
-  // Salida (detectar si es turno de noche = día siguiente)
-  var horaSalidaActual = salida ? salida.hora : '—';
-  var fechaSalidaISO = fecha;
-  if(salida){
-    var sm = horaToMins(salida.hora)||0;
-    if(sm < 120){
-      var p=fecha.split('-').map(Number);
-      var ds=new Date(p[0],p[1]-1,p[2]);
-      ds.setDate(ds.getDate()+1);
-      fechaSalidaISO=ds.getFullYear()+'-'+('0'+(ds.getMonth()+1)).slice(-2)+'-'+('0'+ds.getDate()).slice(-2);
-    }
-  }
-  document.getElementById('sol-fecha-salida-actual').value = isoDisplay(fechaSalidaISO);
-  document.getElementById('sol-fecha-salida-nueva').value  = fechaSalidaISO;
-  document.getElementById('sol-hora-salida-actual').value  = horaSalidaActual;
-  document.getElementById('sol-hora-salida-nueva').value   = salida ? salida.hora.slice(0,5) : '';
-
-  document.getElementById('sol-motivo').value = '';
-
-  if (solIsEmp) {
-    document.getElementById('sol-email-emp').value = session.email;
-    document.getElementById('sol-email-row').style.display = 'none';
-  } else {
-    var empObj = empleados.find(function(e){ return e.nombre === emp; });
-    document.getElementById('sol-email-emp').value = empObj ? empObj.email : '';
-    document.getElementById('sol-email-row').style.display = 'flex';
-  }
-
-  document.getElementById('modal-sol').classList.add('on');
-}
-function cerrarModalSol(){document.getElementById('modal-sol').classList.remove('on');solActual=null;}
-
-// ── BUG FIX 1: enviarSolicitud con try/catch completo para que el loader nunca se quede colgado ──
-async function enviarSolicitud(){
-  if(!solActual)return;
-  var motivo   = document.getElementById('sol-motivo').value.trim();
-  var emailEmp = document.getElementById('sol-email-emp').value.trim();
-
-  var horaEntradaActual  = document.getElementById('sol-hora-entrada-actual').value;
-  var horaEntradaNueva   = normHora(document.getElementById('sol-hora-entrada-nueva').value);
-  var fechaEntradaNueva  = document.getElementById('sol-fecha-entrada-nueva').value || solActual.fecha;
-
-  var horaSalidaActual   = document.getElementById('sol-hora-salida-actual').value;
-  var horaSalidaNueva    = normHora(document.getElementById('sol-hora-salida-nueva').value);
-  var fechaSalidaActual  = document.getElementById('sol-fecha-salida-actual').value;
-  var fechaSalidaNueva   = document.getElementById('sol-fecha-salida-nueva').value || solActual.fecha;
-
-  var cambiaEntrada      = horaEntradaActual !== '—' && horaEntradaNueva && horaEntradaNueva !== normHora(horaEntradaActual);
-  var cambiaFechaEntrada = horaEntradaActual !== '—' && fechaEntradaNueva !== solActual.fecha;
-  var cambiaSalida       = horaSalidaActual  !== '—' && horaSalidaNueva  && horaSalidaNueva  !== normHora(horaSalidaActual);
-  var fechaSalidaOrigISO = parseFecha(fechaSalidaActual) || solActual.fecha;
-  var cambiaFechaSalida  = horaSalidaActual  !== '—' && fechaSalidaNueva !== fechaSalidaOrigISO;
-
-  if (!cambiaEntrada && !cambiaSalida && !cambiaFechaEntrada && !cambiaFechaSalida) {
-    toast('No hay ningún cambio respecto al original','err'); return;
-  }
-
-  cerrarModalSol();
-  setLoader(true,'Enviando solicitud...');
-
-  var solicitudesAEnviar = [];
-
-  if ((cambiaEntrada || cambiaFechaEntrada) && horaEntradaActual !== '—') {
-    solicitudesAEnviar.push({
-      action:'guardarSolicitud',
-      id:'SOL-'+Date.now()+'E',
-      emp:solActual.emp,
-      fecha:solActual.fecha,
-      fechaNueva:fechaEntradaNueva,
-      tipo:'ENTRADA',
-      horaActual:normHora(horaEntradaActual),
-      horaNueva:cambiaEntrada ? horaEntradaNueva : normHora(horaEntradaActual),
-      motivo:motivo||'—',
-      emailEmp:solIsEmp?session.email:emailEmp,
-      estado:'pendiente',
-      fechaReq:new Date().toLocaleString('es-ES')
-    });
-  }
-
-  if ((cambiaSalida || cambiaFechaSalida) && horaSalidaActual !== '—') {
-    solicitudesAEnviar.push({
-      action:'guardarSolicitud',
-      id:'SOL-'+(Date.now()+1)+'S',
-      emp:solActual.emp,
-      fecha:fechaSalidaOrigISO,
-      fechaNueva:fechaSalidaNueva,
-      tipo:'SALIDA',
-      horaActual:normHora(horaSalidaActual),
-      horaNueva:cambiaSalida ? horaSalidaNueva : normHora(horaSalidaActual),
-      motivo:motivo||'—',
-      emailEmp:solIsEmp?session.email:emailEmp,
-      estado:'pendiente',
-      fechaReq:new Date().toLocaleString('es-ES')
-    });
-  }
-
-  if(!solicitudesAEnviar.length){
-    setLoader(false);
-    toast('No hay cambios que enviar','err');
-    return;
-  }
-
-  // FIX BUG 1: try/catch completo — el loader SIEMPRE se cierra pase lo que pase
-  try {
-    for(var i=0;i<solicitudesAEnviar.length;i++){
-      await callScript(solicitudesAEnviar[i]);
-    }
-    // Esperar un momento para que el script procese antes de releer
-    await new Promise(function(r){setTimeout(r,1000);});
-    if(solIsEmp){
-      esolicitudes = await loadSolicitudes(session.nombre);
-      updateEbadge();
-      setLoader(false);
-      toast('Solicitud'+(solicitudesAEnviar.length>1?'es':'')+' enviada'+(solicitudesAEnviar.length>1?'s':'')+' ✓','ok');
-      setTimeout(function(){eswitch('solicitudes');},600);
-    } else {
-      solicitudes = await loadSolicitudes();
-      updateBadge();
-      setLoader(false);
-      toast('Solicitud'+(solicitudesAEnviar.length>1?'es':'')+' enviada'+(solicitudesAEnviar.length>1?'s':'')+' ✓','ok');
-      setTimeout(function(){switchTab('solicitudes');},600);
-    }
-  } catch(e) {
-    setLoader(false);
-    toast('Error al enviar: '+e.message,'err');
-  }
-}
-
-// ── ADMIN: SOLICITUDES ──
-function updateBadge(){
-  var pend=solicitudes.filter(function(s){return s.estado==='pendiente';}).length;
-  var b=document.getElementById('badge-sol');
-  if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}
-}
-function filtrarSol(f,btn){
-  solFiltro=f;
-  document.querySelectorAll('#page-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-  renderSolicitudes();
-}
+// ── ADMIN SOLICITUDES ──
+function updateBadge(){var pend=solicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('badge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
+function filtrarSol(f,btn){solFiltro=f;document.querySelectorAll('#page-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderSolicitudes();}
 function renderSolicitudes(){
   var lista=solicitudes.filter(function(s){return solFiltro==='todas'||s.estado===solFiltro;});
   var el=document.getElementById('sol-list');
@@ -1090,134 +906,47 @@ function renderSolicitudes(){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
-    var fechaISO=safeISO(s.fecha);
-    var fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
-    var hayFechaNueva=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
-      +'<div class="sol-info">'
-      +'<div class="sol-emp">'+esc(s.emp)+'</div>'
-      +'<div class="sol-detail">'
-      +'<span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFechaNueva?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br>'
-      +'<span>Tipo:</span> '+s.tipo+'<br>'
-      +'<span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br>'
-      +'<span>Motivo:</span> '+esc(s.motivo)
-      +(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')
-      +'</div>'
-      +'<div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div>'
-      +'</div>'
-      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div>'
-      +'</div>';
+    var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
+    return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'"><div class="sol-info"><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFN?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br><span>Tipo:</span> '+s.tipo+'<br><span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
   }).join('');
 }
 
 async function aprobar(id){
   var sol=solicitudes.find(function(s){return s.id===id;});if(!sol)return;
-  setLoader(true,'Aprobando y actualizando sheet...');
-  try {
-    await callScript({
-      action:'aprobarSolicitud',
-      id:sol.id,
-      emp:sol.emp,
-      fecha:safeISO(sol.fecha),
-      fechaNueva:safeISO(sol.fechaNueva||sol.fecha),
-      tipo:sol.tipo,
-      horaActual:sol.horaActual,
-      horaNueva:sol.horaNueva,
-      emailEmp:sol.emailEmp||''
-    });
-    await new Promise(function(r){setTimeout(r,1500);});
-    solicitudes = await loadSolicitudes();
-    updateBadge();
-    renderSolicitudes();
-    if(editData[sol.emp]){
-      var fechaOrig=safeISO(sol.fecha);
-      var fechaNueva=safeISO(sol.fechaNueva||sol.fecha);
-      var regs=editData[sol.emp][fechaOrig];
-      if(regs){
-        for(var i=0;i<regs.length;i++){
-          if(regs[i].tipo===sol.tipo&&normHora(regs[i].hora)===normHora(sol.horaActual)){
-            if(fechaNueva!==fechaOrig){
-              regs.splice(i,1);
-              if(!editData[sol.emp][fechaNueva])editData[sol.emp][fechaNueva]=[];
-              editData[sol.emp][fechaNueva].push({tipo:sol.tipo,hora:sol.horaNueva,modificado:true});
-              refreshCard(sol.emp,fechaOrig);
-              refreshCard(sol.emp,fechaNueva);
-            }else{
-              regs[i].hora=sol.horaNueva;
-              regs[i].modificado=true;
-              refreshCard(sol.emp,fechaOrig);
-            }
-            break;
-          }
-        }
-      }
-    }
-    setLoader(false);
-    toast('Aprobado y guardado en el sheet ✓','ok');
-  } catch(e) {
-    setLoader(false);
-    toast('Error al aprobar: '+e.message,'err');
-  }
+  setLoader(true,'Aprobando...');
+  try{
+    var res=await callScriptJSONP({action:'aprobarSolicitud',id:sol.id,emp:sol.emp,fecha:safeISO(sol.fecha),fechaNueva:safeISO(sol.fechaNueva||sol.fecha),tipo:sol.tipo,horaActual:sol.horaActual,horaNueva:sol.horaNueva,emailEmp:sol.emailEmp||''});
+    if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'Error al aprobar');
+    solicitudes=await loadSolicitudes();updateBadge();renderSolicitudes();
+    if(editData[sol.emp]){var fO=safeISO(sol.fecha),fN=safeISO(sol.fechaNueva||sol.fecha),regs=editData[sol.emp][fO];if(regs){for(var i=0;i<regs.length;i++){if(regs[i].tipo===sol.tipo&&normHora(regs[i].hora)===normHora(sol.horaActual)){if(fN!==fO){regs.splice(i,1);if(!editData[sol.emp][fN])editData[sol.emp][fN]=[];editData[sol.emp][fN].push({tipo:sol.tipo,hora:sol.horaNueva,modificado:true});refreshCard(sol.emp,fO);refreshCard(sol.emp,fN);}else{regs[i].hora=sol.horaNueva;regs[i].modificado=true;refreshCard(sol.emp,fO);}break;}}}}
+    setLoader(false);toast('Aprobado ✓','ok');
+  }catch(e){setLoader(false);toast('Error: '+e.message,'err');}
 }
 
 async function rechazar(id){
   var sol=solicitudes.find(function(s){return s.id===id;});if(!sol)return;
   setLoader(true,'Rechazando...');
-  try {
-    await callScript({action:'rechazarSolicitud',id:sol.id,emp:sol.emp,fecha:safeISO(sol.fecha),tipo:sol.tipo,horaActual:sol.horaActual,emailEmp:sol.emailEmp||''});
-    await new Promise(function(r){setTimeout(r,1200);});
-    solicitudes = await loadSolicitudes();
-    updateBadge();
-    renderSolicitudes();
-    setLoader(false);
-    toast('Solicitud rechazada');
-  } catch(e) {
-    setLoader(false);
-    toast('Error al rechazar: '+e.message,'err');
-  }
+  try{
+    var res=await callScriptJSONP({action:'rechazarSolicitud',id:sol.id,emp:sol.emp,fecha:safeISO(sol.fecha),tipo:sol.tipo,horaActual:sol.horaActual,emailEmp:sol.emailEmp||''});
+    if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'Error al rechazar');
+    solicitudes=await loadSolicitudes();updateBadge();renderSolicitudes();
+    setLoader(false);toast('Solicitud rechazada');
+  }catch(e){setLoader(false);toast('Error: '+e.message,'err');}
 }
 
-// ── REFRESH CARDS ──
-function refreshCard(emp,fecha){
-  var id='dc-'+empId(emp)+'-'+fecha;
-  var card=document.getElementById(id);if(!card)return;
-  var wasOpen=card.classList.contains('open');
-  var regs=(editData[emp]&&editData[emp][fecha])||[];
-  var tmp=document.createElement('div');
-  tmp.innerHTML=renderCard(emp,fecha,regs);
-  var nc=tmp.firstElementChild;
-  if(wasOpen)nc.classList.add('open');
-  card.replaceWith(nc);
-}
-function refreshEmpCard(emp,fecha){
-  var id='edc-'+empId(emp)+'-'+fecha;
-  var card=document.getElementById(id);if(!card)return;
-  var wasOpen=card.classList.contains('open');
-  var regs=(empEditData[fecha])||[];
-  var tmp=document.createElement('div');
-  tmp.innerHTML=renderEmpCard(emp,fecha,regs);
-  var nc=tmp.firstElementChild;
-  if(wasOpen)nc.classList.add('open');
-  card.replaceWith(nc);
-}
+function refreshCard(emp,fecha){var id='dc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=(editData[emp]&&editData[emp][fecha])||[];var tmp=document.createElement('div');tmp.innerHTML=renderCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
+function refreshEmpCard(emp,fecha){var id='edc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=empEditData[fecha]||[];var tmp=document.createElement('div');tmp.innerHTML=renderEmpCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
 
-// ── EXPORT ──
 function exportEmp(emp){
   var dmap=emp==='_emp'?empEditData:editData[emp];if(!dmap)return;
   var wb=XLSX.utils.book_new();
-  var rows=Object.keys(dmap).sort().map(function(f){
-    var calc=calcDia(dmap[f]||[]);
-    return{'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};
-  });
-  var ws=XLSX.utils.json_to_sheet(rows);
-  ws['!cols']=[{wch:12},{wch:11},{wch:11},{wch:13},{wch:10},{wch:13}];
+  var rows=Object.keys(dmap).sort().map(function(f){var calc=calcDia(dmap[f]||[]);return{'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};});
+  var ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:12},{wch:11},{wch:11},{wch:13},{wch:10},{wch:13}];
   var sheetName=emp==='_emp'?session.nombre:emp;
   XLSX.utils.book_append_sheet(wb,ws,sheetName.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,'_'));
-  XLSX.writeFile(wb,'Fichajes_'+sheetName.split(' ')[0]+'.xlsx');
-  toast('Excel descargado','ok');
+  XLSX.writeFile(wb,'Fichajes_'+sheetName.split(' ')[0]+'.xlsx');toast('Excel descargado','ok');
 }
 
-// ── CONFIG ──
 function checkCfgUrl(val){var el=document.getElementById('cfg-url-st');if(!val){el.textContent='';return;}if(val.startsWith('https://script.google.com/macros/s/')){el.textContent='✓ URL válida';el.style.color='var(--green)';}else{el.textContent='La URL debe empezar por https://script.google.com/macros/s/';el.style.color='var(--red)';}}
 function saveCfgUrl(){var val=document.getElementById('cfg-url-input').value.trim();if(!val.startsWith('https://script.google.com/macros/s/')){toast('URL no válida','err');return;}SCRIPT_URL=val;localStorage.setItem('fichajes_script_url',val);updateCfgNote();toast('Apps Script configurado ✓','ok');}
 function saveEmail(){var val=document.getElementById('cfg-email-input').value.trim();if(!val||!val.includes('@')){toast('Email no válido','err');return;}ADMIN_EMAIL=val;localStorage.setItem('fichajes_admin_email',val);toast('Email guardado ✓','ok');}
