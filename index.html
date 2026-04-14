@@ -82,8 +82,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .btn-gen{width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:.78rem;font-weight:500;cursor:pointer;letter-spacing:.05em;transition:background .15s,box-shadow .15s;box-shadow:0 2px 8px rgba(45,106,63,.25)}
 .btn-gen:hover{background:var(--green-acc)}
 .btn-gen:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
-.script-cfg{font-size:.6rem;color:var(--ink3);line-height:1.7;border:1px solid var(--border);border-radius:6px;padding:.65rem .75rem;background:var(--cream)}
-.script-cfg a{color:var(--green);text-decoration:underline;cursor:pointer}
 .emp-side-info{background:var(--green3);border:1px solid var(--green4);border-radius:var(--r);padding:1rem;font-size:.7rem;color:var(--ink2);line-height:1.8}
 .emp-side-info strong{color:var(--green-acc)}
 .main{padding:2rem 2.5rem;overflow-x:hidden}
@@ -162,15 +160,17 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .hora-btn.approved .edit-mark{font-size:.6rem;opacity:1}
 .hora-btn-long{color:var(--red)!important}
 .hora-btn-long:hover{background:var(--red-soft)!important;border-color:#f5c6c2!important;color:var(--red)!important}
+
 /* ── CALENDAR PICKER ── */
 .cal-picker{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:#fff}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--cream2);border-bottom:1px solid var(--border)}
 .cal-nav-btn{background:none;border:none;cursor:pointer;color:var(--ink2);font-size:.85rem;padding:2px 6px;border-radius:4px;transition:background .12s}
 .cal-nav-btn:hover{background:var(--green3);color:var(--green)}
 .cal-month-lbl{font-family:'Lora',serif;font-size:.82rem;color:var(--ink);text-transform:capitalize}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:6px}
-.cal-dow{font-size:.52rem;color:var(--ink3);text-align:center;letter-spacing:.06em;text-transform:uppercase;padding:3px 0}
-.cal-day{font-size:.68rem;text-align:center;padding:5px 2px;border-radius:5px;cursor:pointer;color:var(--ink2);transition:all .12s;line-height:1.2}
+/* FIX: 7 columnas iguales, sin overflow */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:4px 6px}
+.cal-dow{font-size:.5rem;color:var(--ink3);text-align:center;letter-spacing:.02em;text-transform:uppercase;padding:3px 1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-day{font-size:.65rem;text-align:center;padding:4px 2px;border-radius:4px;cursor:pointer;color:var(--ink2);transition:all .12s;line-height:1.3;min-width:0;overflow:hidden}
 .cal-day:hover{background:var(--green3);color:var(--green)}
 .cal-day.empty{cursor:default}
 .cal-day.empty:hover{background:none}
@@ -181,7 +181,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .cal-day.disabled{opacity:.25;cursor:not-allowed;pointer-events:none}
 .cal-hint{font-size:.58rem;color:var(--ink3);padding:4px 8px 6px;text-align:center}
 
-/* sol filters — admin keeps all, emp only "todas" */
+/* sol filters */
 .sol-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
 .sol-title{font-family:'Lora',serif;font-size:1.4rem;font-weight:400;color:var(--green-acc)}
 .sol-filters{display:flex;gap:6px;flex-wrap:wrap}
@@ -205,13 +205,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .btn-aprobar:hover{opacity:.85}
 .btn-rechazar{padding:5px 14px;font-size:.65rem;font-family:'DM Mono',monospace;background:#fff;color:var(--red);border:1px solid #f5c6c2;border-radius:5px;cursor:pointer;transition:all .15s}
 .btn-rechazar:hover{background:var(--red-soft)}
-.cfg-step{margin-bottom:.7rem;font-size:.74rem;line-height:1.8;color:var(--ink2)}
-.cfg-step strong{color:var(--green)}
-.cfg-input-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:.5rem}
-.cfg-input-row input{flex:1;min-width:200px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:.72rem;border:1.5px solid var(--border2);border-radius:6px;outline:none;color:var(--ink)}
-.cfg-input-row input:focus{border-color:var(--green)}
-.cfg-input-row button{padding:8px 18px;background:var(--green);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:.72rem;cursor:pointer}
-.cfg-url-st{font-size:.61rem;margin-top:4px}
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(28,43,30,.45);z-index:800;align-items:center;justify-content:center}
 .modal-ov.on{display:flex}
 .modal-box{background:#fff;border-radius:12px;padding:2rem;max-width:540px;width:92%;box-shadow:0 20px 60px rgba(28,43,30,.2);max-height:90vh;overflow-y:auto}
@@ -229,6 +222,9 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .btn-submit{padding:8px 18px;font-size:.7rem;font-family:'DM Mono',monospace;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer}
 .modal-divider{border:none;border-top:1px solid var(--border);margin:.5rem 0 1rem}
 .modal-section-lbl{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:.6rem;display:block}
+/* ERROR de solapamiento en modal */
+.overlap-error{background:var(--red-soft);border:1px solid #f5c6c2;border-radius:6px;padding:8px 12px;font-size:.68rem;color:var(--red);margin-top:.5rem;display:none}
+.overlap-error.on{display:block}
 .loader{display:none;position:fixed;inset:0;background:rgba(247,244,238,.88);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:1rem;backdrop-filter:blur(3px)}
 .loader.on{display:flex}
 .spin{width:30px;height:30px;border:2.5px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:rot .6s linear infinite}
@@ -287,10 +283,10 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
   </div>
 </header>
 
+<!-- Admin: solo Informes y Solicitudes, sin Config -->
 <nav class="nav" id="nav-admin" style="display:none">
   <div class="nav-tab active" id="tab-informes" onclick="switchTab('informes')">📋 Informes</div>
   <div class="nav-tab" id="tab-solicitudes" onclick="switchTab('solicitudes')">🔄 Solicitudes <span class="nav-badge hidden" id="badge-sol">0</span></div>
-  <div class="nav-tab" id="tab-config" onclick="switchTab('config')" style="margin-left:auto">⚙ Config</div>
 </nav>
 
 <nav class="nav" id="nav-emp" style="display:none">
@@ -316,7 +312,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       </div>
     </div>
     <button class="btn-gen" id="btn-gen" onclick="generar()" disabled>Generar informe</button>
-    <div class="script-cfg"><span id="cfg-status-txt">Sin configurar</span><br><a onclick="switchTab('config')">Configurar Apps Script →</a></div>
   </aside>
 
   <!-- SIDEBAR EMPLEADO con calendario -->
@@ -324,7 +319,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
     <div>
       <span class="lbl">Período</span>
       <div id="emp-cal-container"></div>
-      <!-- hidden inputs para compatibilidad -->
       <input type="hidden" id="ef-desde">
       <input type="hidden" id="ef-hasta">
     </div>
@@ -354,25 +348,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
         </div>
         <div id="sol-list"></div>
       </div>
-      <div class="page" id="page-config">
-        <div style="max-width:640px">
-          <div style="font-family:'Lora',serif;font-size:1.4rem;color:var(--green-acc);margin-bottom:1.5rem">Configuración del Apps Script</div>
-          <div class="cfg-step"><strong>1.</strong> Abre tu Google Sheet → <strong>Extensiones → Apps Script</strong></div>
-          <div class="cfg-step"><strong>2.</strong> Borra el código existente y pega el script actualizado.</div>
-          <div class="cfg-step"><strong>3.</strong> Guarda → <strong>Implementar → Nueva implementación</strong><br><span style="color:var(--ink3);padding-left:1rem">Tipo: <strong style="color:var(--ink)">App web</strong> · Ejecutar: <strong style="color:var(--ink)">Yo</strong> · Acceso: <strong style="color:var(--ink)">Cualquier persona</strong></span></div>
-          <div class="cfg-step"><strong>4.</strong> URL de la aplicación web:</div>
-          <div class="cfg-input-row">
-            <input id="cfg-url-input" type="url" placeholder="https://script.google.com/macros/s/..." oninput="checkCfgUrl(this.value)">
-            <button onclick="saveCfgUrl()">Guardar</button>
-          </div>
-          <div class="cfg-url-st" id="cfg-url-st"></div>
-          <div class="cfg-step" style="margin-top:1.5rem"><strong>5.</strong> Email administrador:</div>
-          <div class="cfg-input-row">
-            <input id="cfg-email-input" type="email" placeholder="admin@empresa.com">
-            <button onclick="saveEmail()">Guardar</button>
-          </div>
-        </div>
-      </div>
     </div>
 
     <div id="emp-pages" style="display:none">
@@ -384,7 +359,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
         </div>
         <div id="ereport" style="display:none"></div>
       </div>
-      <!-- MIS SOLICITUDES: solo filtro "todas" -->
       <div class="page" id="epage-solicitudes">
         <div class="sol-header">
           <div class="sol-title">Mis solicitudes</div>
@@ -417,7 +391,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <div class="hora-change">
         <input type="text" id="sol-hora-entrada-actual" readonly style="background:var(--cream3);text-align:center">
         <div class="hora-arrow">→</div>
-        <input type="time" id="sol-hora-entrada-nueva">
+        <input type="time" id="sol-hora-entrada-nueva" oninput="checkOverlap()">
       </div>
     </div>
     <hr class="modal-divider">
@@ -435,15 +409,16 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <div class="hora-change">
         <input type="text" id="sol-hora-salida-actual" readonly style="background:var(--cream3);text-align:center">
         <div class="hora-arrow">→</div>
-        <input type="time" id="sol-hora-salida-nueva">
+        <input type="time" id="sol-hora-salida-nueva" oninput="checkOverlap()">
       </div>
     </div>
+    <div class="overlap-error" id="overlap-error">⚠ ERROR: ver horario — la hora nueva se solapa con otro turno del mismo día.</div>
     <hr class="modal-divider">
     <div class="modal-row" id="sol-email-row"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
     <div class="modal-row"><label>Motivo <span style="color:var(--ink3)">(opcional)</span></label><textarea id="sol-motivo" placeholder="Motivo del cambio..."></textarea></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cerrarModalSol()">Cancelar</button>
-      <button class="btn-submit" onclick="enviarSolicitud()">Enviar solicitud</button>
+      <button class="btn-submit" id="btn-submit-sol" onclick="enviarSolicitud()">Enviar solicitud</button>
     </div>
   </div>
 </div>
@@ -457,26 +432,44 @@ const DIAS_TILDE = ['domingo','lunes','martes','miércoles','jueves','viernes','
 const ADMIN_MAIL = 'luciana@buenasysantas.es';
 const ADMIN_PIN  = '2136';
 const UMBRAL_NOCHE = 120;
-const MAX_TURNO_MINS = 12 * 60; // 12 horas
+const MAX_TURNO_MINS = 12 * 60;
 
 let SCRIPT_URL  = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec';
 let ADMIN_EMAIL = localStorage.getItem('fichajes_admin_email') || ADMIN_MAIL;
 let session=null,empleados=[],editData={},solicitudes=[],esolicitudes=[];
 let solFiltro='todas',esolFiltro='todas';
 let currentSel,currentDesde,currentHasta,empEditData={},solActual=null;
-
-// ── Set de IDs de solicitudes aprobadas (para marcar ✏ en fichajes) ──
 let approvedSet = new Set();
 
+// ══════════════════════════════════════════════════════════════════
+// PERSISTENCIA DE SESIÓN (sessionStorage — sobrevive a recarga)
+// ══════════════════════════════════════════════════════════════════
+function saveSession(){
+  if(session) sessionStorage.setItem('bys_session', JSON.stringify(session));
+}
+function clearSession(){
+  sessionStorage.removeItem('bys_session');
+}
+function restoreSession(){
+  try{
+    var s=sessionStorage.getItem('bys_session');
+    if(s) return JSON.parse(s);
+  }catch(e){}
+  return null;
+}
+
+// ── Utilidades ──
 function toast(msg,cls,dur){dur=dur||2800;var t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(cls?' '+cls:'');clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast';},dur);}
 function setLoader(on,msg){document.getElementById('loader').classList.toggle('on',on);if(msg)document.getElementById('ltxt').textContent=msg;}
 function setStatus(cls,msg){document.getElementById('sdot').className='sdot '+cls;document.getElementById('stxt').textContent=msg;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function empId(emp){return emp.replace(/[^a-zA-Z0-9]/g,'_');}
 
-// ── JSONP ──
+// ══════════════════════════════════════════════════════════════════
+// JSONP — con retry automático en móvil
+// ══════════════════════════════════════════════════════════════════
 function apiGetJSONP(params,timeoutMs){
-  timeoutMs=timeoutMs||20000;
+  timeoutMs=timeoutMs||25000;
   return new Promise(function(resolve,reject){
     var cbName='_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
     var script=document.createElement('script');
@@ -486,29 +479,42 @@ function apiGetJSONP(params,timeoutMs){
     params.callback=cbName;
     var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
     script.src=SCRIPT_URL+'?'+qs;
-    script.onerror=function(){cleanup();reject(new Error('Error de red'));};
+    script.onerror=function(){cleanup();reject(new Error('Error de red — comprueba tu conexión'));};
     document.head.appendChild(script);
   });
+}
+
+// Wrapper con 1 reintento automático
+async function apiGetJSONPWithRetry(params, timeoutMs, retries){
+  retries = retries || 1;
+  for(var attempt=0; attempt<=retries; attempt++){
+    try{
+      return await apiGetJSONP(params, timeoutMs);
+    }catch(e){
+      if(attempt===retries) throw e;
+      await new Promise(function(r){setTimeout(r,1500);});
+    }
+  }
 }
 
 async function callScriptJSONP(payload){
   if(!SCRIPT_URL)return{ok:false,msg:'Sin URL'};
   try{
-    var res=await apiGetJSONP({action:payload.action,data:JSON.stringify(payload)},40000);
+    var res=await apiGetJSONPWithRetry({action:payload.action,data:JSON.stringify(payload)},40000,1);
     return res;
   }catch(e){return{ok:false,msg:e.toString()};}
 }
 
 async function fetchSheet(name){
   if(!SCRIPT_URL)throw new Error('Configura la URL del Apps Script primero');
-  var data=await apiGetJSONP({action:'getFichajes',nombre:name.trim()});
+  var data=await apiGetJSONPWithRetry({action:'getFichajes',nombre:name.trim()},25000,1);
   var rows=Array.isArray(data)?data:(data.data||[]);
   return{rows:rows.map(function(r){return{c:r.map(function(v){return{v:String(v||'')};})};})};
 }
 
 async function loadEmpleados(){
   if(!SCRIPT_URL)throw new Error('Sin URL');
-  var data=await apiGetJSONP({action:'getEmpleados'});
+  var data=await apiGetJSONPWithRetry({action:'getEmpleados'},20000,1);
   var rows=Array.isArray(data)?data:(data.data||[]);
   var found=[];
   for(var i=0;i<rows.length;i++){
@@ -524,23 +530,23 @@ async function loadSolicitudes(empNombre){
   try{
     var params={action:'getSolicitudes'};
     if(empNombre)params.emp=empNombre;
-    var data=await apiGetJSONP(params,15000);
+    var data=await apiGetJSONPWithRetry(params,15000,1);
     return Array.isArray(data)?data:[];
   }catch(e){return[];}
 }
 
-// ── Rebuild approvedSet from solicitudes array ──
 function rebuildApprovedSet(sols){
   approvedSet=new Set();
   sols.forEach(function(s){
     if(s.estado==='aprobada'){
-      // key: emp|fecha|tipo|horaAnterior
       approvedSet.add(s.emp+'|'+safeISO(s.fecha)+'|'+s.tipo+'|'+normHora(s.horaActual));
     }
   });
 }
 
-// ── LOGIN ──
+// ══════════════════════════════════════════════════════════════════
+// LOGIN + RESTAURAR SESIÓN
+// ══════════════════════════════════════════════════════════════════
 async function doLogin(){
   var email=document.getElementById('login-email').value.trim().toLowerCase();
   var pin=document.getElementById('login-pin').value.trim();
@@ -548,15 +554,29 @@ async function doLogin(){
   err.classList.remove('on');
   if(!email||!pin){err.textContent='Rellena todos los campos.';err.classList.add('on');return;}
   btn.disabled=true;btn.textContent='Verificando...';
-  if(email===ADMIN_MAIL&&pin===ADMIN_PIN){session={role:'admin',nombre:'Luciana (Admin)',email:ADMIN_MAIL};btn.disabled=false;btn.textContent='Entrar';await initAdmin();return;}
-  if(!empleados.length){try{await loadEmpleados();}catch(e){err.textContent='Error conectando con Apps Script.';err.classList.add('on');btn.disabled=false;btn.textContent='Entrar';return;}}
+  if(email===ADMIN_MAIL&&pin===ADMIN_PIN){
+    session={role:'admin',nombre:'Luciana (Admin)',email:ADMIN_MAIL};
+    saveSession();
+    btn.disabled=false;btn.textContent='Entrar';
+    await initAdmin();return;
+  }
+  if(!empleados.length){
+    try{await loadEmpleados();}
+    catch(e){err.textContent='Error conectando con Apps Script. Comprueba tu conexión.';err.classList.add('on');btn.disabled=false;btn.textContent='Entrar';return;}
+  }
   var emp=empleados.find(function(e){return e.email.toLowerCase()===email;});
-  if(!emp||String(emp.pin).trim()!==String(pin).trim()){err.textContent='Email o PIN incorrectos.';err.classList.add('on');btn.disabled=false;btn.textContent='Entrar';return;}
-  session={role:'empleado',nombre:emp.nombre,email:emp.email,empData:emp};btn.disabled=false;btn.textContent='Entrar';initEmpleado();
+  if(!emp||String(emp.pin).trim()!==String(pin).trim()){
+    err.textContent='Email o PIN incorrectos.';err.classList.add('on');btn.disabled=false;btn.textContent='Entrar';return;
+  }
+  session={role:'empleado',nombre:emp.nombre,email:emp.email,empData:emp};
+  saveSession();
+  btn.disabled=false;btn.textContent='Entrar';
+  initEmpleado();
 }
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!document.getElementById('app').classList.contains('on'))doLogin();});
 
 function doLogout(){
+  clearSession();
   session=null;empleados=[];editData={};solicitudes=[];esolicitudes=[];empEditData={};currentSel=null;approvedSet=new Set();
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').classList.remove('on');
@@ -569,22 +589,44 @@ function doLogout(){
   document.getElementById('admin-pages').style.display='none';document.getElementById('emp-pages').style.display='none';
 }
 
+// Restaurar sesión al cargar la página
+window.addEventListener('load', async function(){
+  var saved = restoreSession();
+  if(!saved) return;
+  session = saved;
+  if(session.role==='admin'){
+    await initAdmin();
+  } else {
+    // Necesitamos tener el emp completo — cargamos empleados primero
+    try{
+      await loadEmpleados();
+      var emp = empleados.find(function(e){return e.email===session.email;});
+      if(emp) session.empData=emp;
+    }catch(e){}
+    initEmpleado();
+  }
+});
+
 async function initAdmin(){
   document.getElementById('login-screen').style.display='none';document.getElementById('app').classList.add('on');
   document.getElementById('hdr-user-admin').style.display='flex';document.getElementById('hdr-user-name').textContent=session.nombre;
   document.getElementById('hdr-role-badge').textContent='Admin';document.getElementById('hdr-role-badge').className='role-badge role-admin';
   document.getElementById('nav-admin').style.display='flex';document.getElementById('side-admin').style.display='flex';
   document.getElementById('admin-pages').style.display='block';document.getElementById('status-bar-hdr').style.display='flex';
+  // Asegurar que la pestaña activa es Informes
+  switchTab('informes');
   var hoy=new Date(),p1=new Date(hoy.getFullYear(),hoy.getMonth(),1);
   document.getElementById('f-hasta').value=hoy.toISOString().slice(0,10);
   document.getElementById('f-desde').value=p1.toISOString().slice(0,10);
   setStatus('spin','Cargando...');
-  try{if(!empleados.length)await loadEmpleados();renderEmpleados();solicitudes=await loadSolicitudes();updateBadge();setStatus('ok',empleados.length+' empleados');}
-  catch(e){setStatus('err','Sin conexión');}
+  try{
+    if(!empleados.length)await loadEmpleados();
+    renderEmpleados();
+    solicitudes=await loadSolicitudes();
+    updateBadge();
+    setStatus('ok',empleados.length+' empleados');
+  }catch(e){setStatus('err','Sin conexión');}
   document.getElementById('btn-gen').disabled=false;
-  if(SCRIPT_URL)document.getElementById('cfg-url-input').value=SCRIPT_URL;
-  if(ADMIN_EMAIL)document.getElementById('cfg-email-input').value=ADMIN_EMAIL;
-  updateCfgNote();
 }
 
 async function initEmpleado(){
@@ -597,7 +639,6 @@ async function initEmpleado(){
   document.getElementById('ef-hasta').value=hoy.toISOString().slice(0,10);
   document.getElementById('ef-desde').value=p1.toISOString().slice(0,10);
   document.getElementById('sol-email-row').style.display='none';
-  // Inicializar el calendario
   initCalPicker('emp-cal-container','ef-desde','ef-hasta',hoy.getFullYear(),hoy.getMonth());
   esolicitudes=await loadSolicitudes(session.nombre);
   rebuildApprovedSet(esolicitudes);
@@ -608,7 +649,10 @@ async function initEmpleado(){
 function switchTab(tab){
   document.querySelectorAll('#nav-admin .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#admin-pages .page').forEach(function(p){p.classList.remove('active');});
-  document.getElementById('tab-'+tab).classList.add('active');document.getElementById('page-'+tab).classList.add('active');
+  var tabEl=document.getElementById('tab-'+tab);
+  if(tabEl)tabEl.classList.add('active');
+  var pageEl=document.getElementById('page-'+tab);
+  if(pageEl)pageEl.classList.add('active');
   if(tab==='solicitudes'){loadSolicitudes().then(function(data){solicitudes=data;updateBadge();renderSolicitudes();});}
 }
 function renderEmpleados(){document.getElementById('emp-list').innerHTML=empleados.map(function(e){return'<label class="emp-row"><input type="checkbox" class="echk" value="'+esc(e.nombre)+'" checked><label>'+esc(e.nombre)+'</label></label>';}).join('');}
@@ -623,7 +667,6 @@ var calState = {
   month: new Date().getMonth(),
   selStart: null,
   selEnd: null,
-  picking: false, // false=nada, 'start'=esperando start, 'end'=esperando end
   containerId: null,
   inputDesde: null,
   inputHasta: null
@@ -635,7 +678,6 @@ function initCalPicker(containerId, desdeId, hastaId, year, month){
   calState.inputHasta = hastaId;
   calState.year = year;
   calState.month = month;
-  // Leer valores actuales de los hidden inputs
   var d1=document.getElementById(desdeId).value;
   var d2=document.getElementById(hastaId).value;
   calState.selStart = d1||null;
@@ -648,11 +690,11 @@ function renderCalPicker(){
   if(!c)return;
   var year=calState.year,month=calState.month;
   var meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  // Abreviaciones de 2 letras para que no se desborden en la columna
   var dows=['lu','ma','mi','ju','vi','sá','do'];
   var hoy=new Date().toISOString().slice(0,10);
 
-  var firstDay=new Date(year,month,1).getDay(); // 0=dom
-  // convertir a lu=0
+  var firstDay=new Date(year,month,1).getDay();
   var startOffset=(firstDay+6)%7;
   var daysInMonth=new Date(year,month+1,0).getDate();
 
@@ -663,11 +705,11 @@ function renderCalPicker(){
   html+='<button class="cal-nav-btn" onclick="calMove(1)">▶</button>';
   html+='</div>';
   html+='<div class="cal-grid">';
-  // headers
+  // cabeceras días de semana
   dows.forEach(function(d){html+='<div class="cal-dow">'+d+'</div>';});
-  // empty cells
+  // celdas vacías
   for(var e=0;e<startOffset;e++)html+='<div class="cal-day empty"></div>';
-  // days
+  // días
   for(var d=1;d<=daysInMonth;d++){
     var iso=year+'-'+('0'+(month+1)).slice(-2)+'-'+('0'+d).slice(-2);
     var cls='cal-day';
@@ -703,13 +745,10 @@ function calMove(dir){
 
 function calDayClick(iso){
   if(!calState.selStart||calState.selEnd){
-    // Empezar selección nueva
     calState.selStart=iso;calState.selEnd=null;
   }else{
-    // Ya tenemos start, fijar end
     if(iso<calState.selStart){calState.selEnd=calState.selStart;calState.selStart=iso;}
     else{calState.selEnd=iso;}
-    // Actualizar hidden inputs
     document.getElementById(calState.inputDesde).value=calState.selStart;
     document.getElementById(calState.inputHasta).value=calState.selEnd;
   }
@@ -780,7 +819,6 @@ function emparejarTurnos(regs,fechaDia){
   return turnos;
 }
 
-// ── Calcular duración de un turno en minutos ──
 function calcTurnoMins(turno){
   if(!turno.entrada||!turno.salida)return null;
   var me=horaToMins(turno.entrada.hora)||0;
@@ -802,6 +840,62 @@ function calcDia(regs){
   }
   var estado=!hayEntrada?'sin-entrada':turnoAbierto?'sin-salida':'ok';
   return{primera:primera,ultima:ultima,mins:estado==='ok'?totalMins:null,estado:estado};
+}
+
+// ══════════════════════════════════════════════════════════════════
+// VALIDACIÓN DE SOLAPAMIENTO EN EL MODAL
+// ══════════════════════════════════════════════════════════════════
+function checkOverlap(){
+  if(!solActual)return;
+  var errEl=document.getElementById('overlap-error');
+  var btnEl=document.getElementById('btn-submit-sol');
+  errEl.classList.remove('on');
+  btnEl.disabled=false;
+
+  var isEmp=solIsEmp;
+  var dmap=isEmp?empEditData:(editData[solActual.emp]||{});
+  var fecha=solActual.fecha;
+  var regs=(dmap[fecha]||[]).slice();
+  var turnos=emparejarTurnos(regs,fecha);
+  if(turnos.length<2) return; // Solo hay un turno, no puede solaparse
+
+  var turnoIdx=solActual.turnoIdx;
+  var horaENueva=document.getElementById('sol-hora-entrada-nueva').value;
+  var horaSNueva=document.getElementById('sol-hora-salida-nueva').value;
+
+  // Construir lista de intervalos de los turnos EXCEPTO el que estamos editando
+  var intervalos=[];
+  for(var i=0;i<turnos.length;i++){
+    if(i===turnoIdx) continue;
+    var t=turnos[i];
+    if(t.entrada&&t.salida){
+      var me=horaToMins(t.entrada.hora)||0;
+      var ms=horaToMins(t.salida.hora)||0;
+      if(me<UMBRAL_NOCHE)me+=1440;
+      if(ms<UMBRAL_NOCHE)ms+=1440;
+      intervalos.push({inicio:me,fin:ms});
+    }
+  }
+  if(!intervalos.length) return;
+
+  function solapaConAlguno(horaStr){
+    var m=horaToMins(horaStr);
+    if(m===null) return false;
+    if(m<UMBRAL_NOCHE)m+=1440;
+    for(var j=0;j<intervalos.length;j++){
+      if(m>intervalos[j].inicio&&m<intervalos[j].fin) return true;
+    }
+    return false;
+  }
+
+  var solapa=false;
+  if(horaENueva&&solapaConAlguno(horaENueva)) solapa=true;
+  if(horaSNueva&&solapaConAlguno(horaSNueva)) solapa=true;
+
+  if(solapa){
+    errEl.classList.add('on');
+    btnEl.disabled=true;
+  }
 }
 
 // ── GENERAR ──
@@ -855,7 +949,6 @@ function scrollToDay(fecha,empKey){
 }
 function jumpToDate(empKey){var inputId=empKey==='_emp'?'emp-date-jump':'adm-date-jump';var fecha=document.getElementById(inputId).value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,empKey);}
 
-// ── buildFilasTurnos: detecta turno >12h y marca aprobados ──
 function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   var turnos=emparejarTurnos(regs,fecha);
   if(!turnos.length)return'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
@@ -886,7 +979,6 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
       html+='<td><button class="'+btnClsS+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.salida.hora+' '+markS+'</button></td></tr>';
     }
   }
-  // Si algún turno supera 12h, mostrar aviso
   var hayLong=turnos.some(function(tr){var tm=calcTurnoMins(tr);return tm!=null&&tm>MAX_TURNO_MINS;});
   if(hayLong){html+='<tr><td colspan="3" style="padding:6px 10px;font-size:.65rem;color:var(--red);background:var(--red-soft);border-radius:0 0 6px 6px">⚠ Turno de más de 12 horas — revisa si es correcto</td></tr>';}
   return html+'</tbody></table>';
@@ -911,7 +1003,6 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
   if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
   if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
-  // Chip si hay turno largo
   var turnos=emparejarTurnos(regs,fecha);
   var hayLong=turnos.some(function(tr){var tm=calcTurnoMins(tr);return tm!=null&&tm>MAX_TURNO_MINS;});
   if(hayLong)chips+='<span class="chip c-long">+12h ⚠</span>';
@@ -922,11 +1013,8 @@ function toggleCard(card){card.classList.toggle('open');}
 
 function isoWeek(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]),day=d.getDay()||7;d.setDate(d.getDate()+4-day);var ys=new Date(d.getFullYear(),0,1);return Math.ceil(((d-ys)/86400000+1)/7)+'_'+d.getFullYear();}
 
-// ── buildCardsConSemana: separador ANTES de cada semana (no después) ──
 function buildCardsConSemana(fechas,dmap,emp,isEmp){
-  // fechas viene en orden descendente (más reciente primero)
-  // Agrupar por semana manteniendo orden
-  var grupos=[]; // [{semana, mins, cards}]
+  var grupos=[];
   var semActual=null;
   var semMins=0;
   var semCards=[];
@@ -944,7 +1032,6 @@ function buildCardsConSemana(fechas,dmap,emp,isEmp){
   }
   if(semActual!==null)grupos.push({semana:semActual,mins:semMins,cards:semCards.slice()});
 
-  // Renderizar: separador ARRIBA de cada semana, luego los cards
   var html='';
   for(var g=0;g<grupos.length;g++){
     var gr=grupos[g];
@@ -979,6 +1066,9 @@ function abrirModalSol(emp,fecha,isEmp,turnoIdx){
   document.getElementById('sol-hora-salida-actual').value=horaS;
   document.getElementById('sol-hora-salida-nueva').value=turno.salida?horaS.slice(0,5):'';
   document.getElementById('sol-motivo').value='';
+  // Limpiar estado de error
+  document.getElementById('overlap-error').classList.remove('on');
+  document.getElementById('btn-submit-sol').disabled=false;
   if(solIsEmp){document.getElementById('sol-email-emp').value=session.email;document.getElementById('sol-email-row').style.display='none';}
   else{var empObj=empleados.find(function(e){return e.nombre===emp;});document.getElementById('sol-email-emp').value=empObj?empObj.email:'';document.getElementById('sol-email-row').style.display='flex';}
   document.getElementById('modal-sol').classList.add('on');
@@ -987,6 +1077,10 @@ function cerrarModalSol(){document.getElementById('modal-sol').classList.remove(
 
 async function enviarSolicitud(){
   if(!solActual)return;
+  // Bloquear si hay solapamiento
+  if(document.getElementById('btn-submit-sol').disabled){
+    toast('Corrige el solapamiento de turnos antes de enviar','err');return;
+  }
   var motivo=document.getElementById('sol-motivo').value.trim();
   var emailEmp=document.getElementById('sol-email-emp').value.trim();
   var turno=solActual.turno;
@@ -1083,7 +1177,6 @@ function eswitch(tab){
 }
 function updateEbadge(){var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('ebadge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
 
-// ── Mis solicitudes: solo mostrar todas, sin filtros de estado ──
 function erendSolicitudes(){
   var lista=esolicitudes.slice();
   var el=document.getElementById('esol-list');
@@ -1161,11 +1254,6 @@ function exportEmp(emp){
   XLSX.utils.book_append_sheet(wb,ws,sheetName.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,'_'));
   XLSX.writeFile(wb,'Fichajes_'+sheetName.split(' ')[0]+'.xlsx');toast('Excel descargado','ok');
 }
-
-function checkCfgUrl(val){var el=document.getElementById('cfg-url-st');if(!val){el.textContent='';return;}if(val.startsWith('https://script.google.com/macros/s/')){el.textContent='✓ URL válida';el.style.color='var(--green)';}else{el.textContent='La URL debe empezar por https://script.google.com/macros/s/';el.style.color='var(--red)';}}
-function saveCfgUrl(){var val=document.getElementById('cfg-url-input').value.trim();if(!val.startsWith('https://script.google.com/macros/s/')){toast('URL no válida','err');return;}SCRIPT_URL=val;localStorage.setItem('fichajes_script_url',val);updateCfgNote();toast('Apps Script configurado ✓','ok');}
-function saveEmail(){var val=document.getElementById('cfg-email-input').value.trim();if(!val||!val.includes('@')){toast('Email no válido','err');return;}ADMIN_EMAIL=val;localStorage.setItem('fichajes_admin_email',val);toast('Email guardado ✓','ok');}
-function updateCfgNote(){var st=document.getElementById('cfg-status-txt');if(SCRIPT_URL){st.innerHTML='<span style="color:var(--green)">✓ Apps Script conectado</span>';}else{st.innerHTML='<span style="color:var(--amber)">⚠ Sin configurar</span>';}}
 </script>
 </body>
 </html>
