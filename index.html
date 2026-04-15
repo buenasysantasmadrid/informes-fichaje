@@ -1290,13 +1290,9 @@ function renderEmp(emp){
   if(!dmap)return'<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta" style="color:var(--red)">No se encontró la pestaña en el sheet.</div></div>';
   var fechas=Object.keys(dmap).sort().reverse(),fechasAsc=fechas.slice().reverse();
   if(!fechas.length)return'<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">Sin fichajes en el período.</div></div>';
-  var totalMins=0,sinSal=0,sinEnt=0;
-  for(var i=0;i<fechas.length;i++){var calc=calcDia(dmap[fechas[i]]||[],fechas[i]);if(calc.mins!=null)totalMins+=calc.mins;if(calc.hayError)sinSal++;}
-  var pills='<div class="pills"><div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div><div class="pill">Días <strong>'+fechas.length+'</strong></div>'+(sinSal?'<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>':'')+(sinEnt?'<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>':'')+'</div>';
-  var summaryCards=buildSummaryGridAdmin(fechas,dmap,emp);
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="adm-date-jump-'+empId(emp)+'"><button class="btn-jump" onclick="jumpToDateAdmin(\''+esc(emp)+'\')">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmap,emp,false);
-  return'<div class="emp-block" data-emp="'+esc(emp)+'"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+' · '+fechas.length+' días</div>'+pills+summaryCards+dateSearch+'<button class="export-btn" onclick="exportEmp(\''+esc(emp)+'\')">↓ Exportar Excel</button><div class="days">'+cards+'</div></div>';
+  return'<div class="emp-block" data-emp="'+esc(emp)+'"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
 }
 function buildSummaryGridAdmin(fechas,dmap,emp){
   var hoy=new Date().toISOString().slice(0,10);
