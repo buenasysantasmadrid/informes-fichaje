@@ -134,7 +134,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .sum-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.75rem .85rem;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;gap:3px;box-shadow:var(--shadow);}
 .sum-card:hover{border-color:var(--green4);background:var(--green3);box-shadow:var(--shadow2)}
 .sum-card.has-error{border-left:3px solid var(--red)}
-.sum-card.has-warn{border-left:3px solid var(--amber)}
+
 .sum-card.today{border-color:var(--green);box-shadow:0 0 0 2px var(--green4)}
 .sum-dow{font-family:'Lora',serif;font-size:.8rem;color:var(--ink2);text-transform:capitalize}
 .sum-date{font-size:.58rem;color:var(--ink3)}
@@ -153,8 +153,8 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .week-lbl{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:var(--green3);color:var(--green-acc);border:1px solid var(--green4);border-radius:20px;padding:3px 12px;font-weight:500}
 .day-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s}
 .day-card:hover{box-shadow:var(--shadow2)}
-.day-card.has-error{border-left:3px solid var(--red)}
-.day-card.has-warn{border-left:3px solid var(--amber)}
+.day-card.has-error{border-left:3px solid var(--red);background:var(--red-soft)}
+
 .day-head{display:flex;align-items:center;padding:.85rem 1.2rem;cursor:pointer;user-select:none}
 .day-dow{font-family:'Lora',serif;font-size:1rem;font-weight:400;color:var(--ink);width:115px;flex-shrink:0;text-transform:capitalize}
 .day-date{font-size:.65rem;color:var(--ink3);width:85px;flex-shrink:0}
@@ -650,13 +650,7 @@ async function initEmpleado(){
   try{
     var tablaTodos=await fetchSheet(session.nombre);
     var fichajesTodos=parsearTabla(tablaTodos);
-    var dmapTodos={};
-    for(var fi=0;fi<fichajesTodos.length;fi++){
-      var ff=fichajesTodos[fi];
-      if(!dmapTodos[ff.fecha])dmapTodos[ff.fecha]=[];
-      dmapTodos[ff.fecha].push({tipo:ff.tipo,hora:ff.hora});
-    }
-    empEditData=dmapTodos;
+    empEditData=construirDmap(fichajesTodos);
   }catch(e){toast('Error cargando fichajes','err');}
   setLoader(false);
   renderEmpFichajesTab();
@@ -787,25 +781,89 @@ function diaSiguiente(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]
 function diaAnterior(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()-1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 
 // ── TURNOS ──
-function emparejarTurnos(regs,fechaDia){
+
+// Empareja todos los fichajes globalmente.
+// La salida SIEMPRE queda asignada al día de su entrada.
+// Si la salida es de fecha distinta o es antes de las 2am → errorNoche=true.
+function construirDmap(fichajes){
   var UMBRAL=UMBRAL_NOCHE;
-  var sorted=regs.slice().map(function(r){return{r:r};});
-  sorted.sort(function(a,b){var am=horaToMins(a.r.hora)||0,bm=horaToMins(b.r.hora)||0;if(am<UMBRAL)am+=1440;if(bm<UMBRAL)bm+=1440;return am-bm;});
-  var turnos=[],usadas={},k=0;
-  while(k<sorted.length){
-    if(usadas[k]){k++;continue;}
-    var item=sorted[k];
-    if(item.r.tipo==='ENTRADA'){
-      usadas[k]=true;
-      var salidaIdx=-1;
-      for(var s=k+1;s<sorted.length;s++){if(!usadas[s]&&sorted[s].r.tipo==='SALIDA'){salidaIdx=s;break;}}
-      var turno={idx:turnos.length,entrada:item.r,salida:null,fechaEntrada:fechaDia,fechaSalida:fechaDia};
-      if(salidaIdx!==-1){usadas[salidaIdx]=true;turno.salida=sorted[salidaIdx].r;var sm=horaToMins(turno.salida.hora)||0;if(sm<UMBRAL)turno.fechaSalida=diaSiguiente(fechaDia);}
-      turnos.push(turno);
-    }else{
-      if(!usadas[k]){usadas[k]=true;var sm2=horaToMins(item.r.hora)||0;turnos.push({idx:turnos.length,entrada:null,salida:item.r,fechaEntrada:fechaDia,fechaSalida:sm2<UMBRAL?diaSiguiente(fechaDia):fechaDia});}
+
+  // Convertir cada fichaje a minutos absolutos desde epoch para comparar entre días
+  function absMins(fecha, hora){
+    var p=fecha.split('-').map(Number);
+    var d=new Date(p[0],p[1]-1,p[2]);
+    var diasDesdeRef=Math.round((d-new Date(2020,0,1))/86400000);
+    return diasDesdeRef*1440+(horaToMins(hora)||0);
+  }
+
+  // Ordenar por tiempo absoluto
+  var todos=fichajes.slice().sort(function(a,b){
+    return absMins(a.fecha,a.hora)-absMins(b.fecha,b.hora);
+  });
+
+  var usada=new Array(todos.length).fill(false);
+  var dmap={};
+
+  for(var i=0;i<todos.length;i++){
+    if(usada[i])continue;
+    var reg=todos[i];
+
+    if(reg.tipo==='ENTRADA'){
+      usada[i]=true;
+      var fechaE=reg.fecha;
+      if(!dmap[fechaE])dmap[fechaE]=[];
+      dmap[fechaE].push({tipo:'ENTRADA',hora:reg.hora,fechaReal:reg.fecha,errorNoche:false});
+
+      // Buscar la SALIDA más próxima en tiempo después de esta entrada
+      var absEntrada=absMins(reg.fecha,reg.hora);
+      for(var j=i+1;j<todos.length;j++){
+        if(usada[j])continue;
+        if(todos[j].tipo==='SALIDA'){
+          var absSalida=absMins(todos[j].fecha,todos[j].hora);
+          var diff=absSalida-absEntrada;
+          if(diff>0 && diff<1800){
+            usada[j]=true;
+            var sal=todos[j];
+            var err=(sal.fecha!==fechaE); // error si la salida es de otro día
+            dmap[fechaE].push({tipo:'SALIDA',hora:sal.hora,fechaReal:sal.fecha,errorNoche:err});
+            break;
+          }
+        }
+      }
+
+    } else {
+      // SALIDA huérfana
+      usada[i]=true;
+      if(!dmap[reg.fecha])dmap[reg.fecha]=[];
+      dmap[reg.fecha].push({tipo:'SALIDA',hora:reg.hora,fechaReal:reg.fecha,errorNoche:true});
     }
-    k++;
+  }
+  return dmap;
+}
+
+// emparejarTurnos: los registros ya vienen ordenados y emparejados por construirDmap
+// Solo los agrupamos en pares ENTRADA+SALIDA respetando el orden original
+function emparejarTurnos(regs,fechaDia){
+  var turnos=[];
+  var k=0;
+  while(k<regs.length){
+    var r=regs[k];
+    if(r.tipo==='ENTRADA'){
+      var turno={idx:turnos.length,entrada:r,salida:null,fechaEntrada:fechaDia,fechaSalida:fechaDia,errorNoche:r.errorNoche||false};
+      // La siguiente en el array es su salida (construirDmap ya las emparejó juntas)
+      if(k+1<regs.length && regs[k+1].tipo==='SALIDA'){
+        turno.salida=regs[k+1];
+        if(regs[k+1].errorNoche)turno.errorNoche=true;
+        k+=2; // saltar entrada y salida
+      } else {
+        k++;
+      }
+      turnos.push(turno);
+    } else {
+      // SALIDA huérfana
+      turnos.push({idx:turnos.length,entrada:null,salida:r,fechaEntrada:fechaDia,fechaSalida:fechaDia,errorNoche:r.errorNoche||false});
+      k++;
+    }
   }
   return turnos;
 }
@@ -815,30 +873,28 @@ function calcTurnoMins(turno){
   if(me<UMBRAL_NOCHE)me+=1440;if(ms<UMBRAL_NOCHE)ms+=1440;
   var dur=ms-me;return dur>0?dur:null;
 }
-// Devuelve true si el turno debe marcarse en rojo:
-// - dura más de 12h, O
-// - la salida cae en un día distinto al de entrada (cruzó las 2am)
+// Error si la salida es de distinto día que la entrada
 function turnoEsError(turno){
-  if(!turno.entrada||!turno.salida) return false;
-  // Si la salida es de madrugada (< 2am) el emparejador ya puso fechaSalida = día siguiente
-  // Eso significa que el turno cruzó medianoche → error
-  if(turno.fechaSalida !== turno.fechaEntrada) return true;
-  // También error si dura más de 12h en el mismo día
+  if(!turno.entrada) return false;
+  // errorNoche viene de construirDmap: salida en fecha distinta
+  if(turno.errorNoche) return true;
+  // También error si dura más de 12h
   var mins=calcTurnoMins(turno);
   if(mins!=null && mins>MAX_TURNO_MINS) return true;
   return false;
 }
-function calcDia(regs){
-  var UMBRAL=UMBRAL_NOCHE;
-  var sorted=regs.slice().sort(function(a,b){var am=horaToMins(a.hora)||0,bm=horaToMins(b.hora)||0;if(am<UMBRAL)am+=1440;if(bm<UMBRAL)bm+=1440;return am-bm;});
-  var primera=null,ultima=null,totalMins=0,entradaAbierta=null,hayEntrada=false,turnoAbierto=false;
-  for(var i=0;i<sorted.length;i++){
-    var r=sorted[i];
-    if(r.tipo==='ENTRADA'){hayEntrada=true;if(!primera)primera=r.hora;var me=horaToMins(r.hora)||0;if(me<UMBRAL)me+=1440;entradaAbierta=me;turnoAbierto=true;}
-    else if(r.tipo==='SALIDA'){ultima=r.hora;if(turnoAbierto&&entradaAbierta!==null){var ms=horaToMins(r.hora)||0;if(ms<UMBRAL)ms+=1440;var dur=ms-entradaAbierta;if(dur>0)totalMins+=dur;entradaAbierta=null;turnoAbierto=false;}}
+function calcDia(regs,fechaDia){
+  if(!regs||!regs.length)return{primera:null,ultima:null,mins:0,hayError:false};
+  var turnos=emparejarTurnos(regs,fechaDia||'0000-00-00');
+  var primera=null,ultima=null,totalMins=0,hayError=false;
+  for(var i=0;i<turnos.length;i++){
+    var tr=turnos[i];
+    if(turnoEsError(tr))hayError=true;
+    if(tr.entrada&&(!primera||tr.entrada.hora<primera))primera=tr.entrada.hora;
+    if(tr.salida&&(!ultima||tr.salida.hora>ultima))ultima=tr.salida.hora;
+    var tm=calcTurnoMins(tr);if(tm!=null)totalMins+=tm;
   }
-  var estado=!hayEntrada?'sin-entrada':turnoAbierto?'sin-salida':'ok';
-  return{primera:primera,ultima:ultima,mins:estado==='ok'?totalMins:null,estado:estado};
+  return{primera:primera,ultima:ultima,mins:totalMins||null,hayError:hayError};
 }
 
 // ── OVERLAP CHECK ──
@@ -892,8 +948,7 @@ async function generar(){
     try{
       var table=await fetchSheet(emp);var fichajes=parsearTabla(table);
       var filt=fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});
-      var dmap={};for(var j=0;j<filt.length;j++){var f=filt[j];if(!dmap[f.fecha])dmap[f.fecha]=[];dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});}
-      editData[emp]=dmap;
+      editData[emp]=construirDmap(filt);
     }catch(e){editData[emp]=null;}
   }
   setLoader(false);
@@ -912,8 +967,7 @@ async function empGenerar(){
   try{
     var table=await fetchSheet(session.nombre);var fichajes=parsearTabla(table);
     var filt=fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});
-    var dmap={};for(var j=0;j<filt.length;j++){var f=filt[j];if(!dmap[f.fecha])dmap[f.fecha]=[];dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});}
-    empEditDataCal=dmap;
+    empEditDataCal=construirDmap(filt);
     esolicitudes=await loadSolicitudes(session.nombre);
     rebuildApprovedSet(esolicitudes);
     updateEbadge();
@@ -969,60 +1023,94 @@ function jumpToDate(empKey){var inputId=empKey==='_emp'?'emp-date-jump':'adm-dat
 function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   var turnos=emparejarTurnos(regs,fecha);
   if(!turnos.length)return'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
-  var html='<table class="ft"><thead><tr><th>Turno</th><th>Tipo</th><th>Hora <span style="font-weight:400;color:var(--ink3)">(pulsa para solicitar cambio)</span></th></tr></thead><tbody>';
-  for(var t=0;t<turnos.length;t++){
-    var turno=turnos[t],turnoNum=t+1,sepCls=t>0?' class="turno-sep"':'';
+  var turnosRev=turnos.slice().reverse();
+  var bloques=[];
+  for(var t=0;t<turnosRev.length;t++){
+    var turno=turnosRev[t];
+    var turnoIdx=turnos.length-1-t; // índice real en array original
+    var isErr=turnoEsError(turno);
     var turnoMins=calcTurnoMins(turno);
-    var isLong=turnoEsError(turno);
+
+    // fechas reales de cada fichaje
+    var fechaRealE=turno.entrada?(turno.entrada.fechaReal||fecha):fecha;
+    var fechaRealS=turno.salida?(turno.salida.fechaReal||fecha):fecha;
+    var fechaDifE=fechaRealE!==fecha;
+    var fechaDifS=fechaRealS!==fecha;
+
+    // pendientes / aprobados
+    var hasPendE=turno.entrada&&solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';});
+    var hasApprE=turno.entrada&&approvedSet.has(emp+'|'+turno.fechaEntrada+'|ENTRADA|'+normHora(turno.entrada.hora));
+    var hasPendS=turno.salida&&solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';});
+    var hasApprS=turno.salida&&approvedSet.has(emp+'|'+turno.fechaSalida+'|SALIDA|'+normHora(turno.salida.hora));
+
+    var brd=isErr?'border:1px solid #f5c6c2':'border:1px solid var(--border)';
+    var bg=isErr?'background:var(--red-soft)':'background:#fff';
+    var bloque='<div style="border-radius:8px;'+brd+';overflow:hidden;'+bg+';margin-bottom:'+(t<turnosRev.length-1?'10px':'0')+'">';
+
+    // ── Cabecera del turno ──
+    var hdrBg=isErr?'background:#fad7d4':'background:var(--cream2)';
+    var hdrBrd=isErr?'border-bottom:1px solid #f5c6c2':'border-bottom:1px solid var(--border)';
+    bloque+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 12px;'+hdrBg+';'+hdrBrd+'">';
+    bloque+='<span style="font-size:.6rem;font-weight:600;color:'+(isErr?'var(--red)':'var(--ink3)')+';letter-spacing:.08em;text-transform:uppercase">Turno '+(turnos.length-t)+'</span>';
+    if(turnoMins!=null)bloque+='<span style="font-size:.6rem;color:var(--ink3)">'+minsToStr(turnoMins)+'</span>';
+    if(isErr)bloque+='<span style="font-size:.63rem;color:var(--red);font-weight:700">🔴 OJO! ERROR</span>';
+    bloque+='</div>';
+
+    // ── Fila única: ENTRADA · SALIDA en la misma línea ──
+    bloque+='<div style="display:flex;align-items:center;gap:0;padding:8px 12px;">';
+
+    // ENTRADA
     if(turno.entrada){
-      var hasPendE=solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';});
-      var hasApprE=approvedSet.has(emp+'|'+turno.fechaEntrada+'|ENTRADA|'+normHora(turno.entrada.hora));
-      var btnCls='hora-btn'+(hasPendE?' pending':hasApprE?' approved':'')+(isLong?' hora-btn-long':'');
-      // lápiz: siempre visible si aprobado, visible al hover si no
-      var markE='<span class="pencil">✏</span>';
-      html+='<tr'+sepCls+'><td style="font-size:.6rem;color:var(--ink3);white-space:nowrap">T'+turnoNum+'</td>';
-      html+='<td class="t-in'+(isLong?' t-long':'')+'">ENTRADA'+(isLong?' 🔴':'')+'</td>';
-      html+='<td><button class="'+btnCls+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.entrada.hora+' '+markE+'</button></td></tr>';
+      var btnClsE='hora-btn'+(hasPendE?' pending':hasApprE?' approved':'')+(isErr?' hora-btn-long':'');
+      bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
+      bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--green);font-weight:600">ENTRADA</span>';
+      if(fechaDifE)bloque+='<span style="font-size:.58rem;color:var(--ink3)">'+isoDisplay(fechaRealE)+'</span>';
+      bloque+='<button class="'+btnClsE+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+turno.entrada.hora+' <span class="pencil">✏</span></button>';
+      bloque+='</div>';
     }
+
+    // Separador →
+    bloque+='<div style="padding:0 10px;color:var(--ink3);font-size:.9rem;flex-shrink:0">→</div>';
+
+    // SALIDA
     if(turno.salida){
-      var hasPendS=solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';});
-      var hasApprS=approvedSet.has(emp+'|'+turno.fechaSalida+'|SALIDA|'+normHora(turno.salida.hora));
-      var sepS=turno.entrada?'':sepCls;
-      var tdNum=turno.entrada?'<td></td>':'<td style="font-size:.6rem;color:var(--ink3);white-space:nowrap">T'+turnoNum+'</td>';
-      var btnClsS='hora-btn'+(hasPendS?' pending':hasApprS?' approved':'')+(isLong?' hora-btn-long':'');
-      var markS='<span class="pencil">✏</span>';
-      html+='<tr'+sepS+'>'+tdNum;
-      html+='<td class="t-out'+(isLong?' t-long':'')+'">SALIDA'+(isLong?' 🔴':'')+'</td>';
-      html+='<td><button class="'+btnClsS+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.salida.hora+' '+markS+'</button></td></tr>';
+      var btnClsS='hora-btn'+(hasPendS?' pending':hasApprS?' approved':'')+(isErr?' hora-btn-long':'');
+      bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
+      bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:600">SALIDA</span>';
+      if(fechaDifS)bloque+='<span style="font-size:.58rem;color:var(--red);font-weight:600">'+isoDisplay(fechaRealS)+'</span>';
+      bloque+='<button class="'+btnClsS+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+turno.salida.hora+' <span class="pencil">✏</span></button>';
+      bloque+='</div>';
+    } else {
+      bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
+      bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">SALIDA</span>';
+      bloque+='<span style="font-size:.72rem;color:var(--ink3)">—</span>';
+      bloque+='</div>';
     }
+
+    bloque+='</div></div>';
+    bloques.push(bloque);
   }
-  var hayLong=turnos.some(function(tr){return turnoEsError(tr);});
-  if(hayLong){html+='<tr><td colspan="3" style="padding:6px 10px;font-size:.65rem;color:var(--red);background:var(--red-soft);border-radius:0 0 6px 6px">🔴 OJO! ERROR — turno sospechoso (más de 12h o sale pasadas las 2am)</td></tr>';}
-  return html+'</tbody></table>';
+  return bloques.join('');
 }
 
 function renderCard(emp,fecha,regs){
-  var calc=calcDia(regs),cls=calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
+  var calc=calcDia(regs,fecha),cls=calc.hayError?'has-error':'';
   var chips='';
   if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
   if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
-  if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
+  if(calc.hayError)chips+='<span class="chip c-long">🔴 ERROR FICHAJE</span>';
   var tabla=buildFilasTurnos(emp,fecha,regs,false,solicitudes);
   return'<div class="day-card '+cls+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
 function renderEmpCard(emp,fecha,regs){
-  var calc=calcDia(regs),cls=calc.estado==='sin-salida'?'has-error':calc.estado==='sin-entrada'?'has-warn':'';
+  var calc=calcDia(regs,fecha),cls=calc.hayError?'has-error':'';
   var chips='';
   if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
   if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
-  if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
   var turnos=emparejarTurnos(regs,fecha);
-  var hayLong=turnos.some(function(tr){return turnoEsError(tr);});
-  if(hayLong)chips+='<span class="chip c-long">🔴 OJO! ERROR</span>';
+  if(calc.hayError)chips+='<span class="chip c-long">🔴 OJO! ERROR</span>';
   var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
   return'<div class="day-card '+cls+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
@@ -1035,7 +1123,7 @@ function buildCardsConSemana(fechas,dmap,emp,isEmp){
     var f=fechas[i],semana=isoWeek(f);
     if(semActual!==null&&semana!==semActual){grupos.push({semana:semActual,mins:semMins,cards:semCards.slice()});semMins=0;semCards=[];}
     semActual=semana;
-    var calc=calcDia(dmap[f]||[]);if(calc.mins!=null)semMins+=calc.mins;
+    var calc=calcDia(dmap[f]||[],f);if(calc.mins!=null)semMins+=calc.mins;
     semCards.push(isEmp?renderEmpCard(emp,f,dmap[f]||[]):renderCard(emp,f,dmap[f]||[]));
   }
   if(semActual!==null)grupos.push({semana:semActual,mins:semMins,cards:semCards.slice()});
@@ -1060,12 +1148,14 @@ function abrirModalSol(emp,fecha,isEmp,turnoIdx){
   solActual={emp:emp,fecha:fecha,turnoIdx:turnoIdx,turno:turno};
   document.getElementById('sol-emp').value=emp;
   document.getElementById('modal-turno-info').textContent='Turno '+(turnoIdx+1)+' de '+turnos.length+' · '+isoDisplay(fecha)+(turnos.length>1?' (hay '+turnos.length+' turnos este día)':'');
-  var horaE=turno.entrada?turno.entrada.hora:'—',fechaE=turno.fechaEntrada||fecha;
+  var horaE=turno.entrada?turno.entrada.hora:'—';
+  var fechaE=turno.entrada?(turno.entrada.fechaReal||turno.fechaEntrada||fecha):fecha;
   document.getElementById('sol-fecha-entrada-actual').value=isoDisplay(fechaE);
   document.getElementById('sol-fecha-entrada-nueva').value=fechaE;
   document.getElementById('sol-hora-entrada-actual').value=horaE;
   document.getElementById('sol-hora-entrada-nueva').value=turno.entrada?horaE.slice(0,5):'';
-  var horaS=turno.salida?turno.salida.hora:'—',fechaS=turno.fechaSalida||fecha;
+  var horaS=turno.salida?turno.salida.hora:'—';
+  var fechaS=turno.salida?(turno.salida.fechaReal||turno.fechaSalida||fecha):fecha;
   document.getElementById('sol-fecha-salida-actual').value=isoDisplay(fechaS);
   document.getElementById('sol-fecha-salida-nueva').value=fechaS;
   document.getElementById('sol-hora-salida-actual').value=horaS;
@@ -1133,7 +1223,7 @@ function renderEmp(emp){
   var fechas=Object.keys(dmap).sort().reverse(),fechasAsc=fechas.slice().reverse();
   if(!fechas.length)return'<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">Sin fichajes en el período.</div></div>';
   var totalMins=0,sinSal=0,sinEnt=0;
-  for(var i=0;i<fechas.length;i++){var calc=calcDia(dmap[fechas[i]]||[]);if(calc.mins!=null)totalMins+=calc.mins;if(calc.estado==='sin-salida')sinSal++;if(calc.estado==='sin-entrada')sinEnt++;}
+  for(var i=0;i<fechas.length;i++){var calc=calcDia(dmap[fechas[i]]||[],fechas[i]);if(calc.mins!=null)totalMins+=calc.mins;if(calc.hayError)sinSal++;}
   var pills='<div class="pills"><div class="pill g">Total <strong>'+minsToStr(totalMins)+'</strong></div><div class="pill">Días <strong>'+fechas.length+'</strong></div>'+(sinSal?'<div class="pill r">Sin salida <strong>'+sinSal+'</strong></div>':'')+(sinEnt?'<div class="pill a">Sin entrada <strong>'+sinEnt+'</strong></div>':'')+'</div>';
   var summaryCards=buildSummaryGridAdmin(fechas,dmap,emp);
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="adm-date-jump-'+empId(emp)+'"><button class="btn-jump" onclick="jumpToDateAdmin(\''+esc(emp)+'\')">Ir</button></div>';
@@ -1143,9 +1233,8 @@ function renderEmp(emp){
 function buildSummaryGridAdmin(fechas,dmap,emp){
   var hoy=new Date().toISOString().slice(0,10);
   return'<div class="summary-grid">'+fechas.map(function(f){
-    var calc=calcDia(dmap[f]||[]),statCls='',hoursDisplay='';
-    if(calc.estado==='sin-salida'){statCls='has-error';hoursDisplay='<div class="sum-hours err">sin salida</div>';}
-    else if(calc.estado==='sin-entrada'){statCls='has-warn';hoursDisplay='<div class="sum-hours warn">sin entrada</div>';}
+    var calc=calcDia(dmap[f]||[],f),statCls='',hoursDisplay='';
+    if(calc.hayError){statCls='has-error';hoursDisplay='<div class="sum-hours err">🔴 error</div>';}
     else if(calc.mins!=null){hoursDisplay='<div class="sum-hours">'+minsToStr(calc.mins)+'</div>';}
     else{hoursDisplay='<div class="sum-hours empty-day">sin datos</div>';}
     return'<div class="sum-card '+statCls+(f===hoy?' today':'')+'" onclick="scrollToDay(\''+f+'\',\''+esc(emp)+'\')" title="'+dowName(f)+' '+isoDisplay(f)+'"><div class="sum-dow">'+dowName(f).slice(0,3)+'</div><div class="sum-date">'+isoDisplay(f)+'</div>'+hoursDisplay+'</div>';
@@ -1241,7 +1330,7 @@ function erendSolicitudes(){
 function exportEmp(emp){
   var dmap=emp==='_emp'?empEditData:editData[emp];if(!dmap)return;
   var wb=XLSX.utils.book_new();
-  var rows=Object.keys(dmap).sort().map(function(f){var calc=calcDia(dmap[f]||[]);return{'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};});
+  var rows=Object.keys(dmap).sort().map(function(f){var calc=calcDia(dmap[f]||[],f);return{'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};});
   var ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:12},{wch:11},{wch:11},{wch:13},{wch:10},{wch:13}];
   var sheetName=emp==='_emp'?session.nombre:emp;
   XLSX.utils.book_append_sheet(wb,ws,sheetName.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,'_'));
