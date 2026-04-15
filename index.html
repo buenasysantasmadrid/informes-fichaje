@@ -99,7 +99,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .cal-nav-btn{background:none;border:none;cursor:pointer;color:var(--ink2);font-size:.8rem;padding:2px 5px;border-radius:4px;transition:background .12s;line-height:1}
 .cal-nav-btn:hover{background:var(--green3);color:var(--green)}
 .cal-month-lbl{font-family:'Lora',serif;font-size:.78rem;color:var(--ink);text-transform:capitalize;text-align:center}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;padding:3px 4px;width:100%;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:22px;gap:0;padding:3px 4px;width:100%;}
 .cal-dow{font-size:.48rem;color:var(--ink3);text-align:center;letter-spacing:0;text-transform:uppercase;height:22px;line-height:22px;overflow:hidden;white-space:nowrap;}
 .cal-day{font-size:.62rem;text-align:center;height:22px;line-height:22px;border-radius:3px;cursor:pointer;color:var(--ink2);transition:all .12s;min-width:0;overflow:hidden;white-space:nowrap;width:100%;}
 .cal-day:hover{background:var(--green3);color:var(--green)}
@@ -255,7 +255,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
   .summary-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
   .hdr-emp-info{display:none !important}
   .cal-picker{max-width:100%}
-  .cal-grid{padding:4px 6px}
+  .cal-grid{padding:4px 6px;grid-auto-rows:26px;}
   .cal-day{font-size:.7rem;height:26px;line-height:26px}
   .cal-dow{font-size:.52rem;height:26px;line-height:26px}
 }
@@ -358,14 +358,9 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 <!-- EMPLEADO: sin sidebar -->
 <div class="emp-shell" id="emp-shell" style="display:none">
   <div class="emp-main">
-    <!-- Pestaña: Mis fichajes -->
+    <!-- Pestaña: Mis fichajes — siempre muestra el mes actual -->
     <div class="page active" id="epage-fichajes">
-      <div class="empty" id="eempty-inf">
-        <div class="empty-ico">🌿</div>
-        <h2>Tus fichajes</h2>
-        <p>Ve a la pestaña <strong>Calendario</strong> para seleccionar el período y ver tus fichajes.<br><br>Pulsa cualquier hora para solicitar una corrección.</p>
-      </div>
-      <div id="ereport" style="display:none"></div>
+      <div id="ereport-fichajes"></div>
     </div>
     <!-- Pestaña: Mis solicitudes -->
     <div class="page" id="epage-solicitudes">
@@ -374,7 +369,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       </div>
       <div id="esol-list"></div>
     </div>
-    <!-- Pestaña: Calendario -->
+    <!-- Pestaña: Calendario — selector + resultados del período elegido -->
     <div class="page" id="epage-calendario">
       <div class="cal-page-wrap">
         <div class="cal-page-title">Selecciona el período</div>
@@ -385,6 +380,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
           <input type="hidden" id="ef-hasta">
           <button class="btn-gen" id="ebtn-gen" onclick="empGenerar()">Ver mis fichajes</button>
         </div>
+        <div id="ereport" style="display:none;width:100%;margin-top:1.5rem"></div>
       </div>
     </div>
   </div>
@@ -458,7 +454,7 @@ const MAX_TURNO_MINS = 12 * 60;
 let SCRIPT_URL = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec';
 let session=null,empleados=[],editData={},solicitudes=[],esolicitudes=[];
 let solFiltro='todas';
-let currentSel,currentDesde,currentHasta,empEditData={},solActual=null;
+let currentSel,currentDesde,currentHasta,empEditData={},empEditDataCal={},solActual=null;
 let approvedSet = new Set();
 
 // ── PERSISTENCIA ──
@@ -537,7 +533,9 @@ function rebuildApprovedSet(sols){
   approvedSet=new Set();
   sols.forEach(function(s){
     if(s.estado==='aprobada'){
-      approvedSet.add(s.emp+'|'+safeISO(s.fecha)+'|'+s.tipo+'|'+normHora(s.horaActual));
+      // La clave usa fechaNueva+horaNueva: es la hora que queda en el sheet tras el cambio
+      var fechaKey=safeISO(s.fechaNueva||s.fecha);
+      approvedSet.add(s.emp+'|'+fechaKey+'|'+s.tipo+'|'+normHora(s.horaNueva));
     }
   });
 }
@@ -573,7 +571,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!document.ge
 
 function doLogout(){
   clearSession();
-  session=null;empleados=[];editData={};solicitudes=[];esolicitudes=[];empEditData={};currentSel=null;approvedSet=new Set();
+  session=null;empleados=[];editData={};solicitudes=[];esolicitudes=[];empEditData={};empEditDataCal={};currentSel=null;approvedSet=new Set();
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').classList.remove('on');
   document.getElementById('login-email').value='';
@@ -647,6 +645,21 @@ async function initEmpleado(){
   calState.selEnd=hoy.toISOString().slice(0,10);
   renderCalPicker();
   document.getElementById('sol-email-row').style.display='none';
+  // Cargar TODOS los fichajes del empleado para Mis fichajes
+  setLoader(true,'Cargando fichajes...');
+  try{
+    var tablaTodos=await fetchSheet(session.nombre);
+    var fichajesTodos=parsearTabla(tablaTodos);
+    var dmapTodos={};
+    for(var fi=0;fi<fichajesTodos.length;fi++){
+      var ff=fichajesTodos[fi];
+      if(!dmapTodos[ff.fecha])dmapTodos[ff.fecha]=[];
+      dmapTodos[ff.fecha].push({tipo:ff.tipo,hora:ff.hora});
+    }
+    empEditData=dmapTodos;
+  }catch(e){toast('Error cargando fichajes','err');}
+  setLoader(false);
+  renderEmpFichajesTab();
 }
 
 // ── TABS ADMIN ──
@@ -802,6 +815,18 @@ function calcTurnoMins(turno){
   if(me<UMBRAL_NOCHE)me+=1440;if(ms<UMBRAL_NOCHE)ms+=1440;
   var dur=ms-me;return dur>0?dur:null;
 }
+// Devuelve true si el turno debe marcarse en rojo:
+// - dura más de 12h, O
+// - la salida es en el día siguiente Y pasa de las 2am (UMBRAL_NOCHE)
+function turnoEsError(turno){
+  if(!turno.entrada||!turno.salida) return false;
+  var mins=calcTurnoMins(turno);
+  if(mins!=null && mins>MAX_TURNO_MINS) return true;
+  // Cruza medianoche y la salida supera las 2am del día siguiente
+  var msSalida=horaToMins(turno.salida.hora);
+  if(turno.fechaSalida!==turno.fechaEntrada && msSalida!==null && msSalida>=UMBRAL_NOCHE) return true;
+  return false;
+}
 function calcDia(regs){
   var UMBRAL=UMBRAL_NOCHE;
   var sorted=regs.slice().sort(function(a,b){var am=horaToMins(a.hora)||0,bm=horaToMins(b.hora)||0;if(am<UMBRAL)am+=1440;if(bm<UMBRAL)bm+=1440;return am-bm;});
@@ -882,31 +907,54 @@ async function empGenerar(){
   var desde=document.getElementById('ef-desde').value,hasta=document.getElementById('ef-hasta').value;
   if(!desde||!hasta){toast('Selecciona el período en el calendario','err');return;}
   if(desde>hasta){toast('Fecha inicio > fin','err');return;}
-  setLoader(true,'Cargando fichajes...');empEditData={};
+  setLoader(true,'Cargando fichajes...');empEditDataCal={};
   try{
     var table=await fetchSheet(session.nombre);var fichajes=parsearTabla(table);
     var filt=fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});
     var dmap={};for(var j=0;j<filt.length;j++){var f=filt[j];if(!dmap[f.fecha])dmap[f.fecha]=[];dmap[f.fecha].push({tipo:f.tipo,hora:f.hora});}
-    empEditData=dmap;
+    empEditDataCal=dmap;
     esolicitudes=await loadSolicitudes(session.nombre);
     rebuildApprovedSet(esolicitudes);
     updateEbadge();
   }catch(e){toast('Error: '+e.message,'err');setLoader(false);return;}
   setLoader(false);
-  eswitch('fichajes'); // ir a la pestaña de fichajes a mostrar resultado
+  // Mostrar en pestaña Calendario solamente
   renderEmpReport();
 }
 
 // ── RENDER EMPLEADO ──
 function renderEmpReport(){
-  document.getElementById('eempty-inf').style.display='none';
+  // Muestra en pestaña Calendario el período elegido
   var rep=document.getElementById('ereport');rep.style.display='block';
-  var dmap=empEditData,fechas=Object.keys(dmap).sort().reverse();
+  var dmap=empEditDataCal,fechas=Object.keys(dmap).sort().reverse();
   if(!fechas.length){rep.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin fichajes</h2><p>No hay registros en el período seleccionado.</p></div>';return;}
   var fechasAsc=fechas.slice().reverse();
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump"><button class="btn-jump" onclick="jumpToDate(\'_emp\')">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
-  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days" id="emp-days-list">'+cards+'</div></div>';
+  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
+}
+
+function renderEmpFichajesTab(){
+  // Muestra en pestaña Mis fichajes todos los datos cargados
+  var rep=document.getElementById('ereport-fichajes');
+  var dmap=empEditData,fechas=Object.keys(dmap).sort().reverse();
+  if(!fechas.length){
+    rep.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin fichajes</h2><p>No hay registros en el período.</p></div>';
+    return;
+  }
+  var fechasAsc=fechas.slice().reverse();
+  var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump2"><button class="btn-jump" onclick="jumpToDateFichajes()">Ir</button></div>';
+  var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
+  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
+}
+
+function jumpToDateFichajes(){
+  var el=document.getElementById('emp-date-jump2');
+  if(!el)return;
+  var fecha=el.value;if(!fecha){toast('Selecciona una fecha','err');return;}
+  var prefix='edc-'+empId(session.nombre);
+  var card=document.getElementById(prefix+'-'+fecha);if(!card)return;
+  card.classList.add('open');setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});},50);
 }
 
 function scrollToDay(fecha,empKey){
@@ -924,7 +972,7 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   for(var t=0;t<turnos.length;t++){
     var turno=turnos[t],turnoNum=t+1,sepCls=t>0?' class="turno-sep"':'';
     var turnoMins=calcTurnoMins(turno);
-    var isLong=(turnoMins!=null&&turnoMins>MAX_TURNO_MINS);
+    var isLong=turnoEsError(turno);
     if(turno.entrada){
       var hasPendE=solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';});
       var hasApprE=approvedSet.has(emp+'|'+turno.fechaEntrada+'|ENTRADA|'+normHora(turno.entrada.hora));
@@ -947,8 +995,8 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
       html+='<td><button class="'+btnClsS+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+t+')">'+turno.salida.hora+' '+markS+'</button></td></tr>';
     }
   }
-  var hayLong=turnos.some(function(tr){var tm=calcTurnoMins(tr);return tm!=null&&tm>MAX_TURNO_MINS;});
-  if(hayLong){html+='<tr><td colspan="3" style="padding:6px 10px;font-size:.65rem;color:var(--red);background:var(--red-soft);border-radius:0 0 6px 6px">⚠ Turno de más de 12 horas — revisa si es correcto</td></tr>';}
+  var hayLong=turnos.some(function(tr){return turnoEsError(tr);});
+  if(hayLong){html+='<tr><td colspan="3" style="padding:6px 10px;font-size:.65rem;color:var(--red);background:var(--red-soft);border-radius:0 0 6px 6px">🔴 OJO! ERROR — turno sospechoso (más de 12h o sale pasadas las 2am)</td></tr>';}
   return html+'</tbody></table>';
 }
 
@@ -972,8 +1020,8 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.estado==='sin-salida')chips+='<span class="chip c-err">sin salida</span>';
   if(calc.estado==='sin-entrada')chips+='<span class="chip c-wrn">sin entrada</span>';
   var turnos=emparejarTurnos(regs,fecha);
-  var hayLong=turnos.some(function(tr){var tm=calcTurnoMins(tr);return tm!=null&&tm>MAX_TURNO_MINS;});
-  if(hayLong)chips+='<span class="chip c-long">+12h ⚠</span>';
+  var hayLong=turnos.some(function(tr){return turnoEsError(tr);});
+  if(hayLong)chips+='<span class="chip c-long">🔴 OJO! ERROR</span>';
   var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
   return'<div class="day-card '+cls+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
