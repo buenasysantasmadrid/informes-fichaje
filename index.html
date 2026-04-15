@@ -161,21 +161,19 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .hora-btn-long{color:var(--red)!important}
 .hora-btn-long:hover{background:var(--red-soft)!important;border-color:#f5c6c2!important;color:var(--red)!important}
 
-/* ── CALENDAR PICKER — FIX: contenedor compacto, sin desbordamiento ── */
+/* ── FIX 1: CALENDAR PICKER — primera fila compacta ── */
 .cal-picker{
   border:1px solid var(--border);
   border-radius:var(--r);
   overflow:hidden;
   background:#fff;
-  /* Forzar que el calendario no se salga del sidebar de 270px */
   width:100%;
-  max-width:230px;   /* 270px sidebar - 2×1.5rem padding = ~234px; dejamos margen */
+  max-width:230px;
 }
 .cal-nav{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:var(--cream2);border-bottom:1px solid var(--border)}
 .cal-nav-btn{background:none;border:none;cursor:pointer;color:var(--ink2);font-size:.8rem;padding:2px 5px;border-radius:4px;transition:background .12s;line-height:1}
 .cal-nav-btn:hover{background:var(--green3);color:var(--green)}
 .cal-month-lbl{font-family:'Lora',serif;font-size:.78rem;color:var(--ink);text-transform:capitalize;text-align:center}
-/* 7 columnas exactamente iguales, sin gap para evitar overflow */
 .cal-grid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
@@ -183,30 +181,32 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
   padding:3px 4px;
   width:100%;
 }
+/* FIX 1: altura fija igual para cabecera y días — evita la "primera fila alta" */
 .cal-dow{
   font-size:.48rem;
   color:var(--ink3);
   text-align:center;
   letter-spacing:0;
   text-transform:uppercase;
-  padding:3px 0;
+  /* altura fija igual que las celdas de día */
+  height:22px;
+  line-height:22px;
   overflow:hidden;
   white-space:nowrap;
-  line-height:1.2;
 }
 .cal-day{
   font-size:.62rem;
   text-align:center;
-  padding:4px 1px;
+  /* altura fija: evita que la primera fila "crezca" */
+  height:22px;
+  line-height:22px;
   border-radius:3px;
   cursor:pointer;
   color:var(--ink2);
   transition:all .12s;
-  line-height:1.3;
   min-width:0;
   overflow:hidden;
   white-space:nowrap;
-  /* Tamaño de la celda controlado por el grid, no por contenido */
   width:100%;
 }
 .cal-day:hover{background:var(--green3);color:var(--green)}
@@ -280,11 +280,10 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
   .sol-card{grid-template-columns:1fr}
   .summary-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
   .hdr-emp-info{display:none !important}
-  /* En móvil el sidebar ocupa todo el ancho, el calendario puede ser más grande */
   .cal-picker{max-width:100%}
   .cal-grid{padding:4px 6px}
-  .cal-day{font-size:.7rem;padding:5px 2px}
-  .cal-dow{font-size:.52rem}
+  .cal-day{font-size:.7rem;height:26px;line-height:26px}
+  .cal-dow{font-size:.52rem;height:26px;line-height:26px}
 }
 </style>
 </head>
@@ -423,7 +422,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <div class="hora-change">
         <input type="text" id="sol-fecha-entrada-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
         <div class="hora-arrow">→</div>
-        <input type="date" id="sol-fecha-entrada-nueva">
+        <input type="date" id="sol-fecha-entrada-nueva" oninput="checkOverlap()">
       </div>
     </div>
     <div class="modal-row">
@@ -441,7 +440,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <div class="hora-change">
         <input type="text" id="sol-fecha-salida-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
         <div class="hora-arrow">→</div>
-        <input type="date" id="sol-fecha-salida-nueva">
+        <input type="date" id="sol-fecha-salida-nueva" oninput="checkOverlap()">
       </div>
     </div>
     <div class="modal-row">
@@ -452,7 +451,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
         <input type="time" id="sol-hora-salida-nueva" oninput="checkOverlap()">
       </div>
     </div>
-    <div class="overlap-error" id="overlap-error">⚠ ERROR: ver horario — la hora nueva se solapa con otro turno del mismo día.</div>
+    <div class="overlap-error" id="overlap-error">⚠ ERROR: la hora/fecha nueva se solapa con otro turno existente.</div>
     <hr class="modal-divider">
     <div class="modal-row" id="sol-email-row"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
     <div class="modal-row"><label>Motivo <span style="color:var(--ink3)">(opcional)</span></label><textarea id="sol-motivo" placeholder="Motivo del cambio..."></textarea></div>
@@ -481,12 +480,7 @@ let solFiltro='todas',esolFiltro='todas';
 let currentSel,currentDesde,currentHasta,empEditData={},solActual=null;
 let approvedSet = new Set();
 
-// ══════════════════════════════════════════════════════════════════
-// FIX 1 — PERSISTENCIA DE SESIÓN ROBUSTA
-// Se guarda el objeto session completo (incluyendo empData) para que
-// la restauración NO necesite una llamada de red adicional.
-// Esto resuelve el fallo de restauración para empleados.
-// ══════════════════════════════════════════════════════════════════
+// ── PERSISTENCIA DE SESIÓN ──
 function saveSession(){
   if(session) sessionStorage.setItem('bys_session', JSON.stringify(session));
 }
@@ -508,22 +502,9 @@ function setStatus(cls,msg){document.getElementById('sdot').className='sdot '+cl
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function empId(emp){return emp.replace(/[^a-zA-Z0-9]/g,'_');}
 
-// ══════════════════════════════════════════════════════════════════
-// FIX 3 — JSONP ROBUSTO PARA MÓVIL
-// Problemas anteriores:
-//   a) Timeout demasiado corto para redes móviles lentas
-//   b) Solo 1 reintento
-//   c) Sin detección de si el script cargó pero el callback nunca
-//      se ejecutó (fallo silencioso de CORS o contenido bloqueado)
-//
-// Solución:
-//   • Timeout aumentado a 35s por intento
-//   • 3 reintentos (4 intentos en total)
-//   • Espera progresiva entre reintentos (1s, 2s, 3s)
-//   • Limpieza garantizada de scripts huérfanos
-// ══════════════════════════════════════════════════════════════════
+// ── JSONP ──
 function apiGetJSONP(params, timeoutMs){
-  timeoutMs = timeoutMs || 35000;
+  timeoutMs = timeoutMs || 40000;
   return new Promise(function(resolve, reject){
     var cbName = '_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     var script  = document.createElement('script');
@@ -533,7 +514,7 @@ function apiGetJSONP(params, timeoutMs){
       if(done) return;
       done = true;
       cleanup();
-      reject(new Error('Timeout de conexión (' + Math.round(timeoutMs/1000) + 's) — inténtalo de nuevo'));
+      reject(new Error('Timeout (' + Math.round(timeoutMs/1000) + 's)'));
     }, timeoutMs);
 
     function cleanup(){
@@ -559,16 +540,15 @@ function apiGetJSONP(params, timeoutMs){
       if(done) return;
       done = true;
       cleanup();
-      reject(new Error('Error de red — comprueba tu conexión a internet'));
+      reject(new Error('Error de red'));
     };
     document.head.appendChild(script);
   });
 }
 
-// Wrapper con 3 reintentos y espera progresiva
 async function apiGetJSONPWithRetry(params, timeoutMs, retries){
-  retries  = (retries !== undefined) ? retries : 3;
-  timeoutMs = timeoutMs || 35000;
+  retries  = (retries !== undefined) ? retries : 4;
+  timeoutMs = timeoutMs || 40000;
   var lastErr;
   for(var attempt = 0; attempt <= retries; attempt++){
     try{
@@ -576,8 +556,7 @@ async function apiGetJSONPWithRetry(params, timeoutMs, retries){
     }catch(e){
       lastErr = e;
       if(attempt < retries){
-        // Espera progresiva: 1s, 2s, 3s
-        var wait = (attempt + 1) * 1000;
+        var wait = (attempt + 1) * 1500;
         await new Promise(function(r){ setTimeout(r, wait); });
       }
     }
@@ -590,8 +569,8 @@ async function callScriptJSONP(payload){
   try{
     var res = await apiGetJSONPWithRetry(
       {action: payload.action, data: JSON.stringify(payload)},
-      35000,
-      3
+      40000,
+      4
     );
     return res;
   }catch(e){
@@ -601,22 +580,29 @@ async function callScriptJSONP(payload){
 
 async function fetchSheet(name){
   if(!SCRIPT_URL) throw new Error('Configura la URL del Apps Script primero');
-  var data = await apiGetJSONPWithRetry({action:'getFichajes', nombre:name.trim()}, 35000, 3);
+  var data = await apiGetJSONPWithRetry({action:'getFichajes', nombre:name.trim()}, 40000, 4);
   var rows = Array.isArray(data) ? data : (data.data || []);
   return {rows: rows.map(function(r){
     return {c: r.map(function(v){ return {v: String(v||'')}; })};
   })};
 }
 
+// ══════════════════════════════════════════════════════════════════
+// FIX 2: loadEmpleados con más reintentos y timeout mayor para móvil
+// ══════════════════════════════════════════════════════════════════
 async function loadEmpleados(){
   if(!SCRIPT_URL) throw new Error('Sin URL');
-  var data = await apiGetJSONPWithRetry({action:'getEmpleados'}, 20000, 3);
+  var data = await apiGetJSONPWithRetry({action:'getEmpleados'}, 40000, 4);
   var rows = Array.isArray(data) ? data : (data.data || []);
   var found = [];
   for(var i=0; i<rows.length; i++){
     var r = rows[i], nombre = String(r[0]||'').trim();
     if(!nombre || ['nombre','empleado','name'].indexOf(nombre.toLowerCase()) !== -1) continue;
-    found.push({nombre:nombre, pin:String(r[3]||'').trim(), email:String(r[4]||'').trim().toLowerCase()});
+    found.push({
+      nombre: nombre,
+      pin:    String(r[3]||'').trim(),
+      email:  String(r[4]||'').trim().toLowerCase()
+    });
   }
   empleados = found;
   return found;
@@ -627,7 +613,7 @@ async function loadSolicitudes(empNombre){
   try{
     var params = {action:'getSolicitudes'};
     if(empNombre) params.emp = empNombre;
-    var data = await apiGetJSONPWithRetry(params, 20000, 3);
+    var data = await apiGetJSONPWithRetry(params, 30000, 3);
     return Array.isArray(data) ? data : [];
   }catch(e){ return []; }
 }
@@ -643,6 +629,9 @@ function rebuildApprovedSet(sols){
 
 // ══════════════════════════════════════════════════════════════════
 // LOGIN
+// FIX 2: en login de empleado, si loadEmpleados falla en el primer
+// intento, muestra error claro. Al restaurar sesión, usa empData
+// guardado — sin llamada de red adicional.
 // ══════════════════════════════════════════════════════════════════
 async function doLogin(){
   var email = document.getElementById('login-email').value.trim().toLowerCase();
@@ -661,11 +650,13 @@ async function doLogin(){
     return;
   }
 
+  // Para empleados: necesitamos cargar la lista si no la tenemos
   if(!empleados.length){
+    btn.textContent='Conectando...';
     try{
       await loadEmpleados();
     }catch(e){
-      err.textContent='Error conectando con Apps Script. Comprueba tu conexión.';
+      err.textContent='No se puede conectar con el servidor. Comprueba tu conexión y vuelve a intentarlo.';
       err.classList.add('on');
       btn.disabled=false; btn.textContent='Entrar';
       return;
@@ -680,8 +671,7 @@ async function doLogin(){
     return;
   }
 
-  // FIX 1: guardar empData completo en la sesión para no necesitar
-  // loadEmpleados() al restaurar sesión en móvil
+  // Guardar empData completo en sesión — evita llamada de red al restaurar
   session = {role:'empleado', nombre:emp.nombre, email:emp.email, empData:emp};
   saveSession();
   btn.disabled=false; btn.textContent='Entrar';
@@ -710,13 +700,7 @@ function doLogout(){
   document.getElementById('emp-pages').style.display='none';
 }
 
-// ══════════════════════════════════════════════════════════════════
-// FIX 1 — RESTAURAR SESIÓN AL CARGAR
-// Ya NO llamamos a loadEmpleados() al restaurar sesión de empleado:
-// empData viene guardado directamente en sessionStorage.
-// Esto evita el fallo en móvil donde la llamada de red fallaba
-// antes de que la sesión se pudiera restaurar.
-// ══════════════════════════════════════════════════════════════════
+// Restaurar sesión al cargar — sin llamada de red para empleados
 window.addEventListener('load', async function(){
   var saved = restoreSession();
   if(!saved) return;
@@ -724,7 +708,7 @@ window.addEventListener('load', async function(){
   if(session.role === 'admin'){
     await initAdmin();
   } else {
-    // empData ya está en session (guardado en doLogin), no hace falta red
+    // empData guardado en doLogin, no necesita red
     initEmpleado();
   }
 });
@@ -798,12 +782,7 @@ function renderEmpleados(){
 function selAll(){document.querySelectorAll('.echk').forEach(function(c){c.checked=true;});}
 function selNone(){document.querySelectorAll('.echk').forEach(function(c){c.checked=false;});}
 
-// ══════════════════════════════════════════════════════════════════
-// FIX 2 — CALENDAR RANGE PICKER
-// El estado se guarda en un objeto, el render calcula tamaños
-// relativos. El contenedor usa max-width:230px en escritorio y
-// 100% en móvil. Las abreviaturas son de 2 letras ('lu','ma'…).
-// ══════════════════════════════════════════════════════════════════
+// ── CALENDAR RANGE PICKER ──
 var calState = {
   year: new Date().getFullYear(),
   month: new Date().getMonth(),
@@ -832,12 +811,11 @@ function renderCalPicker(){
   if(!c) return;
   var year=calState.year, month=calState.month;
   var meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  // 2-letter abbreviations to prevent overflow in narrow sidebar
   var dows=['lu','ma','mi','ju','vi','sá','do'];
   var hoy = new Date().toISOString().slice(0,10);
 
   var firstDay   = new Date(year, month, 1).getDay();
-  var startOffset = (firstDay + 6) % 7;   // Monday-first
+  var startOffset = (firstDay + 6) % 7;
   var daysInMonth = new Date(year, month+1, 0).getDate();
 
   var html = '<div class="cal-picker">';
@@ -847,11 +825,8 @@ function renderCalPicker(){
   html += '<button class="cal-nav-btn" onclick="calMove(1)">▶</button>';
   html += '</div>';
   html += '<div class="cal-grid">';
-  // Day-of-week headers
   dows.forEach(function(d){ html += '<div class="cal-dow">'+d+'</div>'; });
-  // Empty leading cells
   for(var e=0; e<startOffset; e++) html += '<div class="cal-day empty"></div>';
-  // Day cells
   for(var d=1; d<=daysInMonth; d++){
     var iso = year+'-'+('0'+(month+1)).slice(-2)+'-'+('0'+d).slice(-2);
     var cls = 'cal-day';
@@ -868,7 +843,6 @@ function renderCalPicker(){
     html += '<div class="'+cls+'" onclick="calDayClick(\''+iso+'\')">'+d+'</div>';
   }
   html += '</div>';
-  // Hint line
   var hint = '';
   if(!calState.selStart)           hint = 'Pulsa para elegir inicio';
   else if(!calState.selEnd)        hint = 'Pulsa para elegir fin';
@@ -930,6 +904,7 @@ function minsToStr(m){if(m==null||m<0)return'—';return Math.floor(m/60)+'h '+(
 function isoDisplay(iso){if(!iso)return'';var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function dowName(iso){var p=iso.split('-').map(Number);return DIAS_TILDE[new Date(p[0],p[1]-1,p[2]).getDay()];}
 function diaSiguiente(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function diaAnterior(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()-1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 
 // ── EMPAREJAMIENTO DE TURNOS ──
 function emparejarTurnos(regs,fechaDia){
@@ -989,46 +964,95 @@ function calcDia(regs){
   return{primera:primera,ultima:ultima,mins:estado==='ok'?totalMins:null,estado:estado};
 }
 
-// ── VALIDACIÓN DE SOLAPAMIENTO EN EL MODAL ──
+// ══════════════════════════════════════════════════════════════════
+// FIX 3: checkOverlap — tiene en cuenta fecha Y hora de todos los
+// turnos, incluyendo turnos de días adyacentes que cruzan medianoche.
+// Convierte todo a minutos absolutos desde epoch-día para comparar
+// correctamente entre días distintos.
+// ══════════════════════════════════════════════════════════════════
+function isoToAbsDay(iso){
+  // Días desde una fecha arbitraria de referencia (2020-01-01)
+  var ref = new Date(2020,0,1);
+  var p = iso.split('-').map(Number);
+  var d = new Date(p[0],p[1]-1,p[2]);
+  return Math.round((d - ref) / 86400000);
+}
+
+function isoHoraToAbsMins(iso, horaStr){
+  var dayOffset = isoToAbsDay(iso) * 1440;
+  var m = horaToMins(horaStr);
+  if(m === null) return null;
+  return dayOffset + m;
+}
+
 function checkOverlap(){
-  if(!solActual)return;
-  var errEl=document.getElementById('overlap-error');
-  var btnEl=document.getElementById('btn-submit-sol');
+  if(!solActual) return;
+  var errEl  = document.getElementById('overlap-error');
+  var btnEl  = document.getElementById('btn-submit-sol');
   errEl.classList.remove('on');
-  btnEl.disabled=false;
-  var isEmp=solIsEmp;
-  var dmap=isEmp?empEditData:(editData[solActual.emp]||{});
-  var fecha=solActual.fecha;
-  var regs=(dmap[fecha]||[]).slice();
-  var turnos=emparejarTurnos(regs,fecha);
-  if(turnos.length<2)return;
-  var turnoIdx=solActual.turnoIdx;
-  var horaENueva=document.getElementById('sol-hora-entrada-nueva').value;
-  var horaSNueva=document.getElementById('sol-hora-salida-nueva').value;
-  var intervalos=[];
-  for(var i=0;i<turnos.length;i++){
-    if(i===turnoIdx)continue;
-    var t=turnos[i];
-    if(t.entrada&&t.salida){
-      var me=horaToMins(t.entrada.hora)||0;
-      var ms=horaToMins(t.salida.hora)||0;
-      if(me<UMBRAL_NOCHE)me+=1440;
-      if(ms<UMBRAL_NOCHE)ms+=1440;
-      intervalos.push({inicio:me,fin:ms});
+  btnEl.disabled = false;
+
+  var isEmp  = solIsEmp;
+  var dmap   = isEmp ? empEditData : (editData[solActual.emp] || {});
+  var turnoIdx = solActual.turnoIdx;
+
+  // Leer los nuevos valores del modal
+  var horaEN   = document.getElementById('sol-hora-entrada-nueva').value;
+  var fechaEN  = document.getElementById('sol-fecha-entrada-nueva').value || solActual.fecha;
+  var horaSN   = document.getElementById('sol-hora-salida-nueva').value;
+  var fechaSN  = document.getElementById('sol-fecha-salida-nueva').value || solActual.fecha;
+
+  if(!horaEN && !horaSN) return;
+
+  // Recoger todos los turnos de todos los días cargados (±2 días alrededor del turno editado)
+  // para capturar turnos nocturnos que cruzan medianoche
+  var fechasRef = [
+    diaAnterior(diaAnterior(solActual.fecha)),
+    diaAnterior(solActual.fecha),
+    solActual.fecha,
+    diaSiguiente(solActual.fecha),
+    diaSiguiente(diaSiguiente(solActual.fecha))
+  ];
+
+  // Construir intervalos de todos los turnos excepto el que se está editando
+  var intervalos = [];
+  fechasRef.forEach(function(f){
+    var regs = dmap[f] || [];
+    if(!regs.length) return;
+    var turnos = emparejarTurnos(regs, f);
+    turnos.forEach(function(t, idx){
+      // Si es la misma fecha y el mismo índice, saltamos (es el turno que se edita)
+      if(f === solActual.fecha && idx === turnoIdx) return;
+      if(!t.entrada || !t.salida) return;
+      var absE = isoHoraToAbsMins(t.fechaEntrada, t.entrada.hora);
+      var absS = isoHoraToAbsMins(t.fechaSalida,  t.salida.hora);
+      if(absE === null || absS === null) return;
+      // Normalizar si la salida es madrugada (< UMBRAL_NOCHE) → ya está en fechaSalida correcta
+      intervalos.push({inicio: absE, fin: absS, label: t.fechaEntrada + ' ' + t.entrada.hora + '-' + t.salida.hora});
+    });
+  });
+
+  if(!intervalos.length) return;
+
+  function solapaConAlguno(iso, horaStr){
+    var abs = isoHoraToAbsMins(iso, horaStr);
+    if(abs === null) return false;
+    for(var j=0; j<intervalos.length; j++){
+      var iv = intervalos[j];
+      // Dentro del intervalo (excluyendo extremos exactos — límites se permiten)
+      if(abs > iv.inicio && abs < iv.fin) return true;
     }
-  }
-  if(!intervalos.length)return;
-  function solapaConAlguno(horaStr){
-    var m=horaToMins(horaStr);
-    if(m===null)return false;
-    if(m<UMBRAL_NOCHE)m+=1440;
-    for(var j=0;j<intervalos.length;j++){if(m>intervalos[j].inicio&&m<intervalos[j].fin)return true;}
     return false;
   }
-  var solapa=false;
-  if(horaENueva&&solapaConAlguno(horaENueva))solapa=true;
-  if(horaSNueva&&solapaConAlguno(horaSNueva))solapa=true;
-  if(solapa){errEl.classList.add('on');btnEl.disabled=true;}
+
+  var solapa = false;
+  if(horaEN && solapaConAlguno(fechaEN, horaEN)) solapa = true;
+  if(horaSN && solapaConAlguno(fechaSN, horaSN)) solapa = true;
+
+  if(solapa){
+    errEl.classList.add('on');
+    btnEl.disabled = true;
+  }
 }
 
 // ── GENERAR ──
@@ -1205,7 +1229,7 @@ function cerrarModalSol(){document.getElementById('modal-sol').classList.remove(
 
 async function enviarSolicitud(){
   if(!solActual)return;
-  if(document.getElementById('btn-submit-sol').disabled){toast('Corrige el solapamiento de turnos antes de enviar','err');return;}
+  if(document.getElementById('btn-submit-sol').disabled){toast('Corrige el solapamiento antes de enviar','err');return;}
   var motivo=document.getElementById('sol-motivo').value.trim();
   var emailEmp=document.getElementById('sol-email-emp').value.trim();
   var turno=solActual.turno;
