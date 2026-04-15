@@ -1000,7 +1000,41 @@ function checkOverlap(){
   var solapa=false;
   if(horaEN&&solapaConAlguno(fechaEN,horaEN))solapa=true;
   if(horaSN&&solapaConAlguno(fechaSN,horaSN))solapa=true;
-  if(solapa){errEl.classList.add('on');btnEl.disabled=true;}
+  if(solapa){errEl.classList.add('on');btnEl.disabled=true;return;}
+
+  // Validar que salida sea siempre posterior a entrada
+  if(horaEN&&horaSN){
+    var absE=isoHoraToAbsMins(fechaEN,horaEN);
+    var absS=isoHoraToAbsMins(fechaSN,horaSN);
+    if(absS!==null&&absE!==null&&absS<=absE){
+      errEl.textContent='⚠ La salida no puede ser anterior o igual a la entrada.';
+      errEl.classList.add('on');btnEl.disabled=true;return;
+    }
+  }
+  // Si solo cambia la salida, comparar con la entrada actual (la del turno)
+  if(!horaEN&&horaSN&&solActual.turno.entrada){
+    var entradaFechaActual=solActual.turno.entrada.fechaReal||solActual.fecha;
+    var entradaHoraActual=solActual.turno.entrada.hora;
+    var absEActual=isoHoraToAbsMins(entradaFechaActual,entradaHoraActual);
+    var absSNueva=isoHoraToAbsMins(fechaSN,horaSN);
+    if(absSNueva!==null&&absEActual!==null&&absSNueva<=absEActual){
+      errEl.textContent='⚠ La salida no puede ser anterior o igual a la entrada.';
+      errEl.classList.add('on');btnEl.disabled=true;return;
+    }
+  }
+  // Si solo cambia la entrada, comparar con la salida actual
+  if(horaEN&&!horaSN&&solActual.turno.salida){
+    var salidaFechaActual=solActual.turno.salida.fechaReal||solActual.fecha;
+    var salidaHoraActual=solActual.turno.salida.hora;
+    var absENueva=isoHoraToAbsMins(fechaEN,horaEN);
+    var absSActual=isoHoraToAbsMins(salidaFechaActual,salidaHoraActual);
+    if(absENueva!==null&&absSActual!==null&&absENueva>=absSActual){
+      errEl.textContent='⚠ La entrada no puede ser posterior o igual a la salida.';
+      errEl.classList.add('on');btnEl.disabled=true;return;
+    }
+  }
+  // Resetear mensaje si no hay error
+  errEl.textContent='⚠ ERROR: la hora/fecha nueva se solapa con otro turno existente.';
 }
 
 // ── GENERAR ──
