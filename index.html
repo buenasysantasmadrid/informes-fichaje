@@ -1249,7 +1249,9 @@ async function enviarSolicitud(){
   var horaSA=document.getElementById('sol-hora-salida-actual').value;
   var horaSN=normHora(document.getElementById('sol-hora-salida-nueva').value);
   var fechaSN=document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
-  var fechaEOrig=turno.fechaEntrada||solActual.fecha,fechaSOrig=turno.fechaSalida||solActual.fecha;
+  // Usar fechaReal del fichaje (la que estaba en el sheet original)
+  var fechaEOrig=turno.entrada?(turno.entrada.fechaReal||turno.fechaEntrada||solActual.fecha):(turno.fechaEntrada||solActual.fecha);
+  var fechaSOrig=turno.salida?(turno.salida.fechaReal||turno.fechaSalida||solActual.fecha):(turno.fechaSalida||solActual.fecha);
   var cambiaE=horaEA!=='—'&&horaEN&&horaEN!==normHora(horaEA);
   var cambiaFE=horaEA!=='—'&&fechaEN!==fechaEOrig;
   var cambiaS=horaSA!=='—'&&horaSN&&horaSN!==normHora(horaSA);
