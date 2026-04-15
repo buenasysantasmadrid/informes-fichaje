@@ -817,14 +817,15 @@ function calcTurnoMins(turno){
 }
 // Devuelve true si el turno debe marcarse en rojo:
 // - dura más de 12h, O
-// - la salida es en el día siguiente Y pasa de las 2am (UMBRAL_NOCHE)
+// - la salida cae en un día distinto al de entrada (cruzó las 2am)
 function turnoEsError(turno){
   if(!turno.entrada||!turno.salida) return false;
+  // Si la salida es de madrugada (< 2am) el emparejador ya puso fechaSalida = día siguiente
+  // Eso significa que el turno cruzó medianoche → error
+  if(turno.fechaSalida !== turno.fechaEntrada) return true;
+  // También error si dura más de 12h en el mismo día
   var mins=calcTurnoMins(turno);
   if(mins!=null && mins>MAX_TURNO_MINS) return true;
-  // Cruza medianoche y la salida supera las 2am del día siguiente
-  var msSalida=horaToMins(turno.salida.hora);
-  if(turno.fechaSalida!==turno.fechaEntrada && msSalida!==null && msSalida>=UMBRAL_NOCHE) return true;
   return false;
 }
 function calcDia(regs){
