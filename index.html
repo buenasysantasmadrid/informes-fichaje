@@ -245,6 +245,16 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .toast.ok{background:var(--green)} .toast.err{background:var(--red)}
 .role-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.55rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500;margin-left:6px}
 .role-admin{background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
+.pin-link{font-size:.65rem;color:var(--green);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:'DM Mono',monospace;margin-top:.5rem;display:block;text-align:center;padding:4px 0}
+.pin-link:hover{color:var(--green-acc)}
+.pin-screen{display:none;flex-direction:column;gap:.9rem}
+.pin-screen.on{display:flex}
+.pin-steps{display:flex;gap:6px;margin-bottom:.25rem}
+.pin-step{flex:1;height:3px;border-radius:2px;background:var(--border2)}
+.pin-step.done{background:var(--green)}
+.pin-step.active{background:var(--green2)}
+.cambiar-pin-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;font-size:.62rem;font-family:'DM Mono',monospace;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:5px;cursor:pointer;transition:background .15s}
+.cambiar-pin-btn:hover{background:rgba(255,255,255,.25)}
 @media(max-width:720px){
   .shell{grid-template-columns:1fr}
   .side{border-right:none;border-bottom:1px solid var(--border)}
@@ -266,12 +276,60 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo"><span class="dot"></span><span>Buenas y Santas · RRHH</span></div>
-    <div class="login-title">Bienvenida</div>
-    <div class="login-sub">Introduce tu email y PIN para acceder a tu área de fichajes.</div>
-    <div class="login-field"><label>Email</label><input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email"></div>
-    <div class="login-field"><label>PIN</label><input type="password" id="login-pin" placeholder="••••" maxlength="10" autocomplete="current-password"></div>
-    <div class="login-err" id="login-err">Email o PIN incorrectos.</div>
-    <button class="btn-login" id="btn-login" onclick="doLogin()">Entrar</button>
+
+    <!-- Panel: Login normal -->
+    <div id="panel-login">
+      <div class="login-title">Bienvenida</div>
+      <div class="login-sub">Introduce tu email y PIN para acceder.</div>
+      <div class="login-field"><label>Email</label><input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email"></div>
+      <div class="login-field"><label>PIN</label><input type="password" id="login-pin" placeholder="••••" maxlength="10" autocomplete="current-password"></div>
+      <div class="login-err" id="login-err">Email o PIN incorrectos.</div>
+      <button class="btn-login" id="btn-login" onclick="doLogin()">Entrar</button>
+      <button class="pin-link" onclick="mostrarRecuperar()">¿Olvidaste tu PIN?</button>
+    </div>
+
+    <!-- Panel: Recuperar PIN paso 1 — email -->
+    <div id="panel-rec-email" style="display:none">
+      <div class="login-title">Recuperar PIN</div>
+      <div class="login-sub">Te enviaremos un código de verificación a tu email.</div>
+      <div class="login-field"><label>Email</label><input type="email" id="rec-email" placeholder="tu@email.com" autocomplete="email"></div>
+      <div class="login-err" id="rec-err-email"></div>
+      <button class="btn-login" id="btn-rec-email" onclick="enviarCodigoRecuperacion()">Enviar código</button>
+      <button class="pin-link" onclick="mostrarLogin()">← Volver al login</button>
+    </div>
+
+    <!-- Panel: Recuperar PIN paso 2 — código -->
+    <div id="panel-rec-codigo" style="display:none">
+      <div class="login-title">Introduce el código</div>
+      <div class="login-sub" id="rec-sub-codigo">Revisa tu email. El código expira en 10 minutos.</div>
+      <div class="login-field"><label>Código de 6 dígitos</label><input type="text" id="rec-codigo" placeholder="123456" maxlength="6" style="letter-spacing:.2em;font-size:1.1rem;text-align:center"></div>
+      <div class="login-err" id="rec-err-codigo"></div>
+      <button class="btn-login" id="btn-rec-codigo" onclick="verificarCodigo()">Verificar código</button>
+      <button class="pin-link" onclick="mostrarRecuperar()">← Reenviar código</button>
+    </div>
+
+    <!-- Panel: Elegir PIN nuevo -->
+    <div id="panel-nuevo-pin" style="display:none">
+      <div class="login-title">Elige tu nuevo PIN</div>
+      <div class="login-sub">Mínimo 4 dígitos. Recuérdalo bien.</div>
+      <div class="login-field"><label>PIN nuevo</label><input type="password" id="nuevo-pin" placeholder="••••••" maxlength="10" autocomplete="new-password"></div>
+      <div class="login-field"><label>Repite el PIN</label><input type="password" id="nuevo-pin2" placeholder="••••••" maxlength="10" autocomplete="new-password"></div>
+      <div class="login-err" id="rec-err-pin"></div>
+      <button class="btn-login" id="btn-nuevo-pin" onclick="guardarNuevoPin()">Guardar PIN</button>
+    </div>
+
+    <!-- Panel: Cambiar PIN (desde dentro de la app, mismo diseño) -->
+    <div id="panel-cambiar-pin" style="display:none">
+      <div class="login-title">Cambiar PIN</div>
+      <div class="login-sub">Elige un PIN nuevo de al menos 4 dígitos.</div>
+      <div class="login-field"><label>PIN actual</label><input type="password" id="cambiar-pin-actual" placeholder="••••" maxlength="10"></div>
+      <div class="login-field"><label>PIN nuevo</label><input type="password" id="cambiar-pin-nuevo" placeholder="••••••" maxlength="10" autocomplete="new-password"></div>
+      <div class="login-field"><label>Repite el PIN nuevo</label><input type="password" id="cambiar-pin-nuevo2" placeholder="••••••" maxlength="10" autocomplete="new-password"></div>
+      <div class="login-err" id="cambiar-pin-err"></div>
+      <button class="btn-login" id="btn-cambiar-pin" onclick="ejecutarCambiarPin()">Guardar nuevo PIN</button>
+      <button class="pin-link" onclick="cerrarCambiarPin()">Cancelar</button>
+    </div>
+
   </div>
 </div>
 
@@ -294,6 +352,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <span class="sdot spin" id="sdot"></span>
       <span id="stxt" style="font-size:.62rem">Conectando...</span>
     </div>
+    <button class="cambiar-pin-btn" id="btn-cambiar-pin-hdr" style="display:none" onclick="abrirCambiarPin()">🔑 PIN</button>
     <button class="btn-logout" onclick="doLogout()">Salir</button>
   </div>
 </header>
@@ -580,6 +639,7 @@ function doLogout(){
   document.getElementById('hdr-emp-info').classList.remove('on');
   document.getElementById('hdr-user-admin').style.display='none';
   document.getElementById('nav-admin').style.display='none';
+  document.getElementById('btn-cambiar-pin-hdr').style.display='none';
   document.getElementById('nav-emp').style.display='none';
   document.getElementById('admin-shell').style.display='none';
   document.getElementById('emp-shell').style.display='none';
@@ -625,6 +685,7 @@ async function initEmpleado(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('on');
   document.getElementById('hdr-emp-nombre').textContent=session.nombre;
+  document.getElementById('btn-cambiar-pin-hdr').style.display='flex';
   document.getElementById('hdr-emp-info').classList.add('on');
   document.getElementById('nav-emp').style.display='flex';
   document.getElementById('emp-shell').style.display='block';
@@ -1335,6 +1396,162 @@ function exportEmp(emp){
   var sheetName=emp==='_emp'?session.nombre:emp;
   XLSX.utils.book_append_sheet(wb,ws,sheetName.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,'_'));
   XLSX.writeFile(wb,'Fichajes_'+sheetName.split(' ')[0]+'.xlsx');toast('Excel descargado','ok');
+}
+
+// ══════════════════════════════════════════════════════════
+// PIN: recuperación y cambio
+// ══════════════════════════════════════════════════════════
+
+var pinRecEmail = '';  // email del usuario que está recuperando PIN
+var pinRecNombre = ''; // nombre para guardar
+
+function mostrarPanel(id) {
+  ['panel-login','panel-rec-email','panel-rec-codigo','panel-nuevo-pin','panel-cambiar-pin'].forEach(function(p){
+    var el=document.getElementById(p);
+    if(el) el.style.display = (p===id)?'block':'none';
+  });
+}
+function mostrarLogin(){ mostrarPanel('panel-login'); }
+function mostrarRecuperar(){
+  document.getElementById('rec-email').value='';
+  document.getElementById('rec-err-email').className='login-err';
+  mostrarPanel('panel-rec-email');
+}
+
+// ── Paso 1: enviar código por email ──
+async function enviarCodigoRecuperacion(){
+  var email = document.getElementById('rec-email').value.trim().toLowerCase();
+  var errEl = document.getElementById('rec-err-email');
+  errEl.className='login-err'; errEl.textContent='';
+  if(!email){errEl.textContent='Introduce tu email.';errEl.className='login-err on';return;}
+
+  // Cargar empleados si no están
+  if(!empleados.length){
+    try{await loadEmpleados();}
+    catch(e){errEl.textContent='Sin conexión con el servidor.';errEl.className='login-err on';return;}
+  }
+
+  var emp = empleados.find(function(e){return e.email.toLowerCase()===email;});
+  if(!emp){errEl.textContent='Este email no está registrado.';errEl.className='login-err on';return;}
+
+  pinRecEmail  = email;
+  pinRecNombre = emp.nombre;
+
+  var btn=document.getElementById('btn-rec-email');
+  btn.disabled=true; btn.textContent='Enviando...';
+
+  var res = await callScriptJSONP({action:'enviarCodigo', email:email, nombre:emp.nombre});
+  btn.disabled=false; btn.textContent='Enviar código';
+
+  if(!res||res.ok===false){
+    errEl.textContent='Error al enviar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');
+    errEl.className='login-err on'; return;
+  }
+
+  document.getElementById('rec-sub-codigo').textContent='Código enviado a '+email+'. Expira en 10 minutos.';
+  document.getElementById('rec-codigo').value='';
+  document.getElementById('rec-err-codigo').className='login-err';
+  mostrarPanel('panel-rec-codigo');
+}
+
+// ── Paso 2: verificar código ──
+async function verificarCodigo(){
+  var codigo = document.getElementById('rec-codigo').value.trim();
+  var errEl  = document.getElementById('rec-err-codigo');
+  errEl.className='login-err'; errEl.textContent='';
+  if(!codigo||codigo.length<6){errEl.textContent='Introduce el código de 6 dígitos.';errEl.className='login-err on';return;}
+
+  var btn=document.getElementById('btn-rec-codigo');
+  btn.disabled=true; btn.textContent='Verificando...';
+
+  var res = await callScriptJSONP({action:'verificarCodigo', email:pinRecEmail, codigo:codigo});
+  btn.disabled=false; btn.textContent='Verificar código';
+
+  if(!res||res.ok===false){
+    errEl.textContent='Código incorrecto o expirado.';
+    errEl.className='login-err on'; return;
+  }
+
+  document.getElementById('nuevo-pin').value='';
+  document.getElementById('nuevo-pin2').value='';
+  document.getElementById('rec-err-pin').className='login-err';
+  mostrarPanel('panel-nuevo-pin');
+}
+
+// ── Paso 3: guardar PIN nuevo (recuperación) ──
+async function guardarNuevoPin(){
+  var pin1 = document.getElementById('nuevo-pin').value.trim();
+  var pin2 = document.getElementById('nuevo-pin2').value.trim();
+  var errEl = document.getElementById('rec-err-pin');
+  errEl.className='login-err'; errEl.textContent='';
+  if(!pin1||pin1.length<4){errEl.textContent='El PIN debe tener al menos 4 dígitos.';errEl.className='login-err on';return;}
+  if(pin1!==pin2){errEl.textContent='Los PINes no coinciden.';errEl.className='login-err on';return;}
+
+  var btn=document.getElementById('btn-nuevo-pin');
+  btn.disabled=true; btn.textContent='Guardando...';
+
+  var res = await callScriptJSONP({action:'cambiarPin', email:pinRecEmail, nombre:pinRecNombre, pin:pin1});
+  btn.disabled=false; btn.textContent='Guardar PIN';
+
+  if(!res||res.ok===false){
+    errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');
+    errEl.className='login-err on'; return;
+  }
+
+  toast('PIN actualizado ✓. Ya puedes entrar.','ok',3500);
+  // Refrescar lista de empleados y volver al login
+  try{await loadEmpleados();}catch(e){}
+  mostrarLogin();
+}
+
+// ── Cambiar PIN desde dentro de la app ──
+function abrirCambiarPin(){
+  document.getElementById('cambiar-pin-actual').value='';
+  document.getElementById('cambiar-pin-nuevo').value='';
+  document.getElementById('cambiar-pin-nuevo2').value='';
+  document.getElementById('cambiar-pin-err').className='login-err';
+  document.getElementById('login-screen').style.display='flex';
+  mostrarPanel('panel-cambiar-pin');
+}
+function cerrarCambiarPin(){
+  document.getElementById('login-screen').style.display='none';
+  mostrarPanel('panel-login');
+}
+
+async function ejecutarCambiarPin(){
+  var pinActual = document.getElementById('cambiar-pin-actual').value.trim();
+  var pin1      = document.getElementById('cambiar-pin-nuevo').value.trim();
+  var pin2      = document.getElementById('cambiar-pin-nuevo2').value.trim();
+  var errEl     = document.getElementById('cambiar-pin-err');
+  errEl.className='login-err'; errEl.textContent='';
+
+  if(!pinActual){errEl.textContent='Introduce tu PIN actual.';errEl.className='login-err on';return;}
+  if(!pin1||pin1.length<4){errEl.textContent='El PIN nuevo debe tener al menos 4 dígitos.';errEl.className='login-err on';return;}
+  if(pin1!==pin2){errEl.textContent='Los PINes nuevos no coinciden.';errEl.className='login-err on';return;}
+
+  // Verificar PIN actual
+  if(!session||!session.empData){errEl.textContent='Sesión no válida.';errEl.className='login-err on';return;}
+  if(String(session.empData.pin).trim()!==String(pinActual).trim()){
+    errEl.textContent='PIN actual incorrecto.';errEl.className='login-err on';return;
+  }
+
+  var btn=document.getElementById('btn-cambiar-pin');
+  btn.disabled=true; btn.textContent='Guardando...';
+
+  var res = await callScriptJSONP({action:'cambiarPin', email:session.email, nombre:session.nombre, pin:pin1});
+  btn.disabled=false; btn.textContent='Guardar nuevo PIN';
+
+  if(!res||res.ok===false){
+    errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');
+    errEl.className='login-err on'; return;
+  }
+
+  // Actualizar sesión con nuevo PIN
+  session.empData.pin = pin1;
+  saveSession();
+  try{await loadEmpleados();}catch(e){}
+  toast('PIN cambiado correctamente ✓','ok',3000);
+  cerrarCambiarPin();
 }
 </script>
 </body>
