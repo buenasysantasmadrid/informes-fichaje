@@ -68,8 +68,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .nav-tab.active{color:var(--green);border-bottom-color:var(--green);font-weight:500}
 .nav-badge{background:var(--red);color:#fff;font-size:.55rem;padding:1px 6px;border-radius:10px;font-weight:500}
 .nav-badge.hidden{display:none}
-
-/* ── ADMIN layout: sidebar + main ── */
 .shell{display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 58px - 45px)}
 .side{background:#fff;border-right:1px solid var(--border);padding:1.75rem 1.5rem;display:flex;flex-direction:column;gap:1.5rem}
 .lbl{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:.5rem;display:block}
@@ -91,12 +89,8 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .btn-gen{width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:var(--r);font-family:'DM Mono',monospace;font-size:.78rem;font-weight:500;cursor:pointer;letter-spacing:.05em;transition:background .15s,box-shadow .15s;box-shadow:0 2px 8px rgba(45,106,63,.25)}
 .btn-gen:hover{background:var(--green-acc)}
 .btn-gen:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
-
-/* ── EMPLEADO layout: sin sidebar, solo main ── */
 .emp-shell{min-height:calc(100vh - 58px - 45px)}
 .emp-main{padding:2rem 2.5rem;max-width:900px;margin:0 auto}
-
-/* Pestaña calendario empleado */
 .cal-page-wrap{display:flex;flex-direction:column;align-items:center;gap:1.5rem;padding-top:.5rem}
 .cal-page-title{font-family:'Lora',serif;font-size:1.3rem;font-weight:400;color:var(--green-acc);align-self:flex-start}
 .cal-page-sub{font-size:.68rem;color:var(--ink3);align-self:flex-start;margin-top:-.75rem}
@@ -118,7 +112,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .cal-day.other-month{color:var(--ink3);opacity:.45}
 .cal-day.disabled{opacity:.25;cursor:not-allowed;pointer-events:none}
 .cal-hint{font-size:.57rem;color:var(--ink3);padding:3px 6px 5px;text-align:center;line-height:1.4}
-
 .main{padding:2rem 2.5rem;overflow-x:hidden}
 .page{display:none}
 .page.active{display:block}
@@ -141,7 +134,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .sum-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.75rem .85rem;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;gap:3px;box-shadow:var(--shadow);}
 .sum-card:hover{border-color:var(--green4);background:var(--green3);box-shadow:var(--shadow2)}
 .sum-card.has-error{border-left:3px solid var(--red)}
-
 .sum-card.today{border-color:var(--green);box-shadow:0 0 0 2px var(--green4)}
 .sum-dow{font-family:'Lora',serif;font-size:.8rem;color:var(--ink2);text-transform:capitalize}
 .sum-date{font-size:.58rem;color:var(--ink3)}
@@ -161,7 +153,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .day-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s}
 .day-card:hover{box-shadow:var(--shadow2)}
 .day-card.has-error{border-left:3px solid var(--red);background:var(--red-soft)}
-
 .day-head{display:flex;align-items:center;padding:.85rem 1.2rem;cursor:pointer;user-select:none}
 .day-dow{font-family:'Lora',serif;font-size:1rem;font-weight:400;color:var(--ink);width:115px;flex-shrink:0;text-transform:capitalize}
 .day-date{font-size:.65rem;color:var(--ink3);width:85px;flex-shrink:0}
@@ -186,20 +177,18 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .t-out{color:var(--blue);font-weight:500}
 .t-long{color:var(--red);font-weight:600}
 .turno-sep td{border-top:2px dashed var(--border2)!important;padding-top:10px!important}
-
-/* hora-btn: estado normal, pendiente, aprobado */
+/* CAMBIO 2: pending bloqueado + btn cancelar */
 .hora-btn{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:5px;font-family:'DM Mono',monospace;font-size:.76rem;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--ink);transition:all .15s}
 .hora-btn:hover{background:var(--green3);border-color:var(--green4);color:var(--green)}
 .hora-btn .pencil{font-size:.7rem;opacity:0;transition:opacity .15s}
 .hora-btn:hover .pencil{opacity:1}
-.hora-btn.pending{background:var(--amber-soft);border-color:#f5e0a0;color:var(--amber)}
-/* aprobado: siempre muestra el lápiz verde */
+.hora-btn.pending{background:var(--amber-soft);border-color:#f5e0a0;color:var(--amber);cursor:not-allowed;}
 .hora-btn.approved{background:var(--green3);border-color:var(--green4);color:var(--green)}
 .hora-btn.approved .pencil{opacity:1}
 .hora-btn-long{color:var(--red)!important}
 .hora-btn-long:hover{background:var(--red-soft)!important;border-color:#f5c6c2!important;color:var(--red)!important}
-
-/* sol filters */
+.btn-cancelar-sol{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:.6rem;font-family:'DM Mono',monospace;background:#fff;color:var(--red);border:1px solid #f5c6c2;border-radius:4px;cursor:pointer;transition:all .12s;margin-top:3px;}
+.btn-cancelar-sol:hover{background:var(--red-soft);}
 .sol-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
 .sol-title{font-family:'Lora',serif;font-size:1.4rem;font-weight:400;color:var(--green-acc)}
 .sol-filters{display:flex;gap:6px;flex-wrap:wrap}
@@ -279,12 +268,9 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 </style>
 </head>
 <body>
-
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo"><span class="dot"></span><span>Buenas y Santas · RRHH</span></div>
-
-    <!-- Panel: Login normal -->
     <div id="panel-login">
       <div class="login-title">Bienvenida</div>
       <div class="login-sub">Introduce tu email y PIN para acceder.</div>
@@ -294,8 +280,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <button class="btn-login" id="btn-login" onclick="doLogin()">Entrar</button>
       <button class="pin-link" onclick="mostrarRecuperar()">¿Olvidaste tu PIN?</button>
     </div>
-
-    <!-- Panel: Recuperar PIN paso 1 — email -->
     <div id="panel-rec-email" style="display:none">
       <div class="login-title">Recuperar PIN</div>
       <div class="login-sub">Te enviaremos un código de verificación a tu email.</div>
@@ -304,8 +288,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <button class="btn-login" id="btn-rec-email" onclick="enviarCodigoRecuperacion()">Enviar código</button>
       <button class="pin-link" onclick="mostrarLogin()">← Volver al login</button>
     </div>
-
-    <!-- Panel: Recuperar PIN paso 2 — código -->
     <div id="panel-rec-codigo" style="display:none">
       <div class="login-title">Introduce el código</div>
       <div class="login-sub" id="rec-sub-codigo">Revisa tu email. El código expira en 10 minutos.</div>
@@ -314,8 +296,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <button class="btn-login" id="btn-rec-codigo" onclick="verificarCodigo()">Verificar código</button>
       <button class="pin-link" onclick="mostrarRecuperar()">← Reenviar código</button>
     </div>
-
-    <!-- Panel: Elegir PIN nuevo -->
     <div id="panel-nuevo-pin" style="display:none">
       <div class="login-title">Elige tu nuevo PIN</div>
       <div class="login-sub">Mínimo 4 dígitos. Recuérdalo bien.</div>
@@ -324,8 +304,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <div class="login-err" id="rec-err-pin"></div>
       <button class="btn-login" id="btn-nuevo-pin" onclick="guardarNuevoPin()">Guardar PIN</button>
     </div>
-
-    <!-- Panel: Cambiar PIN (desde dentro de la app, mismo diseño) -->
     <div id="panel-cambiar-pin" style="display:none">
       <div class="login-title">Cambiar PIN</div>
       <div class="login-sub">Elige un PIN nuevo de al menos 4 dígitos.</div>
@@ -336,7 +314,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <button class="btn-login" id="btn-cambiar-pin" onclick="ejecutarCambiarPin()">Guardar nuevo PIN</button>
       <button class="pin-link" onclick="cerrarCambiarPin()">Cancelar</button>
     </div>
-
   </div>
 </div>
 
@@ -363,21 +340,15 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
     <button class="btn-logout" onclick="doLogout()">Salir</button>
   </div>
 </header>
-
-<!-- Nav admin -->
 <nav class="nav" id="nav-admin" style="display:none">
   <div class="nav-tab active" id="tab-informes" onclick="switchTab('informes')">📋 Informes</div>
   <div class="nav-tab" id="tab-solicitudes" onclick="switchTab('solicitudes')">🔄 Solicitudes <span class="nav-badge hidden" id="badge-sol">0</span></div>
 </nav>
-
-<!-- Nav empleado: 3 pestañas -->
 <nav class="nav" id="nav-emp" style="display:none">
   <div class="nav-tab active" id="etab-fichajes" onclick="eswitch('fichajes')">📋 Mis fichajes</div>
   <div class="nav-tab" id="etab-solicitudes" onclick="eswitch('solicitudes')">🔄 Mis solicitudes <span class="nav-badge hidden" id="ebadge-sol">0</span></div>
   <div class="nav-tab" id="etab-calendario" onclick="eswitch('calendario')">📅 Calendario</div>
 </nav>
-
-<!-- ADMIN: shell con sidebar -->
 <div class="shell" id="admin-shell" style="display:none">
   <aside class="side" id="side-admin">
     <div>
@@ -420,22 +391,17 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
     </div>
   </main>
 </div>
-
-<!-- EMPLEADO: sin sidebar -->
 <div class="emp-shell" id="emp-shell" style="display:none">
   <div class="emp-main">
-    <!-- Pestaña: Mis fichajes — siempre muestra el mes actual -->
     <div class="page active" id="epage-fichajes">
       <div id="ereport-fichajes"></div>
     </div>
-    <!-- Pestaña: Mis solicitudes -->
     <div class="page" id="epage-solicitudes">
       <div class="sol-header">
         <div class="sol-title">Mis solicitudes</div>
       </div>
       <div id="esol-list"></div>
     </div>
-    <!-- Pestaña: Calendario — selector + resultados del período elegido -->
     <div class="page" id="epage-calendario">
       <div class="cal-page-wrap">
         <div class="cal-page-title">Selecciona el período</div>
@@ -453,7 +419,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 </div>
 </div>
 
-<!-- MODAL -->
 <div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
   <div class="modal-box">
     <div class="modal-title">Solicitud de cambio de turno</div>
@@ -508,7 +473,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 
 <div class="loader" id="loader"><div class="spin"></div><div class="ltxt" id="ltxt">Cargando...</div></div>
 <div class="toast" id="toast"></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const DIAS_TILDE = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
@@ -523,10 +487,10 @@ let solFiltro='todas';
 let currentSel,currentDesde,currentHasta,empEditData={},empEditDataCal={},solActual=null;
 let approvedSet = new Set();
 
-// ── PERSISTENCIA ──
-function saveSession(){if(session)sessionStorage.setItem('bys_session',JSON.stringify(session));}
-function clearSession(){sessionStorage.removeItem('bys_session');}
-function restoreSession(){try{var s=sessionStorage.getItem('bys_session');if(s)return JSON.parse(s);}catch(e){}return null;}
+// ── PERSISTENCIA (localStorage: sesión permanente) ──
+function saveSession(){if(session)localStorage.setItem('bys_session',JSON.stringify(session));}
+function clearSession(){localStorage.removeItem('bys_session');}
+function restoreSession(){try{var s=localStorage.getItem('bys_session');if(s)return JSON.parse(s);}catch(e){}return null;}
 
 // ── UTILS ──
 function toast(msg,cls,dur){dur=dur||2800;var t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(cls?' '+cls:'');clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast';},dur);}
@@ -599,7 +563,6 @@ function rebuildApprovedSet(sols){
   approvedSet=new Set();
   sols.forEach(function(s){
     if(s.estado==='aprobada'){
-      // La clave usa fechaNueva+horaNueva: es la hora que queda en el sheet tras el cambio
       var fechaKey=safeISO(s.fechaNueva||s.fecha);
       approvedSet.add(s.emp+'|'+fechaKey+'|'+s.tipo+'|'+normHora(s.horaNueva));
     }
@@ -669,7 +632,6 @@ async function initAdmin(){
   document.getElementById('nav-admin').style.display='flex';
   document.getElementById('admin-shell').style.display='grid';
   document.getElementById('status-bar-hdr').style.display='flex';
-  // mostrar página informes por defecto
   document.querySelectorAll('#admin-shell .page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('page-informes').classList.add('active');
   document.querySelectorAll('#nav-admin .nav-tab').forEach(function(t){t.classList.remove('active');});
@@ -696,16 +658,13 @@ async function initEmpleado(){
   document.getElementById('hdr-emp-info').classList.add('on');
   document.getElementById('nav-emp').style.display='flex';
   document.getElementById('emp-shell').style.display='block';
-  // empezar en pestaña fichajes
   eswitch('fichajes');
   esolicitudes=await loadSolicitudes(session.nombre);
   rebuildApprovedSet(esolicitudes);
   updateEbadge();
   erendSolicitudes();
-  // inicializar calendario en la pestaña Calendario
   var hoy=new Date();
   initCalPicker('emp-cal-container','ef-desde','ef-hasta',hoy.getFullYear(),hoy.getMonth());
-  // preseleccionar mes actual
   var p1=new Date(hoy.getFullYear(),hoy.getMonth(),1);
   document.getElementById('ef-desde').value=p1.toISOString().slice(0,10);
   document.getElementById('ef-hasta').value=hoy.toISOString().slice(0,10);
@@ -713,7 +672,6 @@ async function initEmpleado(){
   calState.selEnd=hoy.toISOString().slice(0,10);
   renderCalPicker();
   document.getElementById('sol-email-row').style.display='none';
-  // Cargar TODOS los fichajes del empleado para Mis fichajes
   setLoader(true,'Cargando fichajes...');
   try{
     var tablaTodos=await fetchSheet(session.nombre);
@@ -724,7 +682,7 @@ async function initEmpleado(){
   renderEmpFichajesTab();
 }
 
-// ── TABS ADMIN ──
+// ── TABS ──
 function switchTab(tab){
   document.querySelectorAll('#nav-admin .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#admin-shell .page').forEach(function(p){p.classList.remove('active');});
@@ -734,8 +692,6 @@ function switchTab(tab){
     loadSolicitudes().then(function(data){solicitudes=data;updateBadge();renderSolicitudes();});
   }
 }
-
-// ── TABS EMPLEADO ──
 function eswitch(tab){
   document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#emp-shell .page').forEach(function(p){p.classList.remove('active');});
@@ -758,7 +714,6 @@ function selNone(){document.querySelectorAll('.echk').forEach(function(c){c.chec
 
 // ── CALENDAR PICKER ──
 var calState={year:new Date().getFullYear(),month:new Date().getMonth(),selStart:null,selEnd:null,containerId:null,inputDesde:null,inputHasta:null};
-
 function initCalPicker(containerId,desdeId,hastaId,year,month){
   calState.containerId=containerId;calState.inputDesde=desdeId;calState.inputHasta=hastaId;
   calState.year=year;calState.month=month;
@@ -849,58 +804,41 @@ function diaSiguiente(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]
 function diaAnterior(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()-1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 
 // ── TURNOS ──
-
-// Empareja todos los fichajes globalmente.
-// La salida SIEMPRE queda asignada al día de su entrada.
-// Si la salida es de fecha distinta o es antes de las 2am → errorNoche=true.
 function construirDmap(fichajes){
   var UMBRAL=UMBRAL_NOCHE;
-
-  // Convertir cada fichaje a minutos absolutos desde epoch para comparar entre días
-  function absMins(fecha, hora){
+  function absMins(fecha,hora){
     var p=fecha.split('-').map(Number);
     var d=new Date(p[0],p[1]-1,p[2]);
     var diasDesdeRef=Math.round((d-new Date(2020,0,1))/86400000);
     return diasDesdeRef*1440+(horaToMins(hora)||0);
   }
-
-  // Ordenar por tiempo absoluto
-  var todos=fichajes.slice().sort(function(a,b){
-    return absMins(a.fecha,a.hora)-absMins(b.fecha,b.hora);
-  });
-
+  var todos=fichajes.slice().sort(function(a,b){return absMins(a.fecha,a.hora)-absMins(b.fecha,b.hora);});
   var usada=new Array(todos.length).fill(false);
   var dmap={};
-
   for(var i=0;i<todos.length;i++){
     if(usada[i])continue;
     var reg=todos[i];
-
     if(reg.tipo==='ENTRADA'){
       usada[i]=true;
       var fechaE=reg.fecha;
       if(!dmap[fechaE])dmap[fechaE]=[];
       dmap[fechaE].push({tipo:'ENTRADA',hora:reg.hora,fechaReal:reg.fecha,errorNoche:false});
-
-      // Buscar la SALIDA más próxima en tiempo después de esta entrada
       var absEntrada=absMins(reg.fecha,reg.hora);
       for(var j=i+1;j<todos.length;j++){
         if(usada[j])continue;
         if(todos[j].tipo==='SALIDA'){
           var absSalida=absMins(todos[j].fecha,todos[j].hora);
           var diff=absSalida-absEntrada;
-          if(diff>0 && diff<1800){
+          if(diff>0&&diff<1800){
             usada[j]=true;
             var sal=todos[j];
-            var err=(sal.fecha!==fechaE); // error si la salida es de otro día
+            var err=(sal.fecha!==fechaE);
             dmap[fechaE].push({tipo:'SALIDA',hora:sal.hora,fechaReal:sal.fecha,errorNoche:err});
             break;
           }
         }
       }
-
-    } else {
-      // SALIDA huérfana
+    }else{
       usada[i]=true;
       if(!dmap[reg.fecha])dmap[reg.fecha]=[];
       dmap[reg.fecha].push({tipo:'SALIDA',hora:reg.hora,fechaReal:reg.fecha,errorNoche:true});
@@ -908,27 +846,19 @@ function construirDmap(fichajes){
   }
   return dmap;
 }
-
-// emparejarTurnos: los registros ya vienen ordenados y emparejados por construirDmap
-// Solo los agrupamos en pares ENTRADA+SALIDA respetando el orden original
 function emparejarTurnos(regs,fechaDia){
-  var turnos=[];
-  var k=0;
+  var turnos=[];var k=0;
   while(k<regs.length){
     var r=regs[k];
     if(r.tipo==='ENTRADA'){
       var turno={idx:turnos.length,entrada:r,salida:null,fechaEntrada:fechaDia,fechaSalida:fechaDia,errorNoche:r.errorNoche||false};
-      // La siguiente en el array es su salida (construirDmap ya las emparejó juntas)
-      if(k+1<regs.length && regs[k+1].tipo==='SALIDA'){
+      if(k+1<regs.length&&regs[k+1].tipo==='SALIDA'){
         turno.salida=regs[k+1];
         if(regs[k+1].errorNoche)turno.errorNoche=true;
-        k+=2; // saltar entrada y salida
-      } else {
-        k++;
-      }
+        k+=2;
+      }else{k++;}
       turnos.push(turno);
-    } else {
-      // SALIDA huérfana
+    }else{
       turnos.push({idx:turnos.length,entrada:null,salida:r,fechaEntrada:fechaDia,fechaSalida:fechaDia,errorNoche:r.errorNoche||false});
       k++;
     }
@@ -941,14 +871,11 @@ function calcTurnoMins(turno){
   if(me<UMBRAL_NOCHE)me+=1440;if(ms<UMBRAL_NOCHE)ms+=1440;
   var dur=ms-me;return dur>0?dur:null;
 }
-// Error si la salida es de distinto día que la entrada
 function turnoEsError(turno){
-  if(!turno.entrada) return false;
-  // errorNoche viene de construirDmap: salida en fecha distinta
-  if(turno.errorNoche) return true;
-  // También error si dura más de 12h
+  if(!turno.entrada)return false;
+  if(turno.errorNoche)return true;
   var mins=calcTurnoMins(turno);
-  if(mins!=null && mins>MAX_TURNO_MINS) return true;
+  if(mins!=null&&mins>MAX_TURNO_MINS)return true;
   return false;
 }
 function calcDia(regs,fechaDia){
@@ -1001,39 +928,24 @@ function checkOverlap(){
   if(horaEN&&solapaConAlguno(fechaEN,horaEN))solapa=true;
   if(horaSN&&solapaConAlguno(fechaSN,horaSN))solapa=true;
   if(solapa){errEl.classList.add('on');btnEl.disabled=true;return;}
-
-  // Validar que salida sea siempre posterior a entrada
   if(horaEN&&horaSN){
-    var absE=isoHoraToAbsMins(fechaEN,horaEN);
-    var absS=isoHoraToAbsMins(fechaSN,horaSN);
-    if(absS!==null&&absE!==null&&absS<=absE){
-      errEl.textContent='⚠ La salida no puede ser anterior o igual a la entrada.';
-      errEl.classList.add('on');btnEl.disabled=true;return;
-    }
+    var absE=isoHoraToAbsMins(fechaEN,horaEN);var absS=isoHoraToAbsMins(fechaSN,horaSN);
+    if(absS!==null&&absE!==null&&absS<=absE){errEl.textContent='⚠ La salida no puede ser anterior o igual a la entrada.';errEl.classList.add('on');btnEl.disabled=true;return;}
   }
-  // Si solo cambia la salida, comparar con la entrada actual (la del turno)
   if(!horaEN&&horaSN&&solActual.turno.entrada){
     var entradaFechaActual=solActual.turno.entrada.fechaReal||solActual.fecha;
     var entradaHoraActual=solActual.turno.entrada.hora;
     var absEActual=isoHoraToAbsMins(entradaFechaActual,entradaHoraActual);
     var absSNueva=isoHoraToAbsMins(fechaSN,horaSN);
-    if(absSNueva!==null&&absEActual!==null&&absSNueva<=absEActual){
-      errEl.textContent='⚠ La salida no puede ser anterior o igual a la entrada.';
-      errEl.classList.add('on');btnEl.disabled=true;return;
-    }
+    if(absSNueva!==null&&absEActual!==null&&absSNueva<=absEActual){errEl.textContent='⚠ La salida no puede ser anterior o igual a la entrada.';errEl.classList.add('on');btnEl.disabled=true;return;}
   }
-  // Si solo cambia la entrada, comparar con la salida actual
   if(horaEN&&!horaSN&&solActual.turno.salida){
     var salidaFechaActual=solActual.turno.salida.fechaReal||solActual.fecha;
     var salidaHoraActual=solActual.turno.salida.hora;
     var absENueva=isoHoraToAbsMins(fechaEN,horaEN);
     var absSActual=isoHoraToAbsMins(salidaFechaActual,salidaHoraActual);
-    if(absENueva!==null&&absSActual!==null&&absENueva>=absSActual){
-      errEl.textContent='⚠ La entrada no puede ser posterior o igual a la salida.';
-      errEl.classList.add('on');btnEl.disabled=true;return;
-    }
+    if(absENueva!==null&&absSActual!==null&&absENueva>=absSActual){errEl.textContent='⚠ La entrada no puede ser posterior o igual a la salida.';errEl.classList.add('on');btnEl.disabled=true;return;}
   }
-  // Resetear mensaje si no hay error
   errEl.textContent='⚠ ERROR: la hora/fecha nueva se solapa con otro turno existente.';
 }
 
@@ -1054,7 +966,6 @@ async function generar(){
     }catch(e){editData[emp]=null;}
   }
   setLoader(false);
-  // Recargar solicitudes para que el approvedSet del admin esté actualizado
   solicitudes=await loadSolicitudes();
   rebuildApprovedSet(solicitudes);
   updateBadge();
@@ -1075,13 +986,11 @@ async function empGenerar(){
     updateEbadge();
   }catch(e){toast('Error: '+e.message,'err');setLoader(false);return;}
   setLoader(false);
-  // Mostrar en pestaña Calendario solamente
   renderEmpReport();
 }
 
 // ── RENDER EMPLEADO ──
 function renderEmpReport(){
-  // Muestra en pestaña Calendario el período elegido
   var rep=document.getElementById('ereport');rep.style.display='block';
   var dmap=empEditDataCal,fechas=Object.keys(dmap).sort().reverse();
   if(!fechas.length){rep.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin fichajes</h2><p>No hay registros en el período seleccionado.</p></div>';return;}
@@ -1090,30 +999,21 @@ function renderEmpReport(){
   var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
   rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
 }
-
 function renderEmpFichajesTab(){
-  // Muestra en pestaña Mis fichajes todos los datos cargados
   var rep=document.getElementById('ereport-fichajes');
   var dmap=empEditData,fechas=Object.keys(dmap).sort().reverse();
-  if(!fechas.length){
-    rep.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin fichajes</h2><p>No hay registros en el período.</p></div>';
-    return;
-  }
+  if(!fechas.length){rep.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin fichajes</h2><p>No hay registros en el período.</p></div>';return;}
   var fechasAsc=fechas.slice().reverse();
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump2"><button class="btn-jump" onclick="jumpToDateFichajes()">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
   rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
 }
-
 function jumpToDateFichajes(){
-  var el=document.getElementById('emp-date-jump2');
-  if(!el)return;
+  var el=document.getElementById('emp-date-jump2');if(!el)return;
   var fecha=el.value;if(!fecha){toast('Selecciona una fecha','err');return;}
-  var prefix='edc-'+empId(session.nombre);
-  var card=document.getElementById(prefix+'-'+fecha);if(!card)return;
+  var card=document.getElementById('edc-'+empId(session.nombre)+'-'+fecha);if(!card)return;
   card.classList.add('open');setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});},50);
 }
-
 function scrollToDay(fecha,empKey){
   var prefix=empKey==='_emp'?'edc-'+empId(session.nombre):'dc-'+empId(empKey);
   var card=document.getElementById(prefix+'-'+fecha);if(!card)return;
@@ -1121,7 +1021,7 @@ function scrollToDay(fecha,empKey){
 }
 function jumpToDate(empKey){var inputId=empKey==='_emp'?'emp-date-jump':'adm-date-jump';var fecha=document.getElementById(inputId).value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,empKey);}
 
-// ── BUILD FILAS TURNOS ──
+// ── BUILD FILAS TURNOS (CAMBIO 3: bloquear pendientes + botón cancelar) ──
 function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   var turnos=emparejarTurnos(regs,fecha);
   if(!turnos.length)return'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
@@ -1129,17 +1029,14 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   var bloques=[];
   for(var t=0;t<turnosRev.length;t++){
     var turno=turnosRev[t];
-    var turnoIdx=turnos.length-1-t; // índice real en array original
+    var turnoIdx=turnos.length-1-t;
     var isErr=turnoEsError(turno);
     var turnoMins=calcTurnoMins(turno);
-
-    // fechas reales de cada fichaje
     var fechaRealE=turno.entrada?(turno.entrada.fechaReal||fecha):fecha;
     var fechaRealS=turno.salida?(turno.salida.fechaReal||fecha):fecha;
     var fechaDifE=fechaRealE!==fecha;
     var fechaDifS=fechaRealS!==fecha;
 
-    // pendientes / aprobados
     var hasPendE=turno.entrada&&solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';});
     var hasApprE=turno.entrada&&approvedSet.has(emp+'|'+turno.fechaEntrada+'|ENTRADA|'+normHora(turno.entrada.hora));
     var hasPendS=turno.salida&&solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';});
@@ -1149,7 +1046,6 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     var bg=isErr?'background:var(--red-soft)':'background:#fff';
     var bloque='<div style="border-radius:8px;'+brd+';overflow:hidden;'+bg+';margin-bottom:'+(t<turnosRev.length-1?'10px':'0')+'">';
 
-    // ── Cabecera del turno ──
     var hdrBg=isErr?'background:#fad7d4':'background:var(--cream2)';
     var hdrBrd=isErr?'border-bottom:1px solid #f5c6c2':'border-bottom:1px solid var(--border)';
     bloque+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 12px;'+hdrBg+';'+hdrBrd+'">';
@@ -1158,31 +1054,41 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     if(isErr)bloque+='<span style="font-size:.63rem;color:var(--red);font-weight:700">🔴 OJO! ERROR</span>';
     bloque+='</div>';
 
-    // ── Fila única: ENTRADA · SALIDA en la misma línea ──
     bloque+='<div style="display:flex;align-items:center;gap:0;padding:8px 12px;">';
 
     // ENTRADA
     if(turno.entrada){
+      var solPendEObj=hasPendE?solsRef.find(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';}):null;
       var btnClsE='hora-btn'+(hasPendE?' pending':hasApprE?' approved':'')+(isErr?' hora-btn-long':'');
       bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
       bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--green);font-weight:600">ENTRADA</span>';
       if(fechaDifE)bloque+='<span style="font-size:.58rem;color:var(--ink3)">'+isoDisplay(fechaRealE)+'</span>';
-      bloque+='<button class="'+btnClsE+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+turno.entrada.hora+' <span class="pencil">✏</span></button>';
+      if(hasPendE){
+        bloque+='<button class="'+btnClsE+'" disabled title="Solicitud pendiente">'+turno.entrada.hora+' ⏳</button>';
+        if(isEmp&&solPendEObj)bloque+='<button class="btn-cancelar-sol" onclick="cancelarSolicitud(\''+esc(solPendEObj.id)+'\',true)">✕ Cancelar solicitud</button>';
+      }else{
+        bloque+='<button class="'+btnClsE+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+turno.entrada.hora+' <span class="pencil">✏</span></button>';
+      }
       bloque+='</div>';
     }
 
-    // Separador →
     bloque+='<div style="padding:0 10px;color:var(--ink3);font-size:.9rem;flex-shrink:0">→</div>';
 
     // SALIDA
     if(turno.salida){
+      var solPendSObj=hasPendS?solsRef.find(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';}):null;
       var btnClsS='hora-btn'+(hasPendS?' pending':hasApprS?' approved':'')+(isErr?' hora-btn-long':'');
       bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
       bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:600">SALIDA</span>';
       if(fechaDifS)bloque+='<span style="font-size:.58rem;color:var(--red);font-weight:600">'+isoDisplay(fechaRealS)+'</span>';
-      bloque+='<button class="'+btnClsS+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+turno.salida.hora+' <span class="pencil">✏</span></button>';
+      if(hasPendS){
+        bloque+='<button class="'+btnClsS+'" disabled title="Solicitud pendiente">'+turno.salida.hora+' ⏳</button>';
+        if(isEmp&&solPendSObj)bloque+='<button class="btn-cancelar-sol" onclick="cancelarSolicitud(\''+esc(solPendSObj.id)+'\',true)">✕ Cancelar solicitud</button>';
+      }else{
+        bloque+='<button class="'+btnClsS+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+turno.salida.hora+' <span class="pencil">✏</span></button>';
+      }
       bloque+='</div>';
-    } else {
+    }else{
       bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
       bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)">SALIDA</span>';
       bloque+='<span style="font-size:.72rem;color:var(--ink3)">—</span>';
@@ -1211,7 +1117,6 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
   if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  var turnos=emparejarTurnos(regs,fecha);
   if(calc.hayError)chips+='<span class="chip c-long">🔴 OJO! ERROR</span>';
   var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
   return'<div class="day-card '+cls+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
@@ -1283,7 +1188,6 @@ async function enviarSolicitud(){
   var horaSA=document.getElementById('sol-hora-salida-actual').value;
   var horaSN=normHora(document.getElementById('sol-hora-salida-nueva').value);
   var fechaSN=document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
-  // Usar fechaReal del fichaje (la que estaba en el sheet original)
   var fechaEOrig=turno.entrada?(turno.entrada.fechaReal||turno.fechaEntrada||solActual.fecha):(turno.fechaEntrada||solActual.fecha);
   var fechaSOrig=turno.salida?(turno.salida.fechaReal||turno.fechaSalida||solActual.fecha):(turno.fechaSalida||solActual.fecha);
   var cambiaE=horaEA!=='—'&&horaEN&&horaEN!==normHora(horaEA);
@@ -1330,16 +1234,6 @@ function renderEmp(emp){
   var cards=buildCardsConSemana(fechas,dmap,emp,false);
   return'<div class="emp-block" data-emp="'+esc(emp)+'"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
 }
-function buildSummaryGridAdmin(fechas,dmap,emp){
-  var hoy=new Date().toISOString().slice(0,10);
-  return'<div class="summary-grid">'+fechas.map(function(f){
-    var calc=calcDia(dmap[f]||[],f),statCls='',hoursDisplay='';
-    if(calc.hayError){statCls='has-error';hoursDisplay='<div class="sum-hours err">🔴 error</div>';}
-    else if(calc.mins!=null){hoursDisplay='<div class="sum-hours">'+minsToStr(calc.mins)+'</div>';}
-    else{hoursDisplay='<div class="sum-hours empty-day">sin datos</div>';}
-    return'<div class="sum-card '+statCls+(f===hoy?' today':'')+'" onclick="scrollToDay(\''+f+'\',\''+esc(emp)+'\')" title="'+dowName(f)+' '+isoDisplay(f)+'"><div class="sum-dow">'+dowName(f).slice(0,3)+'</div><div class="sum-date">'+isoDisplay(f)+'</div>'+hoursDisplay+'</div>';
-  }).join('')+'</div>';
-}
 function jumpToDateAdmin(emp){var el=document.getElementById('adm-date-jump-'+empId(emp));if(!el)return;var fecha=el.value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,emp);}
 
 // ── ADMIN SOLICITUDES ──
@@ -1370,7 +1264,6 @@ async function aprobar(id){
   }catch(e){err=e.message;}
   setLoader(false);
   if(ok){
-    // Actualizar datos en memoria y marcar en approvedSet
     if(editData[sol.emp]){
       var fO=safeISO(sol.fecha),fN=safeISO(sol.fechaNueva||sol.fecha),regs=editData[sol.emp][fO];
       if(regs){
@@ -1413,7 +1306,7 @@ async function rechazar(id){
 function refreshCard(emp,fecha){var id='dc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=(editData[emp]&&editData[emp][fecha])||[];var tmp=document.createElement('div');tmp.innerHTML=renderCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
 function refreshEmpCard(emp,fecha){var id='edc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=empEditData[fecha]||[];var tmp=document.createElement('div');tmp.innerHTML=renderEmpCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
 
-// ── EMPLEADO SOLICITUDES ──
+// ── EMPLEADO SOLICITUDES (CAMBIO 5: botón cancelar en pendientes) ──
 function erendSolicitudes(){
   var lista=esolicitudes.slice();
   var el=document.getElementById('esol-list');
@@ -1422,7 +1315,8 @@ function erendSolicitudes(){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    return'<div class="sol-card '+s.estado+'"><div class="sol-info"><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFN?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br><span>Tipo:</span> '+s.tipo+'<br><span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span></div></div>';
+    var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:6px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
+    return'<div class="sol-card '+s.estado+'"><div class="sol-info"><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFN?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br><span>Tipo:</span> '+s.tipo+'<br><span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+accionCancelar+'</div></div>';
   }).join('');
 }
 
@@ -1437,113 +1331,82 @@ function exportEmp(emp){
   XLSX.writeFile(wb,'Fichajes_'+sheetName.split(' ')[0]+'.xlsx');toast('Excel descargado','ok');
 }
 
-// ══════════════════════════════════════════════════════════
-// PIN: recuperación y cambio
-// ══════════════════════════════════════════════════════════
+// ── PIN: recuperación y cambio ──
+var pinRecEmail='';
+var pinRecNombre='';
 
-var pinRecEmail = '';  // email del usuario que está recuperando PIN
-var pinRecNombre = ''; // nombre para guardar
-
-function mostrarPanel(id) {
+function mostrarPanel(id){
   ['panel-login','panel-rec-email','panel-rec-codigo','panel-nuevo-pin','panel-cambiar-pin'].forEach(function(p){
     var el=document.getElementById(p);
-    if(el) el.style.display = (p===id)?'block':'none';
+    if(el)el.style.display=(p===id)?'block':'none';
   });
 }
-function mostrarLogin(){ mostrarPanel('panel-login'); }
+function mostrarLogin(){mostrarPanel('panel-login');}
 function mostrarRecuperar(){
   document.getElementById('rec-email').value='';
   document.getElementById('rec-err-email').className='login-err';
   mostrarPanel('panel-rec-email');
 }
 
-// ── Paso 1: enviar código por email ──
 async function enviarCodigoRecuperacion(){
-  var email = document.getElementById('rec-email').value.trim().toLowerCase();
-  var errEl = document.getElementById('rec-err-email');
-  errEl.className='login-err'; errEl.textContent='';
+  var email=document.getElementById('rec-email').value.trim().toLowerCase();
+  var errEl=document.getElementById('rec-err-email');
+  errEl.className='login-err';errEl.textContent='';
   if(!email){errEl.textContent='Introduce tu email.';errEl.className='login-err on';return;}
-
-  // Cargar empleados si no están
   if(!empleados.length){
     try{await loadEmpleados();}
     catch(e){errEl.textContent='Sin conexión con el servidor.';errEl.className='login-err on';return;}
   }
-
-  var emp = empleados.find(function(e){return e.email.toLowerCase()===email;});
+  var emp=empleados.find(function(e){return e.email.toLowerCase()===email;});
   if(!emp){errEl.textContent='Este email no está registrado.';errEl.className='login-err on';return;}
-
-  pinRecEmail  = email;
-  pinRecNombre = emp.nombre;
-
+  pinRecEmail=email;pinRecNombre=emp.nombre;
   var btn=document.getElementById('btn-rec-email');
-  btn.disabled=true; btn.textContent='Enviando...';
-
-  var res = await callScriptJSONP({action:'enviarCodigo', email:email, nombre:emp.nombre});
-  btn.disabled=false; btn.textContent='Enviar código';
-
+  btn.disabled=true;btn.textContent='Enviando...';
+  var res=await callScriptJSONP({action:'enviarCodigo',email:email,nombre:emp.nombre});
+  btn.disabled=false;btn.textContent='Enviar código';
   if(!res||res.ok===false){
     errEl.textContent='Error al enviar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');
-    errEl.className='login-err on'; return;
+    errEl.className='login-err on';return;
   }
-
   document.getElementById('rec-sub-codigo').textContent='Código enviado a '+email+'. Expira en 10 minutos.';
   document.getElementById('rec-codigo').value='';
   document.getElementById('rec-err-codigo').className='login-err';
   mostrarPanel('panel-rec-codigo');
 }
 
-// ── Paso 2: verificar código ──
 async function verificarCodigo(){
-  var codigo = document.getElementById('rec-codigo').value.trim();
-  var errEl  = document.getElementById('rec-err-codigo');
-  errEl.className='login-err'; errEl.textContent='';
+  var codigo=document.getElementById('rec-codigo').value.trim();
+  var errEl=document.getElementById('rec-err-codigo');
+  errEl.className='login-err';errEl.textContent='';
   if(!codigo||codigo.length<6){errEl.textContent='Introduce el código de 6 dígitos.';errEl.className='login-err on';return;}
-
   var btn=document.getElementById('btn-rec-codigo');
-  btn.disabled=true; btn.textContent='Verificando...';
-
-  var res = await callScriptJSONP({action:'verificarCodigo', email:pinRecEmail, codigo:codigo});
-  btn.disabled=false; btn.textContent='Verificar código';
-
-  if(!res||res.ok===false){
-    errEl.textContent='Código incorrecto o expirado.';
-    errEl.className='login-err on'; return;
-  }
-
+  btn.disabled=true;btn.textContent='Verificando...';
+  var res=await callScriptJSONP({action:'verificarCodigo',email:pinRecEmail,codigo:codigo});
+  btn.disabled=false;btn.textContent='Verificar código';
+  if(!res||res.ok===false){errEl.textContent='Código incorrecto o expirado.';errEl.className='login-err on';return;}
   document.getElementById('nuevo-pin').value='';
   document.getElementById('nuevo-pin2').value='';
   document.getElementById('rec-err-pin').className='login-err';
   mostrarPanel('panel-nuevo-pin');
 }
 
-// ── Paso 3: guardar PIN nuevo (recuperación) ──
 async function guardarNuevoPin(){
-  var pin1 = document.getElementById('nuevo-pin').value.trim();
-  var pin2 = document.getElementById('nuevo-pin2').value.trim();
-  var errEl = document.getElementById('rec-err-pin');
-  errEl.className='login-err'; errEl.textContent='';
+  var pin1=document.getElementById('nuevo-pin').value.trim();
+  var pin2=document.getElementById('nuevo-pin2').value.trim();
+  var errEl=document.getElementById('rec-err-pin');
+  errEl.className='login-err';errEl.textContent='';
   if(!pin1||pin1.length<4){errEl.textContent='El PIN debe tener al menos 4 dígitos.';errEl.className='login-err on';return;}
   if(pin1!==pin2){errEl.textContent='Los PINes no coinciden.';errEl.className='login-err on';return;}
-
   var btn=document.getElementById('btn-nuevo-pin');
-  btn.disabled=true; btn.textContent='Guardando...';
-
-  var res = await callScriptJSONP({action:'cambiarPin', email:pinRecEmail, nombre:pinRecNombre, pin:pin1});
-  btn.disabled=false; btn.textContent='Guardar PIN';
-
-  if(!res||res.ok===false){
-    errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');
-    errEl.className='login-err on'; return;
-  }
-
+  btn.disabled=true;btn.textContent='Guardando...';
+  var res=await callScriptJSONP({action:'cambiarPin',email:pinRecEmail,nombre:pinRecNombre,pin:pin1});
+  btn.disabled=false;btn.textContent='Guardar PIN';
+  if(!res||res.ok===false){errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
   toast('PIN actualizado ✓. Ya puedes entrar.','ok',3500);
-  // Refrescar lista de empleados y volver al login
   try{await loadEmpleados();}catch(e){}
   mostrarLogin();
 }
 
-// ── Cambiar PIN desde dentro de la app ──
 function abrirCambiarPin(){
   document.getElementById('cambiar-pin-actual').value='';
   document.getElementById('cambiar-pin-nuevo').value='';
@@ -1558,48 +1421,60 @@ function cerrarCambiarPin(){
 }
 
 async function ejecutarCambiarPin(){
-  var pinActual = document.getElementById('cambiar-pin-actual').value.trim();
-  var pin1      = document.getElementById('cambiar-pin-nuevo').value.trim();
-  var pin2      = document.getElementById('cambiar-pin-nuevo2').value.trim();
-  var errEl     = document.getElementById('cambiar-pin-err');
-  errEl.className='login-err'; errEl.textContent='';
-
+  var pinActual=document.getElementById('cambiar-pin-actual').value.trim();
+  var pin1=document.getElementById('cambiar-pin-nuevo').value.trim();
+  var pin2=document.getElementById('cambiar-pin-nuevo2').value.trim();
+  var errEl=document.getElementById('cambiar-pin-err');
+  errEl.className='login-err';errEl.textContent='';
   if(!pinActual){errEl.textContent='Introduce tu PIN actual.';errEl.className='login-err on';return;}
   if(!pin1||pin1.length<4){errEl.textContent='El PIN nuevo debe tener al menos 4 dígitos.';errEl.className='login-err on';return;}
   if(pin1!==pin2){errEl.textContent='Los PINes nuevos no coinciden.';errEl.className='login-err on';return;}
-
-  // Verificar PIN actual
   if(!session||!session.empData){errEl.textContent='Sesión no válida.';errEl.className='login-err on';return;}
-  if(String(session.empData.pin).trim()!==String(pinActual).trim()){
-    errEl.textContent='PIN actual incorrecto.';errEl.className='login-err on';return;
-  }
-
+  if(String(session.empData.pin).trim()!==String(pinActual).trim()){errEl.textContent='PIN actual incorrecto.';errEl.className='login-err on';return;}
   var btn=document.getElementById('btn-cambiar-pin');
-  btn.disabled=true; btn.textContent='Guardando...';
-
-  var res = await callScriptJSONP({action:'cambiarPin', email:session.email, nombre:session.nombre, pin:pin1});
-  btn.disabled=false; btn.textContent='Guardar nuevo PIN';
-
-  if(!res||res.ok===false){
-    errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');
-    errEl.className='login-err on'; return;
-  }
-
-  // Actualizar sesión con nuevo PIN
-  session.empData.pin = pin1;
+  btn.disabled=true;btn.textContent='Guardando...';
+  var res=await callScriptJSONP({action:'cambiarPin',email:session.email,nombre:session.nombre,pin:pin1});
+  btn.disabled=false;btn.textContent='Guardar nuevo PIN';
+  if(!res||res.ok===false){errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
+  session.empData.pin=pin1;
   saveSession();
   try{await loadEmpleados();}catch(e){}
   toast('PIN cambiado correctamente ✓','ok',3000);
   cerrarCambiarPin();
 }
 
+// ── CANCELAR SOLICITUD (CAMBIO 4) ──
+async function cancelarSolicitud(id,isEmp){
+  if(!confirm('¿Cancelar esta solicitud pendiente?'))return;
+  setLoader(true,'Cancelando...');
+  var ok=false,err='';
+  try{
+    var res=await callScriptJSONP({action:'cancelarSolicitud',id:id});
+    if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'Error al cancelar');
+    ok=true;
+  }catch(e){err=e.message;}
+  setLoader(false);
+  if(ok){
+    toast('Solicitud cancelada ✓','ok');
+    if(isEmp){
+      esolicitudes=await loadSolicitudes(session.nombre);
+      rebuildApprovedSet(esolicitudes);updateEbadge();
+      renderEmpFichajesTab();erendSolicitudes();
+    }else{
+      solicitudes=await loadSolicitudes();
+      rebuildApprovedSet(solicitudes);updateBadge();
+      renderReport();renderSolicitudes();
+    }
+  }else{toast('Error: '+err,'err');}
+}
+
 // ── PWA: registrar Service Worker ──
 if('serviceWorker' in navigator){
-  window.addEventListener('load', function(){
+  window.addEventListener('load',function(){
     navigator.serviceWorker.register('./sw.js').then(function(reg){
-      console.log('SW registrado:', reg.scope);
+      console.log('SW registrado:',reg.scope);
     }).catch(function(err){
-      console.log('SW error:', err);
+      console.log('SW error:',err);
     });
   });
 }
