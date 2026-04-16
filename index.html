@@ -251,8 +251,8 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .pin-step.active{background:var(--green2)}
 .cambiar-pin-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;font-size:.62rem;font-family:'DM Mono',monospace;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:5px;cursor:pointer;transition:background .15s}
 .cambiar-pin-btn:hover{background:rgba(255,255,255,.25)}
-.cfg-btn{background:none;border:none;color:rgba(255,255,255,.8);font-size:.85rem;cursor:pointer;padding:2px 4px;margin-left:4px;line-height:1;transition:transform .2s;}
-.cfg-btn:hover{transform:rotate(45deg);color:#fff}
+.cfg-btn{background:none;border:none;color:var(--ink3);font-size:1.1rem;cursor:pointer;padding:6px 8px;line-height:1;border-radius:6px;transition:all .2s;display:flex;align-items:center;}
+.cfg-btn:hover{transform:rotate(60deg);color:var(--green);background:var(--green3)}
 .cfg-menu{display:none;position:absolute;top:100%;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow2);z-index:200;min-width:160px;overflow:hidden;}
 .cfg-menu.open{display:block}
 .cfg-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;font-size:.7rem;font-family:'DM Mono',monospace;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;color:var(--ink2);text-align:left;transition:background .12s;}
@@ -351,15 +351,17 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
   <div class="nav-tab active" id="tab-informes" onclick="switchTab('informes')">📋 Informes</div>
   <div class="nav-tab" id="tab-solicitudes" onclick="switchTab('solicitudes')">🔄 Solicitudes <span class="nav-badge hidden" id="badge-sol">0</span></div>
 </nav>
-<nav class="nav" id="nav-emp" style="display:none">
+<nav class="nav" id="nav-emp" style="display:none;align-items:center">
   <div class="nav-tab active" id="etab-fichajes" onclick="eswitch('fichajes')">📋 Mis fichajes</div>
   <div class="nav-tab" id="etab-solicitudes" onclick="eswitch('solicitudes')" style="flex-direction:column;align-items:center;gap:2px">
     🔄 Mis solicitudes
     <span class="nav-badge hidden" id="ebadge-sol"></span>
   </div>
-  <div class="nav-tab" id="etab-calendario" style="position:relative" onclick="eswitch('calendario')">📅 Calendario
-    <button class="cfg-btn" onclick="event.stopPropagation();toggleCfgMenu()" title="Configuración">⚙</button>
+  <div class="nav-tab" id="etab-calendario" onclick="eswitch('calendario')">📅 Calendario</div>
+  <div style="margin-left:auto;position:relative;padding:0 1rem">
+    <button class="cfg-btn" style="font-size:1.1rem;color:var(--ink3);padding:6px" onclick="toggleCfgMenu()" title="Configuración">⚙</button>
     <div class="cfg-menu" id="cfg-menu">
+      <button onclick="toggleCfgMenu();eswitch('solicitudes')">🔄 Mis solicitudes <span id="cfg-badge-sol" style="display:none;background:var(--red);color:#fff;font-size:.55rem;padding:1px 6px;border-radius:10px;font-weight:500;margin-left:4px"></span></button>
       <button onclick="toggleCfgMenu();abrirCambiarPin()">🔑 Cambiar PIN</button>
       <button onclick="doLogout()">🚪 Salir</button>
     </div>
@@ -1268,7 +1270,18 @@ function jumpToDateAdmin(emp){var el=document.getElementById('adm-date-jump-'+em
 
 // ── ADMIN SOLICITUDES ──
 function updateBadge(){var pend=solicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('badge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
-function updateEbadge(){var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('ebadge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
+function updateEbadge(){
+  var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;
+  var b=document.getElementById('ebadge-sol');
+  var b2=document.getElementById('cfg-badge-sol');
+  if(pend>0){
+    b.textContent=pend;b.classList.remove('hidden');
+    if(b2){b2.textContent=pend;b2.style.display='inline';}
+  }else{
+    b.classList.add('hidden');
+    if(b2)b2.style.display='none';
+  }
+}
 function filtrarSol(f,btn){solFiltro=f;document.querySelectorAll('#page-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderSolicitudes();}
 function renderSolicitudes(){
   var lista=solicitudes.filter(function(s){return solFiltro==='todas'||s.estado===solFiltro;});
@@ -1348,7 +1361,7 @@ function erendSolicitudes(){
     var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
     var fechaStr=hayFN?isoDisplay(fechaISO)+' → '+isoDisplay(fechaNuevaISO):isoDisplay(fechaISO);
     var horaStr=normHora(s.horaActual)+(s.horaNueva&&normHora(s.horaNueva)!==normHora(s.horaActual)?' → '+normHora(s.horaNueva):'');
-    var fechaReqLimpia=(s.fechaReq||'').replace(/^Solicitad[ao] el /i,'').trim();
+    var fechaReqLimpia=(s.fechaReq||'').replace(/^Solicitad[ao] el /i,'').replace(/\s*(GMT|UTC)[+-]?\d*(\s*\(.*?\))?$/i,'').replace(/\s*\(hora de verano.*?\)/i,'').replace(/\s*\(hora est.*?\)/i,'').trim();
     return'<div class="sol-card '+s.estado+'">'
       +'<div class="sol-info">'
         +'<div style="font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:.4rem">'+s.tipo+'</div>'
