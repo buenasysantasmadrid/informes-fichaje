@@ -716,8 +716,15 @@ function switchTab(tab){
   document.querySelectorAll('#admin-shell .page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('page-'+tab).classList.add('active');
+  // Ocultar sidebar en solicitudes, mostrar en informes
+  var side=document.getElementById('side-admin');
   if(tab==='solicitudes'){
+    side.style.display='none';
+    document.getElementById('admin-shell').style.gridTemplateColumns='1fr';
     loadSolicitudes().then(function(data){solicitudes=data;updateBadge();renderSolicitudes();});
+  }else{
+    side.style.display='';
+    document.getElementById('admin-shell').style.gridTemplateColumns='';
   }
 }
 function eswitch(tab){
