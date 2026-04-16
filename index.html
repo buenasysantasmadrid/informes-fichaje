@@ -1037,9 +1037,13 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     var fechaDifE=fechaRealE!==fecha;
     var fechaDifS=fechaRealS!==fecha;
 
-    var hasPendE=turno.entrada&&solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';});
+    var hasPendE=turno.entrada&&solsRef.some(function(s){
+      return s.emp===emp&&s.tipo==='ENTRADA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&(safeISO(s.fecha)===turno.fechaEntrada||safeISO(s.fecha)===fechaRealE);
+    });
     var hasApprE=turno.entrada&&approvedSet.has(emp+'|'+turno.fechaEntrada+'|ENTRADA|'+normHora(turno.entrada.hora));
-    var hasPendS=turno.salida&&solsRef.some(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';});
+    var hasPendS=turno.salida&&solsRef.some(function(s){
+      return s.emp===emp&&s.tipo==='SALIDA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&(safeISO(s.fecha)===turno.fechaSalida||safeISO(s.fecha)===fechaRealS);
+    });
     var hasApprS=turno.salida&&approvedSet.has(emp+'|'+turno.fechaSalida+'|SALIDA|'+normHora(turno.salida.hora));
 
     var brd=isErr?'border:1px solid #f5c6c2':'border:1px solid var(--border)';
@@ -1152,6 +1156,16 @@ function abrirModalSol(emp,fecha,isEmp,turnoIdx){
   var turnos=emparejarTurnos(regs,fecha);
   var turno=turnos[turnoIdx]||turnos[0];
   if(!turno){toast('No se encontró el turno','err');return;}
+  // Barrera: bloquear si ya hay solicitud pendiente para este turno
+  var solsRef=isEmp?esolicitudes:solicitudes;
+  var fechaRealE=turno.entrada?(turno.entrada.fechaReal||fecha):fecha;
+  var fechaRealS=turno.salida?(turno.salida.fechaReal||fecha):fecha;
+  if(turno.entrada&&solsRef.some(function(s){return s.emp===emp&&s.tipo==='ENTRADA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&(safeISO(s.fecha)===fecha||safeISO(s.fecha)===fechaRealE);})){
+    toast('Ya hay una solicitud pendiente para esta entrada. Cancélala primero.','err',3500);return;
+  }
+  if(turno.salida&&solsRef.some(function(s){return s.emp===emp&&s.tipo==='SALIDA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&(safeISO(s.fecha)===fecha||safeISO(s.fecha)===fechaRealS);})){
+    toast('Ya hay una solicitud pendiente para esta salida. Cancélala primero.','err',3500);return;
+  }
   solActual={emp:emp,fecha:fecha,turnoIdx:turnoIdx,turno:turno};
   document.getElementById('sol-emp').value=emp;
   document.getElementById('modal-turno-info').textContent='Turno '+(turnoIdx+1)+' de '+turnos.length+' · '+isoDisplay(fecha)+(turnos.length>1?' (hay '+turnos.length+' turnos este día)':'');
