@@ -1490,7 +1490,7 @@ async function verificarCodigo(){
   if(!codigo||codigo.length<6){errEl.textContent='Introduce el código de 6 dígitos.';errEl.className='login-err on';return;}
   var btn=document.getElementById('btn-rec-codigo');
   btn.disabled=true;btn.textContent='Verificando...';
-  var res=await callScriptJSONP({action:'verificarCodigo',email:pinRecEmail,codigo:codigo});
+  var res=await apiGetJSONPWithRetry({action:'verificarCodigo',email:pinRecEmail,codigo:codigo,data:JSON.stringify({action:'verificarCodigo',email:pinRecEmail,codigo:codigo})},40000,3);
   btn.disabled=false;btn.textContent='Verificar código';
   if(!res||res.ok===false){errEl.textContent='Código incorrecto o expirado.';errEl.className='login-err on';return;}
   document.getElementById('nuevo-pin').value='';
@@ -1508,7 +1508,7 @@ async function guardarNuevoPin(){
   if(pin1!==pin2){errEl.textContent='Los PINes no coinciden.';errEl.className='login-err on';return;}
   var btn=document.getElementById('btn-nuevo-pin');
   btn.disabled=true;btn.textContent='Guardando...';
-  var res=await callScriptJSONP({action:'cambiarPin',email:pinRecEmail,nombre:pinRecNombre,pin:pin1});
+  var res=await apiGetJSONPWithRetry({action:'cambiarPin',email:pinRecEmail,nombre:pinRecNombre,pin:pin1,data:JSON.stringify({action:'cambiarPin',email:pinRecEmail,nombre:pinRecNombre,pin:pin1})},40000,3);
   btn.disabled=false;btn.textContent='Guardar PIN';
   if(!res||res.ok===false){errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
   toast('PIN actualizado ✓. Ya puedes entrar.','ok',3500);
@@ -1542,7 +1542,7 @@ async function ejecutarCambiarPin(){
   if(String(session.empData.pin).trim()!==String(pinActual).trim()){errEl.textContent='PIN actual incorrecto.';errEl.className='login-err on';return;}
   var btn=document.getElementById('btn-cambiar-pin');
   btn.disabled=true;btn.textContent='Guardando...';
-  var res=await callScriptJSONP({action:'cambiarPin',email:session.email,nombre:session.nombre,pin:pin1});
+  var res=await apiGetJSONPWithRetry({action:'cambiarPin',email:session.email,nombre:session.nombre,pin:pin1,data:JSON.stringify({action:'cambiarPin',email:session.email,nombre:session.nombre,pin:pin1})},40000,3);
   btn.disabled=false;btn.textContent='Guardar nuevo PIN';
   if(!res||res.ok===false){errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
   session.empData.pin=pin1;
