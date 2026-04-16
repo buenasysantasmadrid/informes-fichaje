@@ -1299,7 +1299,20 @@ async function enviarSolicitud(){
   if(envioOk){
     toast('Solicitud'+(toSend.length>1?'es':'')+' enviada'+(toSend.length>1?'s':'')+' ✓','ok');
     try{
-      if(solIsEmp){esolicitudes=await loadSolicitudes(session.nombre);rebuildApprovedSet(esolicitudes);updateEbadge();setTimeout(function(){eswitch('solicitudes');},600);}
+      if(solIsEmp){
+        esolicitudes=await loadSolicitudes(session.nombre);
+        rebuildApprovedSet(esolicitudes);
+        updateEbadge();
+        // Refrescar Mis fichajes para mostrar el ⏳ sin recargar la página
+        try{
+          var tablaTodos=await fetchSheet(session.nombre);
+          var fichajesTodos=parsearTabla(tablaTodos);
+          empEditData=construirDmap(fichajesTodos);
+        }catch(e3){}
+        renderEmpFichajesTab();
+        erendSolicitudes();
+        setTimeout(function(){eswitch('solicitudes');},400);
+      }
       else{solicitudes=await loadSolicitudes();rebuildApprovedSet(solicitudes);updateBadge();setTimeout(function(){switchTab('solicitudes');},600);}
     }catch(e2){}
   }else{toast('Error al enviar: '+envioErr,'err');}
