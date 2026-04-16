@@ -343,8 +343,6 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
       <span class="sdot spin" id="sdot"></span>
       <span id="stxt" style="font-size:.62rem">Conectando...</span>
     </div>
-    <button class="cambiar-pin-btn" id="btn-cambiar-pin-hdr" style="display:none" onclick="abrirCambiarPin()">🔑 PIN</button>
-    <button class="btn-logout" onclick="doLogout()">Salir</button>
   </div>
 </header>
 <nav class="nav" id="nav-admin" style="display:none">
@@ -353,11 +351,10 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 </nav>
 <nav class="nav" id="nav-emp" style="display:none;align-items:center">
   <div class="nav-tab active" id="etab-fichajes" onclick="eswitch('fichajes')">📋 Mis fichajes</div>
-  <div class="nav-tab" id="etab-solicitudes" onclick="eswitch('solicitudes')" style="flex-direction:column;align-items:center;gap:2px">
-    🔄 Mis solicitudes
-    <span class="nav-badge hidden" id="ebadge-sol"></span>
-  </div>
   <div class="nav-tab" id="etab-calendario" onclick="eswitch('calendario')">📅 Calendario</div>
+  <!-- etab-solicitudes oculto pero funcional -->
+  <div id="etab-solicitudes" style="display:none"></div>
+  <span class="nav-badge hidden" id="ebadge-sol" style="display:none"></span>
   <div style="margin-left:auto;position:relative;padding:0 1rem">
     <button class="cfg-btn" style="font-size:1.1rem;color:var(--ink3);padding:6px" onclick="toggleCfgMenu()" title="Configuración">⚙</button>
     <div class="cfg-menu" id="cfg-menu">
@@ -627,7 +624,6 @@ function doLogout(){
   document.getElementById('hdr-emp-info').classList.remove('on');
   document.getElementById('hdr-user-admin').style.display='none';
   document.getElementById('nav-admin').style.display='none';
-  document.getElementById('btn-cambiar-pin-hdr').style.display='none';
   document.getElementById('nav-emp').style.display='none';
   document.getElementById('admin-shell').style.display='none';
   document.getElementById('emp-shell').style.display='none';
@@ -672,7 +668,6 @@ async function initEmpleado(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('on');
   document.getElementById('hdr-emp-nombre').textContent=session.nombre;
-  document.getElementById('btn-cambiar-pin-hdr').style.display='flex';
   document.getElementById('hdr-emp-info').classList.add('on');
   document.getElementById('nav-emp').style.display='flex';
   document.getElementById('emp-shell').style.display='block';
