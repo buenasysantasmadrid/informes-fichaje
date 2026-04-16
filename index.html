@@ -251,6 +251,13 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 .pin-step.active{background:var(--green2)}
 .cambiar-pin-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;font-size:.62rem;font-family:'DM Mono',monospace;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:5px;cursor:pointer;transition:background .15s}
 .cambiar-pin-btn:hover{background:rgba(255,255,255,.25)}
+.cfg-btn{background:none;border:none;color:rgba(255,255,255,.8);font-size:.85rem;cursor:pointer;padding:2px 4px;margin-left:4px;line-height:1;transition:transform .2s;}
+.cfg-btn:hover{transform:rotate(45deg);color:#fff}
+.cfg-menu{display:none;position:absolute;top:100%;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow2);z-index:200;min-width:160px;overflow:hidden;}
+.cfg-menu.open{display:block}
+.cfg-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;font-size:.7rem;font-family:'DM Mono',monospace;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;color:var(--ink2);text-align:left;transition:background .12s;}
+.cfg-menu button:last-child{border-bottom:none}
+.cfg-menu button:hover{background:var(--green3);color:var(--green)}
 @media(max-width:720px){
   .shell{grid-template-columns:1fr}
   .side{border-right:none;border-bottom:1px solid var(--border)}
@@ -320,7 +327,7 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 <div id="app">
 <header class="hdr">
   <div class="hdr-left">
-    <div class="hdr-logo"><span class="dot"></span>Fichajes · RRHH</div>
+    <div class="hdr-logo"><span class="dot"></span>Fichajes · Buenas y Santas</div>
     <div class="hdr-emp-info" id="hdr-emp-info">
       <div class="hdr-emp-nombre" id="hdr-emp-nombre">—</div>
       <div class="hdr-emp-rol">Empleado/a</div>
@@ -346,8 +353,17 @@ body{font-family:'DM Mono',monospace;color:var(--ink);min-height:100vh}
 </nav>
 <nav class="nav" id="nav-emp" style="display:none">
   <div class="nav-tab active" id="etab-fichajes" onclick="eswitch('fichajes')">📋 Mis fichajes</div>
-  <div class="nav-tab" id="etab-solicitudes" onclick="eswitch('solicitudes')">🔄 Mis solicitudes <span class="nav-badge hidden" id="ebadge-sol">0</span></div>
-  <div class="nav-tab" id="etab-calendario" onclick="eswitch('calendario')">📅 Calendario</div>
+  <div class="nav-tab" id="etab-solicitudes" onclick="eswitch('solicitudes')" style="flex-direction:column;align-items:center;gap:2px">
+    🔄 Mis solicitudes
+    <span class="nav-badge hidden" id="ebadge-sol"></span>
+  </div>
+  <div class="nav-tab" id="etab-calendario" style="position:relative" onclick="eswitch('calendario')">📅 Calendario
+    <button class="cfg-btn" onclick="event.stopPropagation();toggleCfgMenu()" title="Configuración">⚙</button>
+    <div class="cfg-menu" id="cfg-menu">
+      <button onclick="toggleCfgMenu();abrirCambiarPin()">🔑 Cambiar PIN</button>
+      <button onclick="doLogout()">🚪 Salir</button>
+    </div>
+  </div>
 </nav>
 <div class="shell" id="admin-shell" style="display:none">
   <aside class="side" id="side-admin">
@@ -1320,7 +1336,7 @@ async function rechazar(id){
 function refreshCard(emp,fecha){var id='dc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=(editData[emp]&&editData[emp][fecha])||[];var tmp=document.createElement('div');tmp.innerHTML=renderCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
 function refreshEmpCard(emp,fecha){var id='edc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=empEditData[fecha]||[];var tmp=document.createElement('div');tmp.innerHTML=renderEmpCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
 
-// ── EMPLEADO SOLICITUDES (CAMBIO 5: botón cancelar en pendientes) ──
+// ── EMPLEADO SOLICITUDES ──
 function erendSolicitudes(){
   var lista=esolicitudes.slice();
   var el=document.getElementById('esol-list');
@@ -1329,8 +1345,20 @@ function erendSolicitudes(){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:6px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
-    return'<div class="sol-card '+s.estado+'"><div class="sol-info"><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFN?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br><span>Tipo:</span> '+s.tipo+'<br><span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+accionCancelar+'</div></div>';
+    var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
+    var fechaStr=hayFN?isoDisplay(fechaISO)+' → '+isoDisplay(fechaNuevaISO):isoDisplay(fechaISO);
+    var horaStr=normHora(s.horaActual)+(s.horaNueva&&normHora(s.horaNueva)!==normHora(s.horaActual)?' → '+normHora(s.horaNueva):'');
+    var fechaReqLimpia=(s.fechaReq||'').replace(/^Solicitad[ao] el /i,'').trim();
+    return'<div class="sol-card '+s.estado+'">'
+      +'<div class="sol-info">'
+        +'<div style="font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:.4rem">'+s.tipo+'</div>'
+        +'<div style="font-size:.77rem;color:var(--ink);font-weight:500;margin-bottom:.2rem">📅 '+fechaStr+'</div>'
+        +'<div style="font-size:.77rem;color:var(--ink);margin-bottom:.5rem">🕐 '+horaStr+'</div>'
+        +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.67rem;color:var(--ink3);margin-bottom:.4rem;font-style:italic">'+esc(s.motivo)+'</div>':'')
+        +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqLimpia+'</div>'
+      +'</div>'
+      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+accionCancelar+'</div>'
+    +'</div>';
   }).join('');
 }
 
@@ -1456,6 +1484,16 @@ async function ejecutarCambiarPin(){
   toast('PIN cambiado correctamente ✓','ok',3000);
   cerrarCambiarPin();
 }
+
+// ── MENÚ CONFIGURACIÓN ──
+function toggleCfgMenu(){
+  var m=document.getElementById('cfg-menu');
+  m.classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  var m=document.getElementById('cfg-menu');
+  if(m&&!m.closest('.nav-tab').contains(e.target))m.classList.remove('open');
+});
 
 // ── CANCELAR SOLICITUD (CAMBIO 4) ──
 async function cancelarSolicitud(id,isEmp){
