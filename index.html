@@ -21,6 +21,7 @@
   --red:#dc2626; --red-soft:#fef2f2;
   --amber:#d97706; --amber-soft:#fffbeb;
   --blue:#2563eb; --blue-soft:#eff6ff;
+  --teal:#0d9488; --teal-soft:#f0fdfa; --teal-border:#99f6e4;
   --border:#e5e7eb; --border2:#d1d5db;
   --shadow:0 1px 3px rgba(0,0,0,.08); --shadow2:0 8px 24px rgba(0,0,0,.10);
   --r:10px;
@@ -177,7 +178,6 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .t-out{color:var(--blue);font-weight:500}
 .t-long{color:var(--red);font-weight:600}
 .turno-sep td{border-top:2px dashed var(--border2)!important;padding-top:10px!important}
-/* CAMBIO 2: pending bloqueado + btn cancelar */
 .hora-btn{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:5px;font-family:'Outfit',sans-serif;font-size:.76rem;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--ink);transition:all .15s}
 .hora-btn:hover{background:var(--green3);border-color:var(--green4);color:var(--green)}
 .hora-btn .pencil{font-size:.7rem;opacity:0;transition:opacity .15s}
@@ -189,6 +189,14 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .hora-btn-long:hover{background:var(--red-soft)!important;border-color:#f5c6c2!important;color:var(--red)!important}
 .btn-cancelar-sol{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:.6rem;font-family:'Outfit',sans-serif;background:#fff;color:var(--red);border:1px solid #f5c6c2;border-radius:4px;cursor:pointer;transition:all .12s;margin-top:3px;}
 .btn-cancelar-sol:hover{background:var(--red-soft);}
+/* ── SOLICITUDES: sección tabs dentro de la página ── */
+.sol-section-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:1.5rem;}
+.sol-section-tab{padding:.65rem 1.4rem;font-size:.72rem;font-family:'Outfit',sans-serif;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;display:flex;align-items:center;gap:7px;}
+.sol-section-tab:hover{color:var(--ink2)}
+.sol-section-tab.active{color:var(--green);border-bottom-color:var(--green)}
+.sol-section{display:none}
+.sol-section.active{display:block}
+/* ── SOLICITUDES cabecera ── */
 .sol-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem}
 .sol-title{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;color:var(--green-acc)}
 .sol-filters{display:flex;gap:6px;flex-wrap:wrap}
@@ -199,6 +207,12 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .sol-card.aprobada{border-left:3px solid var(--green)}
 .sol-card.rechazada{border-left:3px solid var(--red);opacity:.6}
 .sol-card.pendiente{border-left:3px solid var(--amber)}
+/* Vacation card styling */
+.vac-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr auto;gap:.75rem;align-items:start}
+.vac-card.aprobada{border-left:3px solid var(--teal)}
+.vac-card.rechazada{border-left:3px solid var(--red);opacity:.6}
+.vac-card.pendiente{border-left:3px solid var(--amber)}
+.vac-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.65rem;background:var(--teal-soft);color:var(--teal);border:1px solid var(--teal-border);font-weight:500;margin-bottom:.5rem}
 .sol-emp{font-family:'Fraunces',serif;font-size:1rem;font-weight:400;color:var(--green-acc);margin-bottom:.2rem}
 .sol-detail{font-size:.7rem;color:var(--ink2);line-height:1.8}
 .sol-detail span{color:var(--ink3)}
@@ -212,6 +226,22 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .btn-aprobar:hover{opacity:.85}
 .btn-rechazar{padding:5px 14px;font-size:.65rem;font-family:'Outfit',sans-serif;background:#fff;color:var(--red);border:1px solid #f5c6c2;border-radius:5px;cursor:pointer;transition:all .15s}
 .btn-rechazar:hover{background:var(--red-soft)}
+/* ── VACACIONES empleado: página ── */
+.vac-page-wrap{padding-top:.5rem}
+.vac-page-title{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:400;color:var(--teal);margin-bottom:.3rem}
+.vac-page-sub{font-size:.68rem;color:var(--ink3);margin-bottom:1.5rem}
+.vac-form-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.5rem;max-width:500px;box-shadow:var(--shadow);margin-bottom:2rem}
+.vac-form-row{display:flex;flex-direction:column;gap:4px;margin-bottom:.9rem}
+.vac-form-row label{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.vac-form-row input,.vac-form-row textarea{padding:9px 11px;font-family:'Outfit',sans-serif;font-size:.78rem;background:var(--cream);border:1.5px solid var(--border2);border-radius:7px;color:var(--ink);outline:none;transition:border-color .15s}
+.vac-form-row input:focus,.vac-form-row textarea:focus{border-color:var(--teal);background:#fff}
+.vac-form-row textarea{resize:vertical;min-height:70px}
+.vac-date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-vac-enviar{width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s,box-shadow .15s;box-shadow:0 2px 8px rgba(13,148,136,.25);margin-top:.5rem}
+.btn-vac-enviar:hover{background:#0f766e}
+.btn-vac-enviar:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.vac-hist-title{font-family:'Outfit',sans-serif;font-size:1rem;font-weight:600;color:var(--ink2);margin-bottom:.9rem}
+/* ── MODAL ── */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(28,43,30,.45);z-index:800;align-items:center;justify-content:center}
 .modal-ov.on{display:flex}
 .modal-box{background:#fff;border-radius:12px;padding:2rem;max-width:540px;width:92%;box-shadow:0 20px 60px rgba(28,43,30,.2);max-height:90vh;overflow-y:auto}
@@ -243,28 +273,23 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .role-admin{background:rgba(255,255,255,.2);color:rgba(255,255,255,.9)}
 .pin-link{font-size:.65rem;color:var(--green);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:'Outfit',sans-serif;margin-top:.5rem;display:block;text-align:center;padding:4px 0}
 .pin-link:hover{color:var(--green-acc)}
-.pin-screen{display:none;flex-direction:column;gap:.9rem}
-.pin-screen.on{display:flex}
-.pin-steps{display:flex;gap:6px;margin-bottom:.25rem}
-.pin-step{flex:1;height:3px;border-radius:2px;background:var(--border2)}
-.pin-step.done{background:var(--green)}
-.pin-step.active{background:var(--green2)}
 .cambiar-pin-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;font-size:.62rem;font-family:'Outfit',sans-serif;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:5px;cursor:pointer;transition:background .15s}
 .cambiar-pin-btn:hover{background:rgba(255,255,255,.25)}
 .cfg-btn{background:none;border:none;color:var(--ink3);font-size:1.1rem;cursor:pointer;padding:6px 8px;line-height:1;border-radius:6px;transition:all .2s;display:flex;align-items:center;}
 .cfg-btn:hover{color:var(--green);background:var(--green3)}
-.cfg-menu{display:none;position:absolute;top:100%;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow2);z-index:200;min-width:160px;overflow:hidden;}
+.cfg-menu{display:none;position:absolute;top:100%;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow2);z-index:200;min-width:180px;overflow:hidden;}
 .cfg-menu.open{display:block}
 .cfg-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;font-size:.7rem;font-family:'Outfit',sans-serif;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;color:var(--ink2);text-align:left;transition:background .12s;}
 .cfg-menu button:last-child{border-bottom:none}
 .cfg-menu button:hover{background:var(--green3);color:var(--green)}
+.cfg-menu button.vac-menu-btn:hover{background:var(--teal-soft);color:var(--teal)}
 @media(max-width:720px){
   .shell{grid-template-columns:1fr}
   .side{border-right:none;border-bottom:1px solid var(--border)}
   .main{padding:1.25rem}
   .emp-main{padding:1.25rem}
   .day-dow{width:90px}.day-date{width:72px}
-  .sol-card{grid-template-columns:1fr}
+  .sol-card,.vac-card{grid-template-columns:1fr}
   .summary-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
   .hdr-emp-info{display:none !important}
   .cal-picker{max-width:100%}
@@ -346,15 +371,19 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
     </div>
   </div>
 </header>
+
+<!-- NAV ADMIN -->
 <nav class="nav" id="nav-admin" style="display:none">
   <div class="nav-tab active" id="tab-informes" onclick="switchTab('informes')">📋 Informes</div>
   <div class="nav-tab" id="tab-solicitudes" onclick="switchTab('solicitudes')">🔄 Solicitudes <span class="nav-badge hidden" id="badge-sol">0</span></div>
 </nav>
+
+<!-- NAV EMPLEADO -->
 <nav class="nav" id="nav-emp" style="display:none;align-items:center">
   <div class="nav-tab active" id="etab-fichajes" onclick="eswitch('fichajes')">📋 Mis fichajes</div>
   <div class="nav-tab" id="etab-calendario" onclick="eswitch('calendario')">📅 Calendario</div>
-  <!-- etab-solicitudes oculto pero funcional -->
   <div id="etab-solicitudes" style="display:none"></div>
+  <div id="etab-vacaciones" style="display:none"></div>
   <span class="nav-badge hidden" id="ebadge-sol" style="display:none"></span>
   <div style="margin-left:auto;position:relative;padding:0 1rem">
     <button class="cfg-btn" onclick="toggleCfgMenu()" title="Menú">
@@ -366,11 +395,14 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
     </button>
     <div class="cfg-menu" id="cfg-menu">
       <button onclick="toggleCfgMenu();eswitch('solicitudes')">🔄 Mis solicitudes <span id="cfg-badge-sol" style="display:none;background:var(--red);color:#fff;font-size:.55rem;padding:1px 6px;border-radius:10px;font-weight:500;margin-left:4px"></span></button>
+      <button class="vac-menu-btn" onclick="toggleCfgMenu();eswitch('vacaciones')">🌴 Vacaciones</button>
       <button onclick="toggleCfgMenu();abrirCambiarPin()">🔑 Cambiar PIN</button>
       <button onclick="doLogout()">🚪 Salir</button>
     </div>
   </div>
 </nav>
+
+<!-- SHELL ADMIN -->
 <div class="shell" id="admin-shell" style="display:none">
   <aside class="side" id="side-admin">
     <div>
@@ -408,19 +440,42 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
       <div id="report" style="display:none"></div>
     </div>
     <div class="page" id="page-solicitudes">
-      <div class="sol-header">
-        <div class="sol-title">Solicitudes de cambio</div>
-        <div class="sol-filters">
-          <button class="flt-btn active" onclick="filtrarSol('todas',this)">Todas</button>
-          <button class="flt-btn" onclick="filtrarSol('pendiente',this)">Pendientes</button>
-          <button class="flt-btn" onclick="filtrarSol('aprobada',this)">Aprobadas</button>
-          <button class="flt-btn" onclick="filtrarSol('rechazada',this)">Rechazadas</button>
-        </div>
+      <!-- Tabs dentro de Solicitudes (horas / vacaciones) -->
+      <div class="sol-section-tabs">
+        <div class="sol-section-tab active" id="adm-stab-horas" onclick="admSwitchSol('horas',this)">🔄 Cambios de hora <span class="nav-badge hidden" id="adm-badge-horas" style="background:var(--red);color:#fff;font-size:.55rem;padding:1px 6px;border-radius:10px;font-weight:500;margin-left:4px">0</span></div>
+        <div class="sol-section-tab" id="adm-stab-vacaciones" onclick="admSwitchSol('vacaciones',this)">🌴 Vacaciones <span class="nav-badge hidden" id="adm-badge-vac" style="background:var(--amber);color:#fff;font-size:.55rem;padding:1px 6px;border-radius:10px;font-weight:500;margin-left:4px">0</span></div>
       </div>
-      <div id="sol-list"></div>
+      <!-- Sección: cambios de hora -->
+      <div class="sol-section active" id="adm-sec-horas">
+        <div class="sol-header">
+          <div class="sol-title">Solicitudes de cambio de hora</div>
+          <div class="sol-filters">
+            <button class="flt-btn active" onclick="filtrarSol('todas',this)">Todas</button>
+            <button class="flt-btn" onclick="filtrarSol('pendiente',this)">Pendientes</button>
+            <button class="flt-btn" onclick="filtrarSol('aprobada',this)">Aprobadas</button>
+            <button class="flt-btn" onclick="filtrarSol('rechazada',this)">Rechazadas</button>
+          </div>
+        </div>
+        <div id="sol-list"></div>
+      </div>
+      <!-- Sección: vacaciones -->
+      <div class="sol-section" id="adm-sec-vacaciones">
+        <div class="sol-header">
+          <div class="sol-title">Solicitudes de vacaciones</div>
+          <div class="sol-filters">
+            <button class="flt-btn active" onclick="filtrarVac('todas',this)">Todas</button>
+            <button class="flt-btn" onclick="filtrarVac('pendiente',this)">Pendientes</button>
+            <button class="flt-btn" onclick="filtrarVac('aprobada',this)">Aprobadas</button>
+            <button class="flt-btn" onclick="filtrarVac('rechazada',this)">Rechazadas</button>
+          </div>
+        </div>
+        <div id="vac-list-admin"></div>
+      </div>
     </div>
   </main>
 </div>
+
+<!-- SHELL EMPLEADO -->
 <div class="emp-shell" id="emp-shell" style="display:none">
   <div class="emp-main">
     <div class="page active" id="epage-fichajes">
@@ -445,10 +500,38 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
         <div id="ereport" style="display:none;width:100%;margin-top:1.5rem"></div>
       </div>
     </div>
+    <!-- PÁGINA VACACIONES EMPLEADO -->
+    <div class="page" id="epage-vacaciones">
+      <div class="vac-page-wrap">
+        <div class="vac-page-title">🌴 Vacaciones</div>
+        <div class="vac-page-sub">Solicita tus días de vacaciones. Te notificaremos por email cuando se gestione.</div>
+        <div class="vac-form-box">
+          <div class="vac-date-row">
+            <div class="vac-form-row">
+              <label>Fecha inicio</label>
+              <input type="date" id="vac-desde">
+            </div>
+            <div class="vac-form-row">
+              <label>Fecha fin</label>
+              <input type="date" id="vac-hasta">
+            </div>
+          </div>
+          <div class="vac-form-row" style="margin-top:.4rem">
+            <label>Motivo <span style="color:var(--ink3);text-transform:none;letter-spacing:0">(opcional)</span></label>
+            <textarea id="vac-motivo" placeholder="Ej: vacaciones de verano, asunto personal..."></textarea>
+          </div>
+          <div class="login-err" id="vac-err" style="margin-top:.5rem"></div>
+          <button class="btn-vac-enviar" id="btn-vac-enviar" onclick="enviarSolicitudVacaciones()">Solicitar vacaciones</button>
+        </div>
+        <div class="vac-hist-title">Mis solicitudes anteriores</div>
+        <div id="evac-list" class="sol-list"></div>
+      </div>
+    </div>
   </div>
 </div>
-</div>
+</div><!-- /#app -->
 
+<!-- MODAL SOLICITUD CAMBIO HORA -->
 <div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
   <div class="modal-box">
     <div class="modal-title">Solicitud de cambio de turno</div>
@@ -513,11 +596,12 @@ const MAX_TURNO_MINS = 12 * 60;
 
 let SCRIPT_URL = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec';
 let session=null,empleados=[],editData={},solicitudes=[],esolicitudes=[];
-let solFiltro='todas';
+let solicitudesVac=[],esolicitudesVac=[];
+let solFiltro='todas',vacFiltro='todas';
 let currentSel,currentDesde,currentHasta,empEditData={},empEditDataCal={},solActual=null;
 let approvedSet = new Set();
 
-// ── PERSISTENCIA (localStorage: sesión permanente) ──
+// ── PERSISTENCIA ──
 function saveSession(){if(session)localStorage.setItem('bys_session',JSON.stringify(session));}
 function clearSession(){localStorage.removeItem('bys_session');}
 function restoreSession(){try{var s=localStorage.getItem('bys_session');if(s)return JSON.parse(s);}catch(e){}return null;}
@@ -589,6 +673,15 @@ async function loadSolicitudes(empNombre){
     return Array.isArray(data)?data:[];
   }catch(e){return[];}
 }
+async function loadSolicitudesVacaciones(empNombre){
+  if(!SCRIPT_URL)return[];
+  try{
+    var params={action:'getSolicitudesVacaciones'};
+    if(empNombre)params.emp=empNombre;
+    var data=await apiGetJSONPWithRetry(params,30000,3);
+    return Array.isArray(data)?data:[];
+  }catch(e){return[];}
+}
 function rebuildApprovedSet(sols){
   approvedSet=new Set();
   sols.forEach(function(s){
@@ -616,7 +709,7 @@ async function doLogin(){
   if(!empleados.length){
     btn.textContent='Conectando...';
     try{await loadEmpleados();}
-    catch(e){err.textContent='No se puede conectar con el servidor. Comprueba tu conexión.';err.classList.add('on');btn.disabled=false;btn.textContent='Entrar';return;}
+    catch(e){err.textContent='No se puede conectar con el servidor.';err.classList.add('on');btn.disabled=false;btn.textContent='Entrar';return;}
   }
   var emp=empleados.find(function(e){return e.email.toLowerCase()===email;});
   if(!emp||String(emp.pin).trim()!==String(pin).trim()){
@@ -631,6 +724,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!document.ge
 function doLogout(){
   clearSession();
   session=null;empleados=[];editData={};solicitudes=[];esolicitudes=[];empEditData={};empEditDataCal={};currentSel=null;approvedSet=new Set();
+  solicitudesVac=[];esolicitudesVac=[];
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').classList.remove('on');
   document.getElementById('login-email').value='';
@@ -655,11 +749,8 @@ window.addEventListener('load',async function(){
 async function initAdmin(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('on');
-  // hdr-user-admin hidden permanently
   document.getElementById('nav-admin').style.display='flex';
   document.getElementById('admin-shell').style.display='grid';
-  // status bar hidden
-  // document.getElementById('status-bar-hdr').style.display='flex';
   var bla=document.getElementById('btn-logout-admin');if(bla)bla.style.display='inline-flex';
   document.querySelectorAll('#admin-shell .page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('page-informes').classList.add('active');
@@ -673,6 +764,7 @@ async function initAdmin(){
     if(!empleados.length)await loadEmpleados();
     renderEmpleados();
     solicitudes=await loadSolicitudes();
+    solicitudesVac=await loadSolicitudesVacaciones();
     updateBadge();
     setStatus('ok','Conectado');
   }catch(e){setStatus('err','Sin conexión');}
@@ -688,9 +780,11 @@ async function initEmpleado(){
   document.getElementById('emp-shell').style.display='block';
   eswitch('fichajes');
   esolicitudes=await loadSolicitudes(session.nombre);
+  esolicitudesVac=await loadSolicitudesVacaciones(session.nombre);
   rebuildApprovedSet(esolicitudes);
   updateEbadge();
   erendSolicitudes();
+  erendVacaciones();
   var hoy=new Date();
   initCalPicker('emp-cal-container','ef-desde','ef-hasta',hoy.getFullYear(),hoy.getMonth());
   var p1=new Date(hoy.getFullYear(),hoy.getMonth(),1);
@@ -716,26 +810,51 @@ function switchTab(tab){
   document.querySelectorAll('#admin-shell .page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('page-'+tab).classList.add('active');
-  // Ocultar sidebar en solicitudes, mostrar en informes
   var side=document.getElementById('side-admin');
   if(tab==='solicitudes'){
     side.style.display='none';
     document.getElementById('admin-shell').style.gridTemplateColumns='1fr';
-    loadSolicitudes().then(function(data){solicitudes=data;updateBadge();renderSolicitudes();});
+    // Cargar ambas
+    Promise.all([loadSolicitudes(),loadSolicitudesVacaciones()]).then(function(results){
+      solicitudes=results[0];solicitudesVac=results[1];
+      updateBadge();renderSolicitudes();renderVacacionesAdmin();
+    });
   }else{
     side.style.display='';
     document.getElementById('admin-shell').style.gridTemplateColumns='';
   }
 }
+
+// Sub-tabs dentro de Solicitudes (admin)
+function admSwitchSol(sec,btn){
+  document.querySelectorAll('.sol-section-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.sol-section').forEach(function(s){s.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('adm-sec-'+sec).classList.add('active');
+  if(sec==='vacaciones'&&!solicitudesVac.length){
+    loadSolicitudesVacaciones().then(function(data){solicitudesVac=data;renderVacacionesAdmin();});
+  }
+}
+
 function eswitch(tab){
   document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#emp-shell .page').forEach(function(p){p.classList.remove('active');});
-  document.getElementById('etab-'+tab).classList.add('active');
-  document.getElementById('epage-'+tab).classList.add('active');
+  // las páginas que no tienen nav-tab
+  ['epage-fichajes','epage-solicitudes','epage-calendario','epage-vacaciones'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.classList.remove('active');
+  });
+  // activar nav-tab si existe
+  var navTab=document.getElementById('etab-'+tab);
+  if(navTab)navTab.classList.add('active');
+  var page=document.getElementById('epage-'+tab);
+  if(page)page.classList.add('active');
   if(tab==='solicitudes'){
     loadSolicitudes(session.nombre).then(function(data){
       esolicitudes=data;rebuildApprovedSet(esolicitudes);updateEbadge();erendSolicitudes();
     });
+  }
+  if(tab==='vacaciones'){
+    loadSolicitudesVacaciones(session.nombre).then(function(data){esolicitudesVac=data;erendVacaciones();});
   }
 }
 
@@ -837,6 +956,11 @@ function isoDisplay(iso){if(!iso)return'';var p=iso.split('-');return p[2]+'/'+p
 function dowName(iso){var p=iso.split('-').map(Number);return DIAS_TILDE[new Date(p[0],p[1]-1,p[2]).getDay()];}
 function diaSiguiente(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function diaAnterior(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()-1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function diasEntreISO(desde,hasta){
+  var p1=desde.split('-').map(Number),p2=hasta.split('-').map(Number);
+  var d1=new Date(p1[0],p1[1]-1,p1[2]),d2=new Date(p2[0],p2[1]-1,p2[2]);
+  return Math.round((d2-d1)/86400000)+1;
+}
 
 // ── TURNOS ──
 function construirDmap(fichajes){
@@ -990,19 +1114,13 @@ function aplicarPeriodoRapido(val){
   var hoy=new Date();
   var desde,hasta;
   if(val==='este-mes'){
-    desde=new Date(hoy.getFullYear(),hoy.getMonth(),1);
-    hasta=hoy;
+    desde=new Date(hoy.getFullYear(),hoy.getMonth(),1);hasta=hoy;
   }else if(val==='mes-anterior'){
-    desde=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);
-    hasta=new Date(hoy.getFullYear(),hoy.getMonth(),0);
+    desde=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);hasta=new Date(hoy.getFullYear(),hoy.getMonth(),0);
   }else if(val==='esta-semana'){
-    var d=hoy.getDay()||7;
-    desde=new Date(hoy);desde.setDate(hoy.getDate()-d+1);
-    hasta=hoy;
+    var d=hoy.getDay()||7;desde=new Date(hoy);desde.setDate(hoy.getDate()-d+1);hasta=hoy;
   }else if(val==='semana-anterior'){
-    var d=hoy.getDay()||7;
-    hasta=new Date(hoy);hasta.setDate(hoy.getDate()-d);
-    desde=new Date(hasta);desde.setDate(hasta.getDate()-6);
+    var d=hoy.getDay()||7;hasta=new Date(hoy);hasta.setDate(hoy.getDate()-d);desde=new Date(hasta);desde.setDate(hasta.getDate()-6);
   }
   function fmt(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
   document.getElementById('f-desde').value=fmt(desde);
@@ -1100,7 +1218,7 @@ function scrollToDay(fecha,empKey){
 }
 function jumpToDate(empKey){var inputId=empKey==='_emp'?'emp-date-jump':'adm-date-jump';var fecha=document.getElementById(inputId).value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,empKey);}
 
-// ── BUILD FILAS TURNOS (CAMBIO 3: bloquear pendientes + botón cancelar) ──
+// ── BUILD FILAS TURNOS ──
 function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   var turnos=emparejarTurnos(regs,fecha);
   if(!turnos.length)return'<p style="font-size:.7rem;color:var(--ink3)">Sin registros.</p>';
@@ -1115,20 +1233,13 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     var fechaRealS=turno.salida?(turno.salida.fechaReal||fecha):fecha;
     var fechaDifE=fechaRealE!==fecha;
     var fechaDifS=fechaRealS!==fecha;
-
-    var hasPendE=turno.entrada&&solsRef.some(function(s){
-      return s.emp===emp&&s.tipo==='ENTRADA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&(safeISO(s.fecha)===turno.fechaEntrada||safeISO(s.fecha)===fechaRealE);
-    });
+    var hasPendE=turno.entrada&&solsRef.some(function(s){return s.emp===emp&&s.tipo==='ENTRADA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&(safeISO(s.fecha)===turno.fechaEntrada||safeISO(s.fecha)===fechaRealE);});
     var hasApprE=turno.entrada&&approvedSet.has(emp+'|'+turno.fechaEntrada+'|ENTRADA|'+normHora(turno.entrada.hora));
-    var hasPendS=turno.salida&&solsRef.some(function(s){
-      return s.emp===emp&&s.tipo==='SALIDA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&(safeISO(s.fecha)===turno.fechaSalida||safeISO(s.fecha)===fechaRealS);
-    });
+    var hasPendS=turno.salida&&solsRef.some(function(s){return s.emp===emp&&s.tipo==='SALIDA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&(safeISO(s.fecha)===turno.fechaSalida||safeISO(s.fecha)===fechaRealS);});
     var hasApprS=turno.salida&&approvedSet.has(emp+'|'+turno.fechaSalida+'|SALIDA|'+normHora(turno.salida.hora));
-
     var brd=isErr?'border:1px solid #f5c6c2':'border:1px solid var(--border)';
     var bg=isErr?'background:var(--red-soft)':'background:#fff';
     var bloque='<div style="border-radius:8px;'+brd+';overflow:hidden;'+bg+';margin-bottom:'+(t<turnosRev.length-1?'10px':'0')+'">';
-
     var hdrBg=isErr?'background:#fad7d4':'background:var(--cream2)';
     var hdrBrd=isErr?'border-bottom:1px solid #f5c6c2':'border-bottom:1px solid var(--border)';
     bloque+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 12px;'+hdrBg+';'+hdrBrd+'">';
@@ -1136,10 +1247,7 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     if(turnoMins!=null)bloque+='<span style="font-size:.6rem;color:var(--ink3)">'+minsToStr(turnoMins)+'</span>';
     if(isErr)bloque+='<span style="font-size:.63rem;color:var(--red);font-weight:700">🔴 OJO! ERROR</span>';
     bloque+='</div>';
-
     bloque+='<div style="display:flex;align-items:center;gap:0;padding:8px 12px;">';
-
-    // ENTRADA
     if(turno.entrada){
       var solPendEObj=hasPendE?solsRef.find(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';}):null;
       var btnClsE='hora-btn'+(hasPendE?' pending':hasApprE?' approved':'')+(isErr?' hora-btn-long':'');
@@ -1154,10 +1262,7 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
       }
       bloque+='</div>';
     }
-
     bloque+='<div style="padding:0 10px;color:var(--ink3);font-size:.9rem;flex-shrink:0">→</div>';
-
-    // SALIDA
     if(turno.salida){
       var solPendSObj=hasPendS?solsRef.find(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';}):null;
       var btnClsS='hora-btn'+(hasPendS?' pending':hasApprS?' approved':'')+(isErr?' hora-btn-long':'');
@@ -1177,7 +1282,6 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
       bloque+='<span style="font-size:.72rem;color:var(--ink3)">—</span>';
       bloque+='</div>';
     }
-
     bloque+='</div></div>';
     bloques.push(bloque);
   }
@@ -1235,7 +1339,6 @@ function abrirModalSol(emp,fecha,isEmp,turnoIdx){
   var turnos=emparejarTurnos(regs,fecha);
   var turno=turnos[turnoIdx]||turnos[0];
   if(!turno){toast('No se encontró el turno','err');return;}
-  // Barrera: bloquear si ya hay solicitud pendiente para este turno
   var solsRef=isEmp?esolicitudes:solicitudes;
   var fechaRealE=turno.entrada?(turno.entrada.fechaReal||fecha):fecha;
   var fechaRealS=turno.salida?(turno.salida.fechaReal||fecha):fecha;
@@ -1310,7 +1413,6 @@ async function enviarSolicitud(){
         esolicitudes=await loadSolicitudes(session.nombre);
         rebuildApprovedSet(esolicitudes);
         updateEbadge();
-        // Refrescar Mis fichajes para mostrar el ⏳ sin recargar la página
         try{
           var tablaTodos=await fetchSheet(session.nombre);
           var fichajesTodos=parsearTabla(tablaTodos);
@@ -1323,6 +1425,77 @@ async function enviarSolicitud(){
       else{solicitudes=await loadSolicitudes();rebuildApprovedSet(solicitudes);updateBadge();setTimeout(function(){switchTab('solicitudes');},600);}
     }catch(e2){}
   }else{toast('Error al enviar: '+envioErr,'err');}
+}
+
+// ── SOLICITUDES VACACIONES (EMPLEADO) ──
+async function enviarSolicitudVacaciones(){
+  var desde=document.getElementById('vac-desde').value;
+  var hasta=document.getElementById('vac-hasta').value;
+  var motivo=document.getElementById('vac-motivo').value.trim();
+  var errEl=document.getElementById('vac-err');
+  errEl.style.display='none';errEl.classList.remove('on');
+  if(!desde){errEl.textContent='Introduce la fecha de inicio.';errEl.style.display='block';errEl.classList.add('on');return;}
+  if(!hasta){errEl.textContent='Introduce la fecha de fin.';errEl.style.display='block';errEl.classList.add('on');return;}
+  if(desde>hasta){errEl.textContent='La fecha de fin debe ser posterior a la de inicio.';errEl.style.display='block';errEl.classList.add('on');return;}
+  var btn=document.getElementById('btn-vac-enviar');
+  btn.disabled=true;btn.textContent='Enviando...';
+  var res=await callScriptJSONP({
+    action:'guardarSolicitudVacaciones',
+    emp:session.nombre,
+    desde:desde,
+    hasta:hasta,
+    motivo:motivo||'',
+    emailEmp:session.email
+  });
+  btn.disabled=false;btn.textContent='Solicitar vacaciones';
+  if(!res||res.ok===false){
+    errEl.textContent='Error al enviar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');
+    errEl.style.display='block';errEl.classList.add('on');return;
+  }
+  toast('Solicitud de vacaciones enviada ✓','ok');
+  document.getElementById('vac-desde').value='';
+  document.getElementById('vac-hasta').value='';
+  document.getElementById('vac-motivo').value='';
+  esolicitudesVac=await loadSolicitudesVacaciones(session.nombre);
+  erendVacaciones();
+}
+
+function erendVacaciones(){
+  var lista=esolicitudesVac;
+  var el=document.getElementById('evac-list');
+  if(!el)return;
+  if(!lista||!lista.length){el.innerHTML='<div class="empty" style="height:20vh"><div class="empty-ico">🌴</div><h2>Sin solicitudes</h2><p>Aún no has solicitado vacaciones.</p></div>';return;}
+  // Ya vienen ordenadas (más recientes primero desde el script)
+  el.innerHTML=lista.map(function(s){
+    var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
+    var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
+    var desdeISO=safeISO(s.desde),hastaISO=safeISO(s.hasta);
+    var dias=diasEntreISO(desdeISO,hastaISO);
+    var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitudVac(\''+s.id+'\')">✕ Cancelar</button>':'';
+    var fechaReqLimpia=(s.fechaReq||'').replace(/\s*(GMT|UTC)[+-]?\d*(\s*\(.*?\))?$/i,'').replace(/\s*\(hora de verano.*?\)/i,'').replace(/\s*\(hora est.*?\)/i,'').trim();
+    return'<div class="vac-card '+s.estado+'">'
+      +'<div class="sol-info">'
+        +'<div class="vac-badge">🌴 Vacaciones</div>'
+        +'<div style="font-size:.85rem;font-weight:600;color:var(--ink);margin-bottom:.3rem">'+isoDisplay(desdeISO)+' → '+isoDisplay(hastaISO)+'</div>'
+        +'<div style="font-size:.7rem;color:var(--ink3);margin-bottom:.3rem">'+dias+' día'+(dias!==1?'s':'')+' naturales</div>'
+        +(s.motivo?'<div style="font-size:.67rem;color:var(--ink3);font-style:italic;margin-bottom:.3rem">'+esc(s.motivo)+'</div>':'')
+        +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqLimpia+'</div>'
+      +'</div>'
+      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+accionCancelar+'</div>'
+    +'</div>';
+  }).join('');
+}
+
+async function cancelarSolicitudVac(id){
+  if(!confirm('¿Cancelar esta solicitud de vacaciones?'))return;
+  setLoader(true,'Cancelando...');
+  var res=await callScriptJSONP({action:'cancelarSolicitudVacaciones',id:id});
+  setLoader(false);
+  if(res&&res.ok){
+    toast('Solicitud cancelada ✓','ok');
+    esolicitudesVac=await loadSolicitudesVacaciones(session.nombre);
+    erendVacaciones();
+  }else{toast('Error: '+(res&&res.msg?res.msg:'inténtalo'),'err');}
 }
 
 // ── ADMIN RENDER ──
@@ -1342,32 +1515,88 @@ function renderEmp(emp){
 }
 function jumpToDateAdmin(emp){var el=document.getElementById('adm-date-jump-'+empId(emp));if(!el)return;var fecha=el.value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,emp);}
 
-// ── ADMIN SOLICITUDES ──
-function updateBadge(){var pend=solicitudes.filter(function(s){return s.estado==='pendiente';}).length;var b=document.getElementById('badge-sol');if(pend>0){b.textContent=pend;b.classList.remove('hidden');}else{b.classList.add('hidden');}}
+// ── BADGES ──
+function updateBadge(){
+  var pendHoras=solicitudes.filter(function(s){return s.estado==='pendiente';}).length;
+  var pendVac=solicitudesVac.filter(function(s){return s.estado==='pendiente';}).length;
+  var total=pendHoras+pendVac;
+  var b=document.getElementById('badge-sol');
+  if(total>0){b.textContent=total;b.classList.remove('hidden');}else{b.classList.add('hidden');}
+  // sub-badges
+  var bH=document.getElementById('adm-badge-horas');
+  if(pendHoras>0){bH.textContent=pendHoras;bH.classList.remove('hidden');}else{bH.classList.add('hidden');}
+  var bV=document.getElementById('adm-badge-vac');
+  if(pendVac>0){bV.textContent=pendVac;bV.classList.remove('hidden');}else{bV.classList.add('hidden');}
+}
 function updateEbadge(){
   var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;
   var b=document.getElementById('ebadge-sol');
   var b2=document.getElementById('cfg-badge-sol');
-  if(pend>0){
-    b.textContent=pend;b.classList.remove('hidden');
-    if(b2){b2.textContent=pend;b2.style.display='inline';}
-  }else{
-    b.classList.add('hidden');
-    if(b2)b2.style.display='none';
-  }
+  if(pend>0){b.textContent=pend;b.classList.remove('hidden');if(b2){b2.textContent=pend;b2.style.display='inline';}}
+  else{b.classList.add('hidden');if(b2)b2.style.display='none';}
 }
-function filtrarSol(f,btn){solFiltro=f;document.querySelectorAll('#page-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderSolicitudes();}
+
+// ── SOLICITUDES ADMIN (HORAS) ──
+// Orden: más recientes primero → ya vienen en ese orden del script (insertRowAfter(1)),
+// simplemente NO invertimos: el array ya es [más_reciente, ..., más_antiguo]
+function filtrarSol(f,btn){
+  solFiltro=f;
+  document.querySelectorAll('#adm-sec-horas .flt-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');renderSolicitudes();
+}
 function renderSolicitudes(){
   var lista=solicitudes.filter(function(s){return solFiltro==='todas'||s.estado===solFiltro;});
   var el=document.getElementById('sol-list');
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>'+(solFiltro==='todas'?'Aquí aparecen todas las solicitudes enviadas por los empleados.':'No hay solicitudes con este filtro.')+'</p></div>';return;}
-  el.innerHTML=lista.slice().reverse().map(function(s){
+  // Ya en orden: las últimas insertadas son las primeras en el array (insertRowAfter(1))
+  el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
     var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
     return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'"><div class="sol-info"><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFN?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br><span>Tipo:</span> '+s.tipo+'<br><span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
   }).join('');
+}
+
+// ── VACACIONES ADMIN ──
+function filtrarVac(f,btn){
+  vacFiltro=f;
+  document.querySelectorAll('#adm-sec-vacaciones .flt-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');renderVacacionesAdmin();
+}
+function renderVacacionesAdmin(){
+  var lista=solicitudesVac.filter(function(s){return vacFiltro==='todas'||s.estado===vacFiltro;});
+  var el=document.getElementById('vac-list-admin');
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">🌴</div><h2>Sin solicitudes de vacaciones</h2><p>'+(vacFiltro==='todas'?'Los empleados aún no han solicitado vacaciones.':'No hay solicitudes con este filtro.')+'</p></div>';return;}
+  el.innerHTML=lista.map(function(s){
+    var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
+    var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
+    var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobarVac(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazarVac(\''+s.id+'\')">Rechazar</button>':'';
+    var desdeISO=safeISO(s.desde),hastaISO=safeISO(s.hasta);
+    var dias=diasEntreISO(desdeISO,hastaISO);
+    return'<div class="vac-card '+s.estado+'"><div class="sol-info"><div class="vac-badge">🌴 Vacaciones</div><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Desde:</span> <strong>'+isoDisplay(desdeISO)+'</strong><br><span>Hasta:</span> <strong>'+isoDisplay(hastaISO)+'</strong><br><span>Días:</span> '+dias+(s.motivo?'<br><span>Motivo:</span> '+esc(s.motivo):'')+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
+  }).join('');
+}
+
+async function aprobarVac(id){
+  var sol=solicitudesVac.find(function(s){return s.id===id;});if(!sol)return;
+  setLoader(true,'Aprobando...');
+  var res=await callScriptJSONP({action:'aprobarSolicitudVacaciones',id:sol.id,emp:sol.emp,desde:safeISO(sol.desde),hasta:safeISO(sol.hasta),emailEmp:sol.emailEmp||''});
+  setLoader(false);
+  if(res&&res.ok){
+    toast('Vacaciones aprobadas ✓','ok');
+    solicitudesVac=await loadSolicitudesVacaciones();updateBadge();renderVacacionesAdmin();
+  }else{toast('Error: '+(res&&res.msg?res.msg:'inténtalo'),'err');}
+}
+async function rechazarVac(id){
+  var sol=solicitudesVac.find(function(s){return s.id===id;});if(!sol)return;
+  setLoader(true,'Rechazando...');
+  var res=await callScriptJSONP({action:'rechazarSolicitudVacaciones',id:sol.id,emp:sol.emp,desde:safeISO(sol.desde),hasta:safeISO(sol.hasta),emailEmp:sol.emailEmp||''});
+  setLoader(false);
+  if(res&&res.ok){
+    toast('Solicitud rechazada');
+    solicitudesVac=await loadSolicitudesVacaciones();updateBadge();renderVacacionesAdmin();
+  }else{toast('Error: '+(res&&res.msg?res.msg:'inténtalo'),'err');}
 }
 
 async function aprobar(id){
@@ -1421,14 +1650,13 @@ async function rechazar(id){
 }
 
 function refreshCard(emp,fecha){var id='dc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=(editData[emp]&&editData[emp][fecha])||[];var tmp=document.createElement('div');tmp.innerHTML=renderCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
-function refreshEmpCard(emp,fecha){var id='edc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=empEditData[fecha]||[];var tmp=document.createElement('div');tmp.innerHTML=renderEmpCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
 
-// ── EMPLEADO SOLICITUDES ──
+// ── EMPLEADO SOLICITUDES HORAS ──
 function erendSolicitudes(){
   var lista=esolicitudes.slice();
   var el=document.getElementById('esol-list');
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>Pulsa cualquier hora en Mis fichajes para solicitar una corrección.</p></div>';return;}
-  el.innerHTML=lista.slice().reverse().map(function(s){
+  el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
@@ -1463,11 +1691,9 @@ function exportEmp(emp){
 // ── PIN: recuperación y cambio ──
 var pinRecEmail='';
 var pinRecNombre='';
-
 function mostrarPanel(id){
   ['panel-login','panel-rec-email','panel-rec-codigo','panel-nuevo-pin','panel-cambiar-pin'].forEach(function(p){
-    var el=document.getElementById(p);
-    if(el)el.style.display=(p===id)?'block':'none';
+    var el=document.getElementById(p);if(el)el.style.display=(p===id)?'block':'none';
   });
 }
 function mostrarLogin(){mostrarPanel('panel-login');}
@@ -1476,7 +1702,6 @@ function mostrarRecuperar(){
   document.getElementById('rec-err-email').className='login-err';
   mostrarPanel('panel-rec-email');
 }
-
 async function enviarCodigoRecuperacion(){
   var email=document.getElementById('rec-email').value.trim().toLowerCase();
   var errEl=document.getElementById('rec-err-email');
@@ -1484,7 +1709,6 @@ async function enviarCodigoRecuperacion(){
   if(!email){errEl.textContent='Introduce tu email.';errEl.className='login-err on';return;}
   var btn=document.getElementById('btn-rec-email');
   btn.disabled=true;btn.textContent='Buscando...';
-  // Siempre recargar empleados frescos para recuperación
   try{await loadEmpleados();}
   catch(e){errEl.textContent='Sin conexión con el servidor.';errEl.className='login-err on';btn.disabled=false;btn.textContent='Enviar código';return;}
   btn.textContent='Enviando...';
@@ -1493,16 +1717,12 @@ async function enviarCodigoRecuperacion(){
   pinRecEmail=email;pinRecNombre=emp.nombre;
   var res=await apiGetJSONPWithRetry({action:'enviarCodigo',email:email,nombre:emp.nombre,data:JSON.stringify({action:'enviarCodigo',email:email,nombre:emp.nombre})},40000,3);
   btn.disabled=false;btn.textContent='Enviar código';
-  if(!res||res.ok===false){
-    errEl.textContent='Error al enviar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');
-    errEl.className='login-err on';return;
-  }
+  if(!res||res.ok===false){errEl.textContent='Error al enviar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
   document.getElementById('rec-sub-codigo').textContent='Código enviado a '+email+'. Expira en 10 minutos.';
   document.getElementById('rec-codigo').value='';
   document.getElementById('rec-err-codigo').className='login-err';
   mostrarPanel('panel-rec-codigo');
 }
-
 async function verificarCodigo(){
   var codigo=document.getElementById('rec-codigo').value.trim();
   var errEl=document.getElementById('rec-err-codigo');
@@ -1518,7 +1738,6 @@ async function verificarCodigo(){
   document.getElementById('rec-err-pin').className='login-err';
   mostrarPanel('panel-nuevo-pin');
 }
-
 async function guardarNuevoPin(){
   var pin1=document.getElementById('nuevo-pin').value.trim();
   var pin2=document.getElementById('nuevo-pin2').value.trim();
@@ -1535,7 +1754,6 @@ async function guardarNuevoPin(){
   try{await loadEmpleados();}catch(e){}
   mostrarLogin();
 }
-
 function abrirCambiarPin(){
   document.getElementById('cambiar-pin-actual').value='';
   document.getElementById('cambiar-pin-nuevo').value='';
@@ -1548,7 +1766,6 @@ function cerrarCambiarPin(){
   document.getElementById('login-screen').style.display='none';
   mostrarPanel('panel-login');
 }
-
 async function ejecutarCambiarPin(){
   var pinActual=document.getElementById('cambiar-pin-actual').value.trim();
   var pin1=document.getElementById('cambiar-pin-nuevo').value.trim();
@@ -1565,8 +1782,7 @@ async function ejecutarCambiarPin(){
   var res=await apiGetJSONPWithRetry({action:'cambiarPin',email:session.email,nombre:session.nombre,pin:pin1,data:JSON.stringify({action:'cambiarPin',email:session.email,nombre:session.nombre,pin:pin1})},40000,3);
   btn.disabled=false;btn.textContent='Guardar nuevo PIN';
   if(!res||res.ok===false){errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
-  session.empData.pin=pin1;
-  saveSession();
+  session.empData.pin=pin1;saveSession();
   try{await loadEmpleados();}catch(e){}
   toast('PIN cambiado correctamente ✓','ok',3000);
   cerrarCambiarPin();
@@ -1574,18 +1790,15 @@ async function ejecutarCambiarPin(){
 
 // ── MENÚ CONFIGURACIÓN ──
 function toggleCfgMenu(){
-  var m=document.getElementById('cfg-menu');
-  m.classList.toggle('open');
+  var m=document.getElementById('cfg-menu');m.classList.toggle('open');
 }
 document.addEventListener('click',function(e){
   var m=document.getElementById('cfg-menu');
   var btn=document.querySelector('.cfg-btn');
-  if(m&&m.classList.contains('open')&&!m.contains(e.target)&&btn&&!btn.contains(e.target)){
-    m.classList.remove('open');
-  }
+  if(m&&m.classList.contains('open')&&!m.contains(e.target)&&btn&&!btn.contains(e.target)){m.classList.remove('open');}
 });
 
-// ── CANCELAR SOLICITUD (CAMBIO 4) ──
+// ── CANCELAR SOLICITUD HORAS ──
 async function cancelarSolicitud(id,isEmp){
   if(!confirm('¿Cancelar esta solicitud pendiente?'))return;
   setLoader(true,'Cancelando...');
@@ -1610,14 +1823,12 @@ async function cancelarSolicitud(id,isEmp){
   }else{toast('Error: '+err,'err');}
 }
 
-// ── PWA: registrar Service Worker ──
+// ── PWA ──
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
     navigator.serviceWorker.register('./sw.js').then(function(reg){
       console.log('SW registrado:',reg.scope);
-    }).catch(function(err){
-      console.log('SW error:',err);
-    });
+    }).catch(function(err){console.log('SW error:',err);});
   });
 }
 </script>
