@@ -241,6 +241,21 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .btn-vac-enviar:hover{background:#0f766e}
 .btn-vac-enviar:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
 .vac-hist-title{font-family:'Outfit',sans-serif;font-size:1rem;font-weight:600;color:var(--ink2);margin-bottom:.9rem}
+/* ── BALANCE DE VACACIONES ── */
+.vac-balance-box{background:#fff;border:1px solid var(--teal-border);border-radius:14px;padding:1.25rem 1.5rem;max-width:600px;margin-bottom:1.75rem;box-shadow:0 2px 12px rgba(13,148,136,.08)}
+.vac-balance-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:400;color:var(--teal);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.vac-balance-table{width:100%;border-collapse:collapse}
+.vac-balance-table th{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:4px 10px 6px;text-align:right;border-bottom:1px solid var(--border);font-weight:500}
+.vac-balance-table th:first-child{text-align:left}
+.vac-balance-table td{padding:7px 10px;font-size:.78rem;border-bottom:1px solid var(--cream3);vertical-align:middle;text-align:right}
+.vac-balance-table td:first-child{text-align:left;color:var(--ink2);font-weight:500}
+.vac-balance-table tr:last-child td{border-bottom:none}
+.vac-balance-table .val-pos{color:var(--green-acc);font-weight:500}
+.vac-balance-table .val-neg{color:var(--red);font-weight:500}
+.vac-balance-table .val-zero{color:var(--ink3)}
+.vac-total-row td{background:var(--teal-soft)!important;font-weight:700!important;font-size:.85rem!important;border-top:2px solid var(--teal-border)!important;color:var(--teal)!important}
+.vac-anio-row td{background:var(--cream2);font-size:.74rem;color:var(--ink3)}
+.vac-loading{font-size:.72rem;color:var(--ink3);padding:.5rem 0}
 /* ── MODAL ── */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(28,43,30,.45);z-index:800;align-items:center;justify-content:center}
 .modal-ov.on{display:flex}
@@ -505,6 +520,8 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
       <div class="vac-page-wrap">
         <div class="vac-page-title">🌴 Vacaciones</div>
         <div class="vac-page-sub">Solicita tus días de vacaciones. Te notificaremos por email cuando se gestione.</div>
+        <!-- BALANCE DE VACACIONES (cargado dinámicamente) -->
+        <div id="vac-balance-container"></div>
         <div class="vac-form-box">
           <div class="vac-date-row">
             <div class="vac-form-row">
@@ -785,6 +802,7 @@ async function initEmpleado(){
   updateEbadge();
   erendSolicitudes();
   erendVacaciones();
+  loadYRenderBalanceVacaciones();
   var hoy=new Date();
   initCalPicker('emp-cal-container','ef-desde','ef-hasta',hoy.getFullYear(),hoy.getMonth());
   var p1=new Date(hoy.getFullYear(),hoy.getMonth(),1);
@@ -855,6 +873,7 @@ function eswitch(tab){
   }
   if(tab==='vacaciones'){
     loadSolicitudesVacaciones(session.nombre).then(function(data){esolicitudesVac=data;erendVacaciones();});
+    loadYRenderBalanceVacaciones();
   }
 }
 
@@ -1821,6 +1840,64 @@ async function cancelarSolicitud(id,isEmp){
       renderReport();renderSolicitudes();
     }
   }else{toast('Error: '+err,'err');}
+}
+
+// ── BALANCE DE VACACIONES ──
+async function loadYRenderBalanceVacaciones(){
+  var el=document.getElementById('vac-balance-container');
+  if(!el)return;
+  el.innerHTML='<div class="vac-loading">Cargando tu balance de vacaciones...</div>';
+  try{
+    var data=await apiGetJSONPWithRetry({action:'getVacaciones',nombre:session.nombre},30000,3);
+    if(!data||data.error){el.innerHTML='';return;}
+    el.innerHTML=renderBalanceVacaciones(data);
+  }catch(e){el.innerHTML='';}
+}
+
+function renderBalanceVacaciones(d){
+  if(!d)return'';
+  var unidad=d.unidad||'horas';
+  var conceptos=d.conceptos||[];
+  if(!conceptos.length&&d.anoAnterior.valor===null&&d.total===null)return'';
+
+  function fmtVal(v,u){
+    if(v===null||v===undefined)return'—';
+    var num=parseFloat(String(v).replace(',','.'));
+    if(isNaN(num))return'—';
+    var s=num%1===0?num.toString():num.toFixed(2).replace(/\.?0+$/,'');
+    return s+' '+u;
+  }
+  function clsVal(v){
+    if(v===null||v===undefined)return'';
+    return v>0?'val-pos':v<0?'val-neg':'val-zero';
+  }
+
+  var filas='';
+  if(d.anoAnterior&&d.anoAnterior.valor!==null){
+    filas+='<tr class="vac-anio-row">'
+      +'<td>'+esc(d.anoAnterior.etiqueta||'Año anterior')+'</td>'
+      +'<td class="'+clsVal(d.anoAnterior.valor)+'">'+fmtVal(d.anoAnterior.valor,unidad)+'</td>'
+      +'</tr>';
+  }
+  conceptos.forEach(function(c){
+    if(!c.etiqueta&&c.valor===null)return;
+    filas+='<tr>'
+      +'<td>'+esc(c.etiqueta||'—')+'</td>'
+      +'<td class="'+clsVal(c.valor)+'">'+fmtVal(c.valor,unidad)+'</td>'
+      +'</tr>';
+  });
+  var totalRow='<tr class="vac-total-row">'
+    +'<td>✅ Saldo disponible</td>'
+    +'<td>'+fmtVal(d.total,unidad)+'</td>'
+    +'</tr>';
+
+  return'<div class="vac-balance-box">'
+    +'<div class="vac-balance-title">📊 Tu balance de vacaciones '+esc(d.anioActual||'')+'</div>'
+    +'<table class="vac-balance-table">'
+    +'<thead><tr><th>Concepto</th><th>'+(unidad.charAt(0).toUpperCase()+unidad.slice(1))+'</th></tr></thead>'
+    +'<tbody>'+filas+totalRow+'</tbody>'
+    +'</table>'
+    +'</div>';
 }
 
 // ── PWA ──
