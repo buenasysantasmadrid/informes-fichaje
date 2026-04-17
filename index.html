@@ -1858,7 +1858,7 @@ function renderBalanceVacaciones(d){
   if(!d)return'';
   var unidad=d.unidad||'horas';
   var conceptos=d.conceptos||[];
-  if(!conceptos.length&&d.anoAnterior.valor===null&&d.total===null)return'';
+  if(!conceptos.length&&d.total===null)return'';
 
   function fmtVal(v,u){
     if(v===null||v===undefined)return'—';
@@ -1873,12 +1873,6 @@ function renderBalanceVacaciones(d){
   }
 
   var filas='';
-  if(d.anoAnterior&&d.anoAnterior.valor!==null){
-    filas+='<tr class="vac-anio-row">'
-      +'<td>'+esc(d.anoAnterior.etiqueta||'Año anterior')+'</td>'
-      +'<td class="'+clsVal(d.anoAnterior.valor)+'">'+fmtVal(d.anoAnterior.valor,unidad)+'</td>'
-      +'</tr>';
-  }
   conceptos.forEach(function(c){
     if(!c.etiqueta&&c.valor===null)return;
     filas+='<tr>'
