@@ -519,9 +519,10 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
     <div class="page" id="epage-vacaciones">
       <div class="vac-page-wrap">
         <div class="vac-page-title">🌴 Vacaciones</div>
-        <div class="vac-page-sub">Solicita tus días de vacaciones. Te notificaremos por email cuando se gestione.</div>
         <!-- BALANCE DE VACACIONES (cargado dinámicamente) -->
         <div id="vac-balance-container"></div>
+        <div class="vac-page-title" style="font-size:1.1rem;margin-bottom:.3rem">Solicitud de vacaciones</div>
+        <div class="vac-page-sub">Te notificaremos por email cuando se gestione.</div>
         <div class="vac-form-box">
           <div class="vac-date-row">
             <div class="vac-form-row">
@@ -1886,7 +1887,7 @@ function renderBalanceVacaciones(d){
     +'</tr>';
 
   return'<div class="vac-balance-box">'
-    +'<div class="vac-balance-title">📊 Tu balance de vacaciones '+esc(d.anioActual||'')+'</div>'
+    +'<div class="vac-balance-title">🏖️ Vacaciones '+esc(d.anioActual||new Date().getFullYear())+'</div>'
     +'<table class="vac-balance-table">'
     +'<thead><tr><th>Concepto</th><th>'+(unidad.charAt(0).toUpperCase()+unidad.slice(1))+'</th></tr></thead>'
     +'<tbody>'+filas+totalRow+'</tbody>'
