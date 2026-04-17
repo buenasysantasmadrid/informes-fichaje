@@ -1887,7 +1887,7 @@ function renderBalanceVacaciones(d){
     +'</tr>';
 
   return'<div class="vac-balance-box">'
-    +'<div class="vac-balance-title">🏖️ Vacaciones '+esc(d.anioActual||String(new Date().getFullYear()))+'</div>'
+    +'<div class="vac-balance-title">🏖️ Vacaciones '+new Date().getFullYear()+'</div>'
     +'<table class="vac-balance-table">'
     +'<thead><tr><th>Concepto</th><th>'+(unidad.charAt(0).toUpperCase()+unidad.slice(1))+'</th></tr></thead>'
     +'<tbody>'+filas+totalRow+'</tbody>'
