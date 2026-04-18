@@ -832,6 +832,11 @@ function switchTab(tab){
   if(tab==='solicitudes'){
     side.style.display='none';
     document.getElementById('admin-shell').style.gridTemplateColumns='1fr';
+    // Resetear sub-tab a horas
+    document.querySelectorAll('.sol-section-tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.sol-section').forEach(function(s){s.classList.remove('active');});
+    document.getElementById('adm-stab-horas').classList.add('active');
+    document.getElementById('adm-sec-horas').classList.add('active');
     // Resetear filtros a pendiente visualmente
     solFiltro='pendiente';vacFiltro='pendiente';
     document.querySelectorAll('#adm-sec-horas .flt-btn').forEach(function(b){b.classList.remove('active');});
@@ -1873,23 +1878,28 @@ function formatFechaReq(raw){
      .replace(/^Solicitad[ao] el /i,'')
      .trim();
 
-  var d=null;
-
-  // Formato español: "18/04/2026, 21:54:24"
+  // Formato español "18/04/2026, 14:31:24" — parsear directamente SIN new Date()
+  // para evitar que el navegador reinterprete el timezone
   var mEs=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
   if(mEs){
-    d=new Date(+mEs[3],+mEs[2]-1,+mEs[1],+mEs[4],+mEs[5]);
-  }
-
-  // Formato inglés: "Sat Apr 18 2026 19:01:43"
-  if(!d||isNaN(d)){d=new Date(s);}
-
-  if(d&&!isNaN(d)){
+    // Construir Date usando año/mes/día en local para obtener el día de la semana correcto
+    var d=new Date(+mEs[3],+mEs[2]-1,+mEs[1]);
     var dow=DIAS_ES[d.getDay()];
     dow=dow.charAt(0).toUpperCase()+dow.slice(1);
-    return dow+', '+('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()
-      +' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+    // Mostrar la hora TAL CUAL viene del script (ya está en hora española)
+    return dow+', '+('0'+mEs[1]).slice(-2)+'/'+('0'+mEs[2]).slice(-2)+'/'+mEs[3]
+      +' '+('0'+mEs[4]).slice(-2)+':'+mEs[5];
   }
+
+  // Formato inglés "Sat Apr 18 2026 19:01:43" — estos sí se pueden parsear con new Date()
+  var d2=new Date(s);
+  if(!isNaN(d2.getTime())){
+    var dow2=DIAS_ES[d2.getDay()];
+    dow2=dow2.charAt(0).toUpperCase()+dow2.slice(1);
+    return dow2+', '+('0'+d2.getDate()).slice(-2)+'/'+('0'+(d2.getMonth()+1)).slice(-2)+'/'+d2.getFullYear()
+      +' '+('0'+d2.getHours()).slice(-2)+':'+('0'+d2.getMinutes()).slice(-2);
+  }
+
   return s;
 }
 
