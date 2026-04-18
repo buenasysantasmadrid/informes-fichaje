@@ -365,7 +365,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 </div>
 
 <div id="app">
-<header class="hdr">
+<header class="hdr" id="app-hdr">
   <div class="hdr-left">
     <div class="hdr-logo"><span class="dot"></span>Fichajes · Buenas y Santas</div>
     <div class="hdr-emp-info" id="hdr-emp-info">
@@ -1592,9 +1592,9 @@ function filtrarSol(f,btn){
   btn.classList.add('active');renderSolicitudes();
 }
 function renderSolicitudes(){
-  var lista=solicitudes.filter(function(s){return solFiltro==='todas'||s.estado===solFiltro;});
+  var lista=solicitudes.filter(function(s){return s.estado===solFiltro;});
   var el=document.getElementById('sol-list');
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>'+(solFiltro==='todas'?'Aquí aparecen todas las solicitudes enviadas por los empleados.':'No hay solicitudes con este filtro.')+'</p></div>';return;}
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>No hay solicitudes '+solFiltro+'s.</p></div>';return;}
   // Ya en orden: las últimas insertadas son las primeras en el array (insertRowAfter(1))
   el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
@@ -1612,9 +1612,9 @@ function filtrarVac(f,btn){
   btn.classList.add('active');renderVacacionesAdmin();
 }
 function renderVacacionesAdmin(){
-  var lista=solicitudesVac.filter(function(s){return vacFiltro==='todas'||s.estado===vacFiltro;});
+  var lista=solicitudesVac.filter(function(s){return s.estado===vacFiltro;});
   var el=document.getElementById('vac-list-admin');
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">🌴</div><h2>Sin solicitudes de vacaciones</h2><p>'+(vacFiltro==='todas'?'Los empleados aún no han solicitado vacaciones.':'No hay solicitudes con este filtro.')+'</p></div>';return;}
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">🌴</div><h2>Sin solicitudes de vacaciones</h2><p>No hay solicitudes '+vacFiltro+'s.</p></div>';return;}
   el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
@@ -1879,10 +1879,10 @@ function formatFechaReq(raw){
      .replace(/^Solicitad[ao] el /i,'')
      .trim();
 
-  // Formato español correcto "18/04/2026, 14:31:24" — NO usar new Date(), mostrar tal cual
-  var mEs=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
+  // Formato español con o sin coma: "18/04/2026, 14:31:24" o "18/04/2026 14:31:00"
+  // NO usar new Date() — mostrar la hora TAL CUAL viene del script (ya es hora española)
+  var mEs=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[,\s]+(\d{1,2}):(\d{2})/);
   if(mEs){
-    // Solo calcular el día de la semana, sin tocar la hora
     var dSolo=new Date(+mEs[3],+mEs[2]-1,+mEs[1]);
     var dow=DIAS_ES[dSolo.getDay()];
     dow=dow.charAt(0).toUpperCase()+dow.slice(1);
@@ -1890,8 +1890,8 @@ function formatFechaReq(raw){
       +' '+('0'+mEs[4]).slice(-2)+':'+mEs[5];
   }
 
-  // Formato inglés antiguo "Sat Apr 18 2026 19:01:43" — estos vienen ya en hora local del navegador
-  var mEn=s.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\w+)\s+(\d+)\s+(\d{4})\s+(\d{2}):(\d{2})/);
+  // Formato inglés antiguo "Sat Apr 18 2026 19:01:43"
+  var mEn=s.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s/);
   if(mEn){
     var d=new Date(s);
     if(!isNaN(d)){
