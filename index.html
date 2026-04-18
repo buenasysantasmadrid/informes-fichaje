@@ -832,7 +832,12 @@ function switchTab(tab){
   if(tab==='solicitudes'){
     side.style.display='none';
     document.getElementById('admin-shell').style.gridTemplateColumns='1fr';
-    // Cargar ambas
+    // Resetear filtros a pendiente visualmente
+    solFiltro='pendiente';vacFiltro='pendiente';
+    document.querySelectorAll('#adm-sec-horas .flt-btn').forEach(function(b){b.classList.remove('active');});
+    var bH=document.querySelector('#adm-sec-horas .flt-btn');if(bH)bH.classList.add('active');
+    document.querySelectorAll('#adm-sec-vacaciones .flt-btn').forEach(function(b){b.classList.remove('active');});
+    var bV=document.querySelector('#adm-sec-vacaciones .flt-btn');if(bV)bV.classList.add('active');
     Promise.all([loadSolicitudes(),loadSolicitudesVacaciones()]).then(function(results){
       solicitudes=results[0];solicitudesVac=results[1];
       updateBadge();renderSolicitudes();renderVacacionesAdmin();
@@ -1860,27 +1865,31 @@ async function cancelarSolicitud(id,isEmp){
 }
 
 function formatFechaReq(raw){
+  var DIAS_ES=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
   var s=String(raw||'').trim();
-  // Limpiar sufijos de timezone
   s=s.replace(/\s*(GMT|UTC)[+-]?\d*(\s*\(.*?\))?$/i,'')
      .replace(/\s*\(hora de verano.*?\)/i,'')
      .replace(/\s*\(hora est.*?\)/i,'')
      .replace(/^Solicitad[ao] el /i,'')
      .trim();
 
-  // Formato correcto ya en español: "18/04/2026, 21:54:24" → mostrar como "18/04/2026 21:54"
+  var d=null;
+
+  // Formato español: "18/04/2026, 21:54:24"
   var mEs=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
   if(mEs){
-    return ('0'+mEs[1]).slice(-2)+'/'+('0'+mEs[2]).slice(-2)+'/'+mEs[3]+' '+('0'+mEs[4]).slice(-2)+':'+mEs[5];
+    d=new Date(+mEs[3],+mEs[2]-1,+mEs[1],+mEs[4],+mEs[5]);
   }
 
-  // Formato inglés tipo "Sat Apr 18 2026 19:01:43" — parsear y convertir a español
-  var d=new Date(s);
-  if(!isNaN(d.getTime())){
-    return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()
+  // Formato inglés: "Sat Apr 18 2026 19:01:43"
+  if(!d||isNaN(d)){d=new Date(s);}
+
+  if(d&&!isNaN(d)){
+    var dow=DIAS_ES[d.getDay()];
+    dow=dow.charAt(0).toUpperCase()+dow.slice(1);
+    return dow+', '+('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()
       +' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
   }
-
   return s;
 }
 
