@@ -845,6 +845,7 @@ function switchTab(tab){
     var bV=document.querySelector('#adm-sec-vacaciones .flt-btn');if(bV)bV.classList.add('active');
     Promise.all([loadSolicitudes(),loadSolicitudesVacaciones()]).then(function(results){
       solicitudes=results[0];solicitudesVac=results[1];
+      solFiltro='pendiente';vacFiltro='pendiente';
       updateBadge();renderSolicitudes();renderVacacionesAdmin();
     });
   }else{
@@ -1878,26 +1879,27 @@ function formatFechaReq(raw){
      .replace(/^Solicitad[ao] el /i,'')
      .trim();
 
-  // Formato español "18/04/2026, 14:31:24" — parsear directamente SIN new Date()
-  // para evitar que el navegador reinterprete el timezone
+  // Formato español correcto "18/04/2026, 14:31:24" — NO usar new Date(), mostrar tal cual
   var mEs=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
   if(mEs){
-    // Construir Date usando año/mes/día en local para obtener el día de la semana correcto
-    var d=new Date(+mEs[3],+mEs[2]-1,+mEs[1]);
-    var dow=DIAS_ES[d.getDay()];
+    // Solo calcular el día de la semana, sin tocar la hora
+    var dSolo=new Date(+mEs[3],+mEs[2]-1,+mEs[1]);
+    var dow=DIAS_ES[dSolo.getDay()];
     dow=dow.charAt(0).toUpperCase()+dow.slice(1);
-    // Mostrar la hora TAL CUAL viene del script (ya está en hora española)
     return dow+', '+('0'+mEs[1]).slice(-2)+'/'+('0'+mEs[2]).slice(-2)+'/'+mEs[3]
       +' '+('0'+mEs[4]).slice(-2)+':'+mEs[5];
   }
 
-  // Formato inglés "Sat Apr 18 2026 19:01:43" — estos sí se pueden parsear con new Date()
-  var d2=new Date(s);
-  if(!isNaN(d2.getTime())){
-    var dow2=DIAS_ES[d2.getDay()];
-    dow2=dow2.charAt(0).toUpperCase()+dow2.slice(1);
-    return dow2+', '+('0'+d2.getDate()).slice(-2)+'/'+('0'+(d2.getMonth()+1)).slice(-2)+'/'+d2.getFullYear()
-      +' '+('0'+d2.getHours()).slice(-2)+':'+('0'+d2.getMinutes()).slice(-2);
+  // Formato inglés antiguo "Sat Apr 18 2026 19:01:43" — estos vienen ya en hora local del navegador
+  var mEn=s.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\w+)\s+(\d+)\s+(\d{4})\s+(\d{2}):(\d{2})/);
+  if(mEn){
+    var d=new Date(s);
+    if(!isNaN(d)){
+      var dow2=DIAS_ES[d.getDay()];
+      dow2=dow2.charAt(0).toUpperCase()+dow2.slice(1);
+      return dow2+', '+('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()
+        +' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+    }
   }
 
   return s;
