@@ -1282,7 +1282,7 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     bloque+='</div>';
     bloque+='<div style="display:flex;align-items:center;gap:0;padding:8px 12px;">';
     if(turno.entrada){
-      var solPendEObj=hasPendE?solsRef.find(function(s){return s.emp===emp&&s.tipo==='ENTRADA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&(safeISO(s.fecha)===turno.fechaEntrada||safeISO(s.fecha)===fechaRealE);}):null;
+      var solPendEObj=hasPendE?solsRef.find(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';}):null;
       var btnClsE='hora-btn'+(hasPendE?' pending':hasApprE?' approved':'')+(isErr?' hora-btn-long':'');
       bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
       bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--green);font-weight:600">ENTRADA</span>';
@@ -1297,7 +1297,7 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     }
     bloque+='<div style="padding:0 10px;color:var(--ink3);font-size:.9rem;flex-shrink:0">→</div>';
     if(turno.salida){
-      var solPendSObj=hasPendS?solsRef.find(function(s){return s.emp===emp&&s.tipo==='SALIDA'&&s.estado==='pendiente'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&(safeISO(s.fecha)===turno.fechaSalida||safeISO(s.fecha)===fechaRealS);}):null;
+      var solPendSObj=hasPendS?solsRef.find(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';}):null;
       var btnClsS='hora-btn'+(hasPendS?' pending':hasApprS?' approved':'')+(isErr?' hora-btn-long':'');
       bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
       bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:600">SALIDA</span>';
@@ -1425,8 +1425,8 @@ async function enviarSolicitud(){
   var cambiaFS=horaSA!=='—'&&fechaSN!==fechaSOrig;
   if(!cambiaE&&!cambiaS&&!cambiaFE&&!cambiaFS){toast('No hay ningún cambio respecto al original','err');return;}
   var toSend=[];
-  if((cambiaE||cambiaFE)&&horaEA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaEOrig,fechaNueva:fechaEN,tipo:'ENTRADA',horaActual:normHora(horaEA),horaNueva:cambiaE?horaEN:normHora(horaEA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp,turnoEntrada:turno.entrada?(turno.entrada.fechaReal||turno.fechaEntrada||solActual.fecha)+' '+turno.entrada.hora:'',turnoSalida:turno.salida?(turno.salida.fechaReal||turno.fechaSalida||solActual.fecha)+' '+turno.salida.hora:''});}
-  if((cambiaS||cambiaFS)&&horaSA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaSOrig,fechaNueva:fechaSN,tipo:'SALIDA',horaActual:normHora(horaSA),horaNueva:cambiaS?horaSN:normHora(horaSA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp,turnoEntrada:turno.entrada?(turno.entrada.fechaReal||turno.fechaEntrada||solActual.fecha)+' '+turno.entrada.hora:'',turnoSalida:turno.salida?(turno.salida.fechaReal||turno.fechaSalida||solActual.fecha)+' '+turno.salida.hora:''});}
+  if((cambiaE||cambiaFE)&&horaEA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaEOrig,fechaNueva:fechaEN,tipo:'ENTRADA',horaActual:normHora(horaEA),horaNueva:cambiaE?horaEN:normHora(horaEA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp});}
+  if((cambiaS||cambiaFS)&&horaSA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaSOrig,fechaNueva:fechaSN,tipo:'SALIDA',horaActual:normHora(horaSA),horaNueva:cambiaS?horaSN:normHora(horaSA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp});}
   if(!toSend.length){toast('No hay cambios que enviar','err');return;}
   cerrarModalSol();setLoader(true,'Enviando solicitud...');
   var envioOk=false,envioErr='';
@@ -1560,20 +1560,7 @@ function updateBadge(){
   if(pendHoras>0){bH.textContent=pendHoras;bH.classList.remove('hidden');}else{bH.classList.add('hidden');}
   var bV=document.getElementById('adm-badge-vac');
   if(pendVac>0){bV.textContent=pendVac;bV.classList.remove('hidden');}else{bV.classList.add('hidden');}
-  // ── Alerta visual: header ámbar si hay pendientes ──
-  var hdr=document.getElementById('app-hdr');
-  var meta=document.querySelector('meta[name="theme-color"]');
-  if(total>0){
-    hdr.style.background='#b45309';
-    hdr.style.boxShadow='0 2px 16px rgba(180,83,9,.4)';
-    if(meta)meta.setAttribute('content','#b45309');
-    document.title='🔔 ('+total+') Fichajes · Buenas y Santas';
-  }else{
-    hdr.style.background='#15803d';
-    hdr.style.boxShadow='0 2px 12px rgba(0,0,0,.15)';
-    if(meta)meta.setAttribute('content','#2d6a3f');
-    document.title='Fichajes · Buenas y Santas';
-  }
+  document.title='Fichajes · Buenas y Santas';
 }
 function updateEbadge(){
   var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;
