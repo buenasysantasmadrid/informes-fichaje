@@ -465,8 +465,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
         <div class="sol-header">
           <div class="sol-title">Solicitudes de cambio de hora</div>
           <div class="sol-filters">
-            <button class="flt-btn active" onclick="filtrarSol('todas',this)">Todas</button>
-            <button class="flt-btn" onclick="filtrarSol('pendiente',this)">Pendientes</button>
+            <button class="flt-btn active" onclick="filtrarSol('pendiente',this)">Pendientes</button>
             <button class="flt-btn" onclick="filtrarSol('aprobada',this)">Aprobadas</button>
             <button class="flt-btn" onclick="filtrarSol('rechazada',this)">Rechazadas</button>
           </div>
@@ -478,8 +477,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
         <div class="sol-header">
           <div class="sol-title">Solicitudes de vacaciones</div>
           <div class="sol-filters">
-            <button class="flt-btn active" onclick="filtrarVac('todas',this)">Todas</button>
-            <button class="flt-btn" onclick="filtrarVac('pendiente',this)">Pendientes</button>
+            <button class="flt-btn active" onclick="filtrarVac('pendiente',this)">Pendientes</button>
             <button class="flt-btn" onclick="filtrarVac('aprobada',this)">Aprobadas</button>
             <button class="flt-btn" onclick="filtrarVac('rechazada',this)">Rechazadas</button>
           </div>
@@ -527,7 +525,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
           <div class="vac-date-row">
             <div class="vac-form-row">
               <label>Fecha inicio</label>
-              <input type="date" id="vac-desde" min="">
+              <input type="date" id="vac-desde" min="" onchange="document.getElementById('vac-hasta').min=this.value;if(document.getElementById('vac-hasta').value&&document.getElementById('vac-hasta').value<this.value)document.getElementById('vac-hasta').value=this.value;">
             </div>
             <div class="vac-form-row">
               <label>Fecha fin</label>
@@ -615,7 +613,7 @@ const MAX_TURNO_MINS = 12 * 60;
 let SCRIPT_URL = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec';
 let session=null,empleados=[],editData={},solicitudes=[],esolicitudes=[];
 let solicitudesVac=[],esolicitudesVac=[];
-let solFiltro='todas',vacFiltro='todas';
+let solFiltro='pendiente',vacFiltro='pendiente';
 let currentSel,currentDesde,currentHasta,empEditData={},empEditDataCal={},solActual=null;
 let approvedSet = new Set();
 
@@ -1862,26 +1860,27 @@ async function cancelarSolicitud(id,isEmp){
 }
 
 function formatFechaReq(raw){
-  // Intenta parsear la fecha del Apps Script (formato es-ES: "17/04/2026, 21:54:24")
   var s=String(raw||'').trim();
-  // Quitar timezone y texto sobrante
+  // Limpiar sufijos de timezone
   s=s.replace(/\s*(GMT|UTC)[+-]?\d*(\s*\(.*?\))?$/i,'')
      .replace(/\s*\(hora de verano.*?\)/i,'')
      .replace(/\s*\(hora est.*?\)/i,'')
      .replace(/^Solicitad[ao] el /i,'')
      .trim();
-  // Intentar parsear y reformatear
-  try{
-    // Formato "17/04/2026, 21:54:24" → Date
-    var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
-    if(m){
-      var d=new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5]);
-      if(!isNaN(d)){
-        return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()
-          +' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
-      }
-    }
-  }catch(e){}
+
+  // Formato correcto ya en español: "18/04/2026, 21:54:24" → mostrar como "18/04/2026 21:54"
+  var mEs=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
+  if(mEs){
+    return ('0'+mEs[1]).slice(-2)+'/'+('0'+mEs[2]).slice(-2)+'/'+mEs[3]+' '+('0'+mEs[4]).slice(-2)+':'+mEs[5];
+  }
+
+  // Formato inglés tipo "Sat Apr 18 2026 19:01:43" — parsear y convertir a español
+  var d=new Date(s);
+  if(!isNaN(d.getTime())){
+    return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()
+      +' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+  }
+
   return s;
 }
 
