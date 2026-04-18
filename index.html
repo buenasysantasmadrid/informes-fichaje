@@ -527,11 +527,11 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
           <div class="vac-date-row">
             <div class="vac-form-row">
               <label>Fecha inicio</label>
-              <input type="date" id="vac-desde">
+              <input type="date" id="vac-desde" min="">
             </div>
             <div class="vac-form-row">
               <label>Fecha fin</label>
-              <input type="date" id="vac-hasta">
+              <input type="date" id="vac-hasta" min="">
             </div>
           </div>
           <div class="vac-form-row" style="margin-top:.4rem">
@@ -797,6 +797,7 @@ async function initEmpleado(){
   document.getElementById('nav-emp').style.display='flex';
   document.getElementById('emp-shell').style.display='block';
   eswitch('fichajes');
+  document.getElementById('ereport-fichajes').innerHTML='<div class="empty"><div class="spin" style="width:36px;height:36px;border-width:3px;margin-bottom:.75rem"></div><h2 style="font-size:1rem;color:var(--ink2)">Estamos actualizando, paciencia!</h2></div>';
   esolicitudes=await loadSolicitudes(session.nombre);
   esolicitudesVac=await loadSolicitudesVacaciones(session.nombre);
   rebuildApprovedSet(esolicitudes);
@@ -873,6 +874,9 @@ function eswitch(tab){
     });
   }
   if(tab==='vacaciones'){
+    var hoyMin=new Date().toISOString().slice(0,10);
+    document.getElementById('vac-desde').min=hoyMin;
+    document.getElementById('vac-hasta').min=hoyMin;
     loadSolicitudesVacaciones(session.nombre).then(function(data){esolicitudesVac=data;erendVacaciones();});
     loadYRenderBalanceVacaciones();
   }
@@ -1210,7 +1214,7 @@ async function empGenerar(){
 function renderEmpReport(){
   var rep=document.getElementById('ereport');rep.style.display='block';
   var dmap=empEditDataCal,fechas=Object.keys(dmap).sort().reverse();
-  if(!fechas.length){rep.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin fichajes</h2><p>No hay registros en el período seleccionado.</p></div>';return;}
+  if(!fechas.length){rep.innerHTML='<div class="empty"><div class="spin" style="width:36px;height:36px;border-width:3px;margin-bottom:.75rem"></div><h2 style="font-size:1rem;color:var(--ink2)">Estamos actualizando, paciencia!</h2></div>';return;}
   var fechasAsc=fechas.slice().reverse();
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump"><button class="btn-jump" onclick="jumpToDate(\'_emp\')">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
@@ -1219,7 +1223,7 @@ function renderEmpReport(){
 function renderEmpFichajesTab(){
   var rep=document.getElementById('ereport-fichajes');
   var dmap=empEditData,fechas=Object.keys(dmap).sort().reverse();
-  if(!fechas.length){rep.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin fichajes</h2><p>No hay registros en el período.</p></div>';return;}
+  if(!fechas.length){rep.innerHTML='<div class="empty"><div class="spin" style="width:36px;height:36px;border-width:3px;margin-bottom:.75rem"></div><h2 style="font-size:1rem;color:var(--ink2)">Estamos actualizando, paciencia!</h2></div>';return;}
   var fechasAsc=fechas.slice().reverse();
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump2"><button class="btn-jump" onclick="jumpToDateFichajes()">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
@@ -1492,14 +1496,14 @@ function erendVacaciones(){
     var desdeISO=safeISO(s.desde),hastaISO=safeISO(s.hasta);
     var dias=diasEntreISO(desdeISO,hastaISO);
     var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitudVac(\''+s.id+'\')">✕ Cancelar</button>':'';
-    var fechaReqLimpia=(s.fechaReq||'').replace(/\s*(GMT|UTC)[+-]?\d*(\s*\(.*?\))?$/i,'').replace(/\s*\(hora de verano.*?\)/i,'').replace(/\s*\(hora est.*?\)/i,'').trim();
+    var fechaReqFmt=formatFechaReq(s.fechaReq);
     return'<div class="vac-card '+s.estado+'">'
       +'<div class="sol-info">'
         +'<div class="vac-badge">🌴 Vacaciones</div>'
         +'<div style="font-size:.85rem;font-weight:600;color:var(--ink);margin-bottom:.3rem">'+isoDisplay(desdeISO)+' → '+isoDisplay(hastaISO)+'</div>'
         +'<div style="font-size:.7rem;color:var(--ink3);margin-bottom:.3rem">'+dias+' día'+(dias!==1?'s':'')+' naturales</div>'
         +(s.motivo?'<div style="font-size:.67rem;color:var(--ink3);font-style:italic;margin-bottom:.3rem">'+esc(s.motivo)+'</div>':'')
-        +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqLimpia+'</div>'
+        +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqFmt+'</div>'
       +'</div>'
       +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+accionCancelar+'</div>'
     +'</div>';
@@ -1547,6 +1551,20 @@ function updateBadge(){
   if(pendHoras>0){bH.textContent=pendHoras;bH.classList.remove('hidden');}else{bH.classList.add('hidden');}
   var bV=document.getElementById('adm-badge-vac');
   if(pendVac>0){bV.textContent=pendVac;bV.classList.remove('hidden');}else{bV.classList.add('hidden');}
+  // ── Alerta visual: header ámbar si hay pendientes ──
+  var hdr=document.getElementById('app-hdr');
+  var meta=document.querySelector('meta[name="theme-color"]');
+  if(total>0){
+    hdr.style.background='#b45309';
+    hdr.style.boxShadow='0 2px 16px rgba(180,83,9,.4)';
+    if(meta)meta.setAttribute('content','#b45309');
+    document.title='🔔 ('+total+') Fichajes · Buenas y Santas';
+  }else{
+    hdr.style.background='#15803d';
+    hdr.style.boxShadow='0 2px 12px rgba(0,0,0,.15)';
+    if(meta)meta.setAttribute('content','#2d6a3f');
+    document.title='Fichajes · Buenas y Santas';
+  }
 }
 function updateEbadge(){
   var pend=esolicitudes.filter(function(s){return s.estado==='pendiente';}).length;
@@ -1574,7 +1592,7 @@ function renderSolicitudes(){
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
     var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'"><div class="sol-info"><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFN?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br><span>Tipo:</span> '+s.tipo+'<br><span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
+    return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'"><div class="sol-info"><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFN?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br><span>Tipo:</span> '+s.tipo+'<br><span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')+'</div><div class="sol-fecha-req">'+formatFechaReq(s.fechaReq)+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
   }).join('');
 }
 
@@ -1594,7 +1612,7 @@ function renderVacacionesAdmin(){
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobarVac(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazarVac(\''+s.id+'\')">Rechazar</button>':'';
     var desdeISO=safeISO(s.desde),hastaISO=safeISO(s.hasta);
     var dias=diasEntreISO(desdeISO,hastaISO);
-    return'<div class="vac-card '+s.estado+'"><div class="sol-info"><div class="vac-badge">🌴 Vacaciones</div><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Desde:</span> <strong>'+isoDisplay(desdeISO)+'</strong><br><span>Hasta:</span> <strong>'+isoDisplay(hastaISO)+'</strong><br><span>Días:</span> '+dias+(s.motivo?'<br><span>Motivo:</span> '+esc(s.motivo):'')+'</div><div class="sol-fecha-req">Solicitada el '+s.fechaReq+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
+    return'<div class="vac-card '+s.estado+'"><div class="sol-info"><div class="vac-badge">🌴 Vacaciones</div><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Desde:</span> <strong>'+isoDisplay(desdeISO)+'</strong><br><span>Hasta:</span> <strong>'+isoDisplay(hastaISO)+'</strong><br><span>Días:</span> '+dias+(s.motivo?'<br><span>Motivo:</span> '+esc(s.motivo):'')+'</div><div class="sol-fecha-req">'+formatFechaReq(s.fechaReq)+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
   }).join('');
 }
 
@@ -1683,14 +1701,14 @@ function erendSolicitudes(){
     var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
     var fechaStr=hayFN?isoDisplay(fechaISO)+' → '+isoDisplay(fechaNuevaISO):isoDisplay(fechaISO);
     var horaStr=normHora(s.horaActual)+(s.horaNueva&&normHora(s.horaNueva)!==normHora(s.horaActual)?' → '+normHora(s.horaNueva):'');
-    var fechaReqLimpia=(s.fechaReq||'').replace(/^Solicitad[ao] el /i,'').replace(/\s*(GMT|UTC)[+-]?\d*(\s*\(.*?\))?$/i,'').replace(/\s*\(hora de verano.*?\)/i,'').replace(/\s*\(hora est.*?\)/i,'').trim();
+    var fechaReqFmt=formatFechaReq(s.fechaReq);
     return'<div class="sol-card '+s.estado+'">'
       +'<div class="sol-info">'
         +'<div style="font-size:.65rem;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:var(--ink2);background:var(--cream2);display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:.5rem">'+s.tipo+'</div>'
         +'<div style="font-size:.77rem;color:var(--ink);font-weight:500;margin-bottom:.2rem">📅 '+fechaStr+'</div>'
         +'<div style="font-size:.77rem;color:var(--ink);margin-bottom:.5rem">🕐 '+horaStr+'</div>'
         +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.67rem;color:var(--ink3);margin-bottom:.4rem;font-style:italic">'+esc(s.motivo)+'</div>':'')
-        +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqLimpia+'</div>'
+        +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqFmt+'</div>'
       +'</div>'
       +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+accionCancelar+'</div>'
     +'</div>';
@@ -1841,6 +1859,30 @@ async function cancelarSolicitud(id,isEmp){
       renderReport();renderSolicitudes();
     }
   }else{toast('Error: '+err,'err');}
+}
+
+function formatFechaReq(raw){
+  // Intenta parsear la fecha del Apps Script (formato es-ES: "17/04/2026, 21:54:24")
+  var s=String(raw||'').trim();
+  // Quitar timezone y texto sobrante
+  s=s.replace(/\s*(GMT|UTC)[+-]?\d*(\s*\(.*?\))?$/i,'')
+     .replace(/\s*\(hora de verano.*?\)/i,'')
+     .replace(/\s*\(hora est.*?\)/i,'')
+     .replace(/^Solicitad[ao] el /i,'')
+     .trim();
+  // Intentar parsear y reformatear
+  try{
+    // Formato "17/04/2026, 21:54:24" → Date
+    var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s*(\d{1,2}):(\d{2})/);
+    if(m){
+      var d=new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5]);
+      if(!isNaN(d)){
+        return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()
+          +' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+      }
+    }
+  }catch(e){}
+  return s;
 }
 
 // ── BALANCE DE VACACIONES ──
