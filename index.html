@@ -443,8 +443,8 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
       </div>
     </div>
     <button class="btn-gen" id="btn-gen" onclick="generar()" disabled>Generar informe</button>
-    <button class="btn-gen" id="btn-export-excel" onclick="exportarExcelAdmin()" disabled style="background:#fff;color:var(--green);border:1px solid var(--green);box-shadow:none;margin-top:4px">⬇ Exportar Excel</button>
     <button class="btn-gen" id="btn-export-pdf" onclick="exportarPDFAdmin()" disabled style="background:#fff;color:#dc2626;border:1px solid #dc2626;box-shadow:none;margin-top:4px">📄 Exportar PDF</button>
+    <button class="btn-gen" id="btn-export-excel" onclick="exportarExcelAdmin()" disabled style="background:#fff;color:var(--green);border:1px solid var(--green);box-shadow:none;margin-top:4px">⬇ Exportar Excel</button>
   </aside>
   <main class="main">
     <div class="page active" id="page-informes">
@@ -603,7 +603,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 
 <div class="loader" id="loader"><div class="spin"></div><div class="ltxt" id="ltxt">Cargando...</div></div>
 <div class="toast" id="toast"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script>
 const DIAS_TILDE = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 const ADMIN_MAIL = 'luciana@buenasysantas.es';
@@ -2076,13 +2076,13 @@ function exportarPDFAdmin() {
       doc.rect(marL, y, pgW-marL-marR, 6, 'F');
       doc.setTextColor(255,255,255);
       doc.setFont('times','bold'); doc.setFontSize(5.8);
-      doc.text('FECHA',         marL+1,  y+4);
-      doc.text('DÍA',      marL+21, y+4);
-      doc.text('ENTRADA',       marL+37, y+4);
-      doc.text('SALIDA',        marL+70, y+4);
-      doc.text('T.TURNO',  marL+103, y+4);
-      doc.text('T.DÍA',   marL+127, y+4);
-      doc.text('MODIFICACIÓN', marL+150, y+4);
+      doc.text('FECHA / DÍA',   marL+1,   y+4);
+      doc.text('ENTRADA',          marL+30,  y+4);
+      doc.text('SALIDA',           marL+52,  y+4);
+      doc.text('LUGAR',            marL+74,  y+4);
+      doc.text('T.TURNO',          marL+114, y+4);
+      doc.text('T.DÍA',       marL+130, y+4);
+      doc.text('MOD.',             marL+146, y+4);
       y += 7;
     }
 
@@ -2112,6 +2112,19 @@ function exportarPDFAdmin() {
     var fechas = Object.keys(dmap).sort();
     var totalMinsGlobal = 0;
     var rowIdx = 0;
+    var semMins = {};  // acumulado horas por semana
+
+    // Pre-calcular fechas por semana para saber cuándo insertar el total
+    var fechasPorSemana = {};
+    fechas.forEach(function(fecha) {
+      var regs = dmap[fecha] || [];
+      if (!regs.length) return;
+      var turnos = buildTurnosInforme(empNombre, fecha, regs, solicitudes);
+      if (!turnos.length) return;
+      var sk = isoWeek(fecha);
+      if (!fechasPorSemana[sk]) fechasPorSemana[sk] = [];
+      fechasPorSemana[sk].push(fecha);
+    });
 
     fechas.forEach(function(fecha) {
       var regs = dmap[fecha] || [];
@@ -2120,119 +2133,131 @@ function exportarPDFAdmin() {
       var turnos = buildTurnosInforme(empNombre, fecha, regs, solicitudes);
       if (!turnos.length) return;
       if (calc.mins != null) totalMinsGlobal += calc.mins;
-      var dow    = dowName(fecha);
-      var dowCap = dow.charAt(0).toUpperCase() + dow.slice(1).substring(0, 2) + '.';
+      var dow     = dowName(fecha);
+      var dowFull = dow.charAt(0).toUpperCase() + dow.slice(1); // lunes, martes...
+      // Acumulado semana
+      var semKey  = isoWeek(fecha);
+      if (!semMins[semKey]) semMins[semKey] = 0;
 
       turnos.forEach(function(t, ti) {
-        var hasMod = !!(t.modEntrada || t.modSalida);
-        var dosMod = !!(t.modEntrada && t.modSalida);
-        var conMotE = !!(t.modEntrada && t.modEntrada.motivo && t.modEntrada.motivo !== '—' && t.modEntrada.motivo !== '-' && t.modEntrada.motivo !== '');
-        var conMotS = !!(t.modSalida  && t.modSalida.motivo  && t.modSalida.motivo  !== '—' && t.modSalida.motivo  !== '-' && t.modSalida.motivo  !== '');
-        var ROW_H  = dosMod ? (conMotE || conMotS ? 13 : 11) : (hasMod ? (conMotE || conMotS ? 10 : 8) : 7);
+        var hasMod  = !!(t.modEntrada || t.modSalida);
+        var conMot  = !!(hasMod && (t.modEntrada||t.modSalida).motivo
+                       && (t.modEntrada||t.modSalida).motivo !== '—'
+                       && (t.modEntrada||t.modSalida).motivo !== '-'
+                       && (t.modEntrada||t.modSalida).motivo !== '');
+        var ROW_H   = hasMod ? (conMot ? 10 : 8) : 7;
         checkPage(ROW_H + 0.5);
 
         // Fondo fila
         var esError = t.errorNoche;
-        if (esError) {
-          doc.setFillColor(254,242,242);
-        } else {
-          rowIdx % 2 === 0 ? setFill(C_FONDO_PAR) : doc.setFillColor(255,255,255);
-        }
+        if (esError) { doc.setFillColor(254,242,242); }
+        else         { rowIdx%2===0 ? setFill(C_FONDO_PAR) : doc.setFillColor(255,255,255); }
         setDraw(C_GRIS_CLR); doc.setLineWidth(0.15);
         doc.rect(marL, y, pgW-marL-marR, ROW_H, 'FD');
 
-        // Borde izquierdo de color
-        doc.setLineWidth(1.2);
-        if (ti === 0) { setDraw(C_VERDE); }
-        else          { doc.setDrawColor(147,197,253); }
+        // Borde izquierdo verde
+        doc.setLineWidth(1.2); setDraw(C_VERDE);
         doc.line(marL, y+0.1, marL, y+ROW_H-0.1);
         doc.setLineWidth(0.15);
 
-        var yT = y + (hasMod ? 4.2 : ROW_H/2 + 1.5);
+        var yT = y + (hasMod ? 4 : ROW_H/2 + 1.5);
 
-        // FECHA (solo turno 0)
+        // FECHA (solo primer turno) + DÍA debajo
         if (ti === 0) {
-          setRGB(C_GRIS_OSC);
-          doc.setFont('times','bold'); doc.setFontSize(6);
-          doc.text(isoDisplay(fecha), marL+1, yT);
-          setRGB(C_GRIS_MED);
-          doc.setFont('times','normal'); doc.setFontSize(6);
-          doc.text(dowCap, marL+21, yT);
-        } else {
-          setRGB(C_GRIS_MED);
-          doc.setFont('times','italic'); doc.setFontSize(5.5);
-          doc.text('T'+( ti+1), marL+21, yT);
+          setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(6);
+          doc.text(isoDisplay(fecha), marL+1, y + 3.5);
+          setRGB(C_GRIS_MED); doc.setFont('times','italic'); doc.setFontSize(5.5);
+          doc.text(dowFull, marL+1, y + 3.5 + 3);
         }
 
         // ENTRADA
         if (t.entradaHora) {
-          setRGB(C_VERDE);
-          doc.setFont('times','bold'); doc.setFontSize(7);
-          doc.text(t.entradaHora, marL+37, yT);
-          // Lápiz si hay modificación en entrada
+          setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(7);
+          doc.text(t.entradaHora, marL+30, yT);
           if (t.modEntrada) {
-            setRGB(C_AMBER); doc.setFont('times','normal'); doc.setFontSize(7);
-            doc.text('✏', marL+37 + doc.getTextWidth(t.entradaHora) + 1, yT);
+            var xE = marL+30 + doc.getTextWidth(t.entradaHora) + 1;
+            // Badge MOD: rectángulo ámbar con texto blanco
+            doc.setFillColor(146,64,14);
+            doc.rect(xE - 0.3, yT - 3.5, 5.8, 3.8, 'F');
+            doc.setTextColor(255,255,255);
+            doc.setFont('times','bold'); doc.setFontSize(4.5);
+            doc.text('MOD', xE + 0.5, yT - 0.5);
           }
         } else {
           setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(6);
-          doc.text('—', marL+37, yT);
+          doc.text('—', marL+30, yT);
         }
 
         // SALIDA
         if (t.salidaHora) {
-          setRGB(C_AZUL);
-          doc.setFont('times','bold'); doc.setFontSize(7);
-          doc.text(t.salidaHora, marL+70, yT);
-          // Lápiz si hay modificación en salida
+          setRGB(C_AZUL); doc.setFont('times','bold'); doc.setFontSize(7);
+          doc.text(t.salidaHora, marL+52, yT);
           if (t.modSalida) {
-            setRGB(C_AMBER); doc.setFont('times','normal'); doc.setFontSize(7);
-            doc.text('✏', marL+70 + doc.getTextWidth(t.salidaHora) + 1, yT);
+            var xS = marL+52 + doc.getTextWidth(t.salidaHora) + 1;
+            // Badge MOD: rectángulo ámbar con texto blanco
+            doc.setFillColor(146,64,14);
+            doc.rect(xS - 0.3, yT - 3.5, 5.8, 3.8, 'F');
+            doc.setTextColor(255,255,255);
+            doc.setFont('times','bold'); doc.setFontSize(4.5);
+            doc.text('MOD', xS + 0.5, yT - 0.5);
           }
         } else {
           setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(6);
-          doc.text('—', marL+70, yT);
+          doc.text('—', marL+52, yT);
         }
+
+        // LUGAR
+        setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(5.5);
+        doc.text('Embajadores, 177', marL+74, yT - 0.5);
+        doc.text('Madrid', marL+74, yT + 2.5);
 
         // TOTAL TURNO
-        setRGB(C_GRIS_OSC); doc.setFont('times','normal'); doc.setFontSize(6);
-        doc.text(t.minutos != null ? minsToStr(t.minutos) : '—', marL+103, yT);
-
-        // TOTAL DÍA — columna propia, solo en el último turno
-        if (ti === turnos.length-1 && calc.mins != null) {
-          setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(6);
-          doc.text(minsToStr(calc.mins), marL+127, yT);
+        if (t.minutos != null) {
+          setRGB(C_GRIS_OSC); doc.setFont('times','normal'); doc.setFontSize(6);
+          doc.text(minsToStr(t.minutos), marL+114, yT);
+          semMins[semKey] += t.minutos;
         }
 
-        // MODIFICACIÓN — una sola explicación por fila
+        // TOTAL DÍA — solo en el último turno del día
+        if (ti === turnos.length-1 && calc.mins != null) {
+          setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(6);
+          doc.text(minsToStr(calc.mins), marL+130, yT);
+        }
+
+        // MODIFICACIÓN
         if (hasMod) {
-          var xMod = marL+150;
-          // Tomar la modificación disponible (entrada tiene preferencia, si no salida)
           var modRef = t.modEntrada || t.modSalida;
           var autor  = modRef.emailEmp ? empNombre : 'Administrador';
           var motivo = (modRef.motivo && modRef.motivo !== '—' && modRef.motivo !== '-' && modRef.motivo !== '')
-            ? modRef.motivo.substring(0, 25) : '';
-          var yL1 = motivo ? yT - 1.5 : yT;
-          // Línea 1: Autor
+            ? modRef.motivo.substring(0, 18) : '';
+          var yL1 = conMot ? yT - 1.5 : yT;
           setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(5.5);
-          doc.text('Autor: ' + autor, xMod, yL1);
-          // Línea 2: Motivo (si existe)
+          doc.text('Autor: ' + autor, marL+146, yL1);
           if (motivo) {
-            doc.setFont('times','italic'); doc.setFontSize(5.5);
-            setRGB(C_GRIS_MED);
-            doc.text('Motivo: ' + motivo, xMod, yL1 + 3);
+            setRGB(C_GRIS_MED); doc.setFont('times','italic'); doc.setFontSize(5.5);
+            doc.text('Motivo: ' + motivo, marL+146, yL1 + 3);
           }
         }
 
-        // Error
         if (esError) {
           setRGB(C_ROJO); doc.setFont('times','bold'); doc.setFontSize(5.5);
-          doc.text('⚠', pgW-marR-4, yT);
+          doc.text('⚠', pgW-marR-2, yT);
         }
 
         rowIdx++;
         y += ROW_H + 0.5;
       });
+
+      // Al terminar todos los turnos del día, insertar fila Total Semana si es el último día de esa semana
+      var grupoSem = fechasPorSemana[semKey] || [];
+      if (fecha === grupoSem[grupoSem.length - 1]) {
+        checkPage(7);
+        setFill([236,253,245]); setDraw(C_VERDE_BRD); doc.setLineWidth(0.3);
+        doc.rect(marL, y, pgW-marL-marR, 6, 'FD');
+        setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(6);
+        doc.text('Total Semana:  ' + minsToStr(semMins[semKey]), marL+3, y+4);
+        y += 6.5;
+      }
     });
 
     // Línea cierre tabla
@@ -2296,6 +2321,56 @@ function exportarExcelAdmin() {
   if (!currentSel || !currentSel.length) { toast('Genera un informe primero', 'err'); return; }
   var wb = XLSX.utils.book_new();
 
+  // ── Paleta de colores (mismos que el PDF) ──
+  var COL = {
+    VERDE_FONDO : 'FF15803D', // header empresa/empleado
+    VERDE_COL   : 'FF1E6432', // header columnas
+    VERDE_TEXTO : 'FF15803D', // texto verde
+    VERDE_SEM   : 'FFECFDF5', // fondo fila total semana
+    VERDE_SEM_B : 'FFBBF7D0', // borde fila total semana
+    VERDE_SEM_T : 'FF15803D', // texto total semana
+    AZUL_TEXTO  : 'FF2563EB', // salida
+    GRIS_OSC    : 'FF374151', // fecha bold
+    GRIS_MED    : 'FF6B7280', // día italic
+    GRIS_CLR    : 'FFD1D5DB', // borde claro
+    AMBER       : 'FF92400E', // modificación
+    ROJO        : 'FFDC2626', // error
+    BLANCO      : 'FFFFFFFF',
+    PAR         : 'FFF9FAFB', // fondo fila par
+    IMPAR       : 'FFFFFFFF', // fondo fila impar
+    ERROR_F     : 'FFFEF2F2', // fondo error
+    TOTAL_F     : 'FF15803D', // fondo fila total global
+    HDR_META_F  : 'FF15803D', // fondo cabecera empresa
+  };
+
+  function hex(c) { return { rgb: c }; }
+  function fgHex(c) { return { patternType:'solid', fgColor:hex(c), bgColor:hex(c) }; }
+
+  // Estilo base
+  function st(opts) {
+    var s = {};
+    if (opts.bg)      s.fill = fgHex(opts.bg);
+    if (opts.color)   s.font = Object.assign(s.font||{}, { color: hex(opts.color) });
+    if (opts.bold)    s.font = Object.assign(s.font||{}, { bold: true });
+    if (opts.italic)  s.font = Object.assign(s.font||{}, { italic: true });
+    if (opts.sz)      s.font = Object.assign(s.font||{}, { sz: opts.sz });
+    if (opts.name)    s.font = Object.assign(s.font||{}, { name: opts.name });
+    if (opts.align)   s.alignment = { horizontal: opts.align, vertical:'center', wrapText: true };
+    else              s.alignment = { vertical:'center', wrapText: true };
+    if (opts.border) {
+      var b = { style:'thin', color: hex(opts.border) };
+      s.border = { top:b, bottom:b, left:b, right:b };
+    }
+    if (opts.borderB) {
+      s.border = s.border || {};
+      s.border.bottom = { style:'medium', color: hex(opts.borderB) };
+    }
+    return s;
+  }
+
+  function cell(v, opts) { return { v: v, t: typeof v === 'number' ? 'n' : 's', s: st(opts||{}) }; }
+  function empty(opts)   { return cell('', opts); }
+
   currentSel.forEach(function(empNombre) {
     var dmap = editData[empNombre];
     if (!dmap) return;
@@ -2303,35 +2378,238 @@ function exportarExcelAdmin() {
     var empDNI  = empObj.dni  || '';
     var empAfil = empObj.numAfiliacion || '';
     var fOrd = Object.keys(dmap).sort();
-    var intervalo = (currentDesde && currentHasta) ? isoDisplay(currentDesde) + ' - ' + isoDisplay(currentHasta) : (fOrd.length ? isoDisplay(fOrd[0]) + ' - ' + isoDisplay(fOrd[fOrd.length-1]) : '');
+    var intervalo = (currentDesde && currentHasta)
+      ? isoDisplay(currentDesde) + ' - ' + isoDisplay(currentHasta)
+      : (fOrd.length ? isoDisplay(fOrd[0]) + ' - ' + isoDisplay(fOrd[fOrd.length-1]) : '');
 
-    var rows = [];
-    rows.push(['EMPRESA: '+EMPRESA_DATOS.nombre,'','','EMPLEADO: '+empNombre,'','','','']);
-    rows.push(['CIF: '+EMPRESA_DATOS.cif,'','','DNI: '+empDNI,'','','','']);
-    rows.push(['N\u00BA AFILIACI\u00D3N: '+EMPRESA_DATOS.numAfiliacion,'','','N\u00BA AFILIACI\u00D3N: '+empAfil,'','','','']);
-    rows.push(['CENTRO: '+EMPRESA_DATOS.centro,'','','INTERVALO: '+intervalo,'','','','']);
-    rows.push([]);
-    rows.push(['FECHA','D\u00CDA','TURNO','ENTRADA','SALIDA','TIEMPO TOTAL','MOD. ENTRADA','MOD. SALIDA']);
+    // ── 7 columnas: FECHA/DÍA | ENTRADA | SALIDA | LUGAR | T.TURNO | T.DÍA | MOD ──
+    var COLS = 7;
+    var data = []; // array de filas: cada fila es array de cell()
 
-    var totalMins = 0;
+    // Estilos cabecera empresa
+    var hdrSt = { bg: COL.VERDE_FONDO, color: COL.BLANCO, bold: true, sz: 9, name: 'Calibri' };
+    var hdrStN = { bg: COL.VERDE_FONDO, color: COL.BLANCO, bold: false, sz: 8, name: 'Calibri' };
+
+    // ── Fila 1: Empresa | Empleado ──
+    data.push([
+      cell('EMPRESA: ' + EMPRESA_DATOS.nombre, hdrSt),
+      empty(hdrSt), empty(hdrSt),
+      cell('EMPLEADO: ' + empNombre, hdrSt),
+      empty(hdrSt), empty(hdrSt), empty(hdrSt)
+    ]);
+    // ── Fila 2 ──
+    data.push([
+      cell('CIF: ' + EMPRESA_DATOS.cif, hdrStN),
+      empty(hdrStN), empty(hdrStN),
+      cell('DNI: ' + empDNI, hdrStN),
+      empty(hdrStN), empty(hdrStN), empty(hdrStN)
+    ]);
+    // ── Fila 3 ──
+    data.push([
+      cell('Nº AFILIACIÓN: ' + EMPRESA_DATOS.numAfiliacion, hdrStN),
+      empty(hdrStN), empty(hdrStN),
+      cell('Nº AFILIACIÓN: ' + empAfil, hdrStN),
+      empty(hdrStN), empty(hdrStN), empty(hdrStN)
+    ]);
+    // ── Fila 4 ──
+    data.push([
+      cell('CENTRO: ' + EMPRESA_DATOS.centro, hdrStN),
+      empty(hdrStN), empty(hdrStN),
+      cell('INTERVALO: ' + intervalo, hdrStN),
+      empty(hdrStN), empty(hdrStN), empty(hdrStN)
+    ]);
+    // ── Fila 5: Título ──
+    var titSt = { bg: COL.VERDE_FONDO, color: COL.BLANCO, bold: true, italic: true, sz: 13, name: 'Times New Roman', align: 'center' };
+    data.push([
+      cell('Informe de Fichajes', titSt),
+      empty(titSt), empty(titSt), empty(titSt), empty(titSt), empty(titSt), empty(titSt)
+    ]);
+    // ── Fila 6: Subtítulo ──
+    var subSt = { bg: COL.VERDE_FONDO, color: 'FFD1FAE5', bold: false, italic: true, sz: 8, name: 'Times New Roman', align: 'center' };
+    data.push([
+      cell(EMPRESA_DATOS.nombre + '  —  ' + empNombre, subSt),
+      empty(subSt), empty(subSt), empty(subSt), empty(subSt), empty(subSt), empty(subSt)
+    ]);
+
+    // ── Fila 7: Cabecera columnas ──
+    var colHdrSt = function(txt) {
+      return cell(txt, { bg: COL.VERDE_COL, color: COL.BLANCO, bold: true, sz: 8, name: 'Calibri', align: 'center',
+        border: COL.VERDE_COL });
+    };
+    data.push([
+      colHdrSt('FECHA / DÍA'),
+      colHdrSt('ENTRADA'),
+      colHdrSt('SALIDA'),
+      colHdrSt('LUGAR'),
+      colHdrSt('T.TURNO'),
+      colHdrSt('T.DÍA'),
+      colHdrSt('MOD.')
+    ]);
+
+    var ROW_HDR = data.length; // número de filas de cabecera (0-indexed start of data)
+
+    // ── Pre-calcular fechas por semana ──
+    var fechasPorSemana = {};
+    var semMins = {};
     fOrd.forEach(function(fecha) {
       var regs = dmap[fecha] || [];
       if (!regs.length) return;
       var turnos = buildTurnosInforme(empNombre, fecha, regs, solicitudes);
-      var dow = dowName(fecha); var dowCap = dow.charAt(0).toUpperCase()+dow.slice(1);
-      turnos.forEach(function(t) {
-        var modE = t.modEntrada ? 'Mod. por '+(t.modEntrada.emailEmp?'empleado':'empresa')+(t.modEntrada.motivo&&t.modEntrada.motivo!=='\u2014'?'. Motivo: '+t.modEntrada.motivo:'') : '';
-        var modS = t.modSalida  ? 'Mod. por '+(t.modSalida.emailEmp ?'empleado':'empresa')+(t.modSalida.motivo &&t.modSalida.motivo !=='\u2014'?'. Motivo: '+t.modSalida.motivo :'') : '';
-        rows.push([isoDisplay(fecha), dowCap, 'Turno '+t.turnoNum, t.entradaHora||'\u2014', t.salidaHora||'\u2014', t.minutos!=null?minsToStr(t.minutos):'\u2014', modE, modS]);
-        if (t.minutos!=null) totalMins+=t.minutos;
+      if (!turnos.length) return;
+      var sk = isoWeek(fecha);
+      if (!fechasPorSemana[sk]) fechasPorSemana[sk] = [];
+      fechasPorSemana[sk].push(fecha);
+    });
+
+    var totalMinsGlobal = 0;
+    var rowIdx = 0;
+
+    fOrd.forEach(function(fecha) {
+      var regs = dmap[fecha] || [];
+      if (!regs.length) return;
+      var calc   = calcDia(regs, fecha);
+      var turnos = buildTurnosInforme(empNombre, fecha, regs, solicitudes);
+      if (!turnos.length) return;
+      if (calc.mins != null) totalMinsGlobal += calc.mins;
+      var semKey = isoWeek(fecha);
+      if (!semMins[semKey]) semMins[semKey] = 0;
+
+      var dow    = dowName(fecha);
+      var dowCap = dow.charAt(0).toUpperCase() + dow.slice(1);
+      var esUltimoDiaSem = (fecha === (fechasPorSemana[semKey]||[])[((fechasPorSemana[semKey]||[]).length)-1]);
+
+      turnos.forEach(function(t, ti) {
+        var esError = !!t.errorNoche;
+        var hasMod  = !!(t.modEntrada || t.modSalida);
+        var bg = esError ? COL.ERROR_F : (rowIdx % 2 === 0 ? COL.PAR : COL.IMPAR);
+        var brd = COL.GRIS_CLR;
+
+        // Celda fecha+día (solo primer turno del día)
+        var fechaCell;
+        if (ti === 0) {
+          fechaCell = cell(isoDisplay(fecha) + '\n' + dowCap, {
+            bg: bg, color: COL.GRIS_OSC, bold: true, sz: 8, name: 'Calibri', border: brd
+          });
+        } else {
+          fechaCell = empty({ bg: bg, border: brd });
+        }
+
+        // Entrada
+        var entColor = t.modEntrada ? COL.AMBER : COL.VERDE_TEXTO;
+        var entTxt = t.entradaHora ? (t.entradaHora + (t.modEntrada ? ' ✏' : '')) : '—';
+        var entCell = cell(entTxt, { bg: bg, color: entColor, bold: !!t.entradaHora, sz: 9, name: 'Calibri', align: 'center', border: brd });
+
+        // Salida
+        var salColor = t.modSalida ? COL.AMBER : COL.AZUL_TEXTO;
+        var salTxt = t.salidaHora ? (t.salidaHora + (t.modSalida ? ' ✏' : '')) : '—';
+        var salCell = cell(salTxt, { bg: bg, color: salColor, bold: !!t.salidaHora, sz: 9, name: 'Calibri', align: 'center', border: brd });
+
+        // Lugar
+        var lugarCell = cell('Embajadores, 177\nMadrid', { bg: bg, color: COL.GRIS_MED, sz: 7, name: 'Calibri', border: brd });
+
+        // T.Turno
+        var tTurnoCell;
+        if (t.minutos != null) {
+          semMins[semKey] += t.minutos;
+          tTurnoCell = cell(minsToStr(t.minutos), { bg: bg, color: COL.GRIS_OSC, sz: 8, name: 'Calibri', align: 'center', border: brd });
+        } else {
+          tTurnoCell = cell('—', { bg: bg, color: COL.GRIS_MED, sz: 8, name: 'Calibri', align: 'center', border: brd });
+        }
+
+        // T.Día (solo último turno del día)
+        var tDiaCell;
+        if (ti === turnos.length - 1 && calc.mins != null) {
+          tDiaCell = cell(minsToStr(calc.mins), { bg: bg, color: COL.VERDE_TEXTO, bold: true, sz: 9, name: 'Calibri', align: 'center', border: brd });
+        } else {
+          tDiaCell = cell('', { bg: bg, border: brd });
+        }
+
+        // Mod
+        var modTxt = '';
+        if (hasMod) {
+          var modRef = t.modEntrada || t.modSalida;
+          var autor  = modRef.emailEmp ? empNombre : 'Administrador';
+          var motivo = (modRef.motivo && modRef.motivo !== '—' && modRef.motivo !== '-' && modRef.motivo !== '') ? modRef.motivo : '';
+          modTxt = 'Autor: ' + autor + (motivo ? '\nMotivo: ' + motivo : '');
+        }
+        var modCell = cell(modTxt, { bg: bg, color: COL.AMBER, sz: 7, name: 'Calibri', border: brd });
+
+        data.push([fechaCell, entCell, salCell, lugarCell, tTurnoCell, tDiaCell, modCell]);
+        rowIdx++;
+      });
+
+      // Total semana al final del último día de la semana
+      if (esUltimoDiaSem) {
+        var semSt = { bg: COL.VERDE_SEM, color: COL.VERDE_SEM_T, bold: true, sz: 8, name: 'Calibri' };
+        var semBrd = { style:'thin', color: hex(COL.VERDE_SEM_B) };
+        var semBrdSt = Object.assign({}, semSt, { _brd: semBrd });
+        var semCell0 = cell('Total Semana', semSt);
+        semCell0.s.border = { top: semBrd, bottom: semBrd, left: semBrd, right: semBrd };
+        var semCellTot = cell(minsToStr(semMins[semKey]), semSt);
+        semCellTot.s.border = { top: semBrd, bottom: semBrd, left: semBrd, right: semBrd };
+        semCellTot.s.alignment = { horizontal:'center', vertical:'center' };
+        var semEmpty = function() {
+          var c = empty(semSt);
+          c.s.border = { top: semBrd, bottom: semBrd, left: semBrd, right: semBrd };
+          return c;
+        };
+        data.push([semCell0, semEmpty(), semEmpty(), semEmpty(), semCellTot, semEmpty(), semEmpty()]);
+      }
+    });
+
+    // ── Fila total global ──
+    var totSt = { bg: COL.TOTAL_F, color: COL.BLANCO, bold: true, sz: 10, name: 'Calibri', align: 'center' };
+    var totCell = cell('TOTAL HORAS TRABAJADAS EN EL PERÍODO:  ' + minsToStr(totalMinsGlobal), totSt);
+    data.push([totCell, empty(totSt), empty(totSt), empty(totSt), empty(totSt), empty(totSt), empty(totSt)]);
+
+    // ── Construir worksheet ──
+    var ws = {};
+    var nRows = data.length;
+    var nCols = COLS;
+    var range = { s: {r:0,c:0}, e: {r:nRows-1,c:nCols-1} };
+    ws['!ref'] = XLSX.utils.encode_range(range);
+
+    data.forEach(function(row, r) {
+      row.forEach(function(c, col) {
+        var addr = XLSX.utils.encode_cell({r:r, c:col});
+        ws[addr] = c;
       });
     });
 
-    rows.push([]);
-    rows.push(['','','','','','RESUMEN TOTAL: '+minsToStr(totalMins),'','']);
+    // Anchos de columna
+    ws['!cols'] = [
+      {wch:16}, // FECHA/DÍA
+      {wch:11}, // ENTRADA
+      {wch:11}, // SALIDA
+      {wch:20}, // LUGAR
+      {wch:10}, // T.TURNO
+      {wch:10}, // T.DÍA
+      {wch:30}  // MOD
+    ];
 
-    var ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:13},{wch:12},{wch:9},{wch:9},{wch:9},{wch:14},{wch:35},{wch:35}];
+    // Alturas de fila
+    var rowHeights = [];
+    for (var ri = 0; ri < nRows; ri++) {
+      if (ri < 4) rowHeights.push({hpt: 18});       // meta
+      else if (ri === 4) rowHeights.push({hpt: 24}); // título
+      else if (ri === 5) rowHeights.push({hpt: 14}); // subtítulo
+      else if (ri === 6) rowHeights.push({hpt: 16}); // col header
+      else rowHeights.push({hpt: 20});               // data rows
+    }
+    ws['!rows'] = rowHeights;
+
+    // Merges: cabecera empresa (cols 0-2) y empleado (cols 3-6) para filas 0-5
+    ws['!merges'] = [];
+    for (var mr = 0; mr < 6; mr++) {
+      ws['!merges'].push({s:{r:mr,c:0},e:{r:mr,c:2}}); // empresa
+      ws['!merges'].push({s:{r:mr,c:3},e:{r:mr,c:6}}); // empleado
+    }
+    // Título y subtítulo: fila completa
+    ws['!merges'].push({s:{r:4,c:0},e:{r:4,c:6}});
+    ws['!merges'].push({s:{r:5,c:0},e:{r:5,c:6}});
+    // Total global: fila completa
+    ws['!merges'].push({s:{r:nRows-1,c:0},e:{r:nRows-1,c:6}});
+
     var hn = empNombre.substring(0,28).replace(/[:\\/\?\*\[\]]/g,'_');
     XLSX.utils.book_append_sheet(wb, ws, hn);
   });
