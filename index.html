@@ -593,7 +593,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
     <div class="overlap-error" id="overlap-error">⚠ ERROR: la hora/fecha nueva se solapa con otro turno existente.</div>
     <hr class="modal-divider">
     <div class="modal-row" id="sol-email-row"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
-    <div class="modal-row"><label>Motivo <span style="color:var(--ink3)">(opcional)</span></label><textarea id="sol-motivo" placeholder="Motivo del cambio..."></textarea></div>
+    <div class="modal-row"><label>Motivo <span style="color:var(--red);font-weight:600">*</span></label><select id="sol-motivo" style="padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;width:100%;transition:border-color .15s"><option value="OLVIDO DE FICHAJE">OLVIDO DE FICHAJE</option><option value="ERROR EN EL SISTEMA">ERROR EN EL SISTEMA</option><option value="OTROS">OTROS</option></select></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cerrarModalSol()">Cancelar</button>
       <button class="btn-submit" id="btn-submit-sol" onclick="enviarSolicitud()">Enviar solicitud</button>
@@ -1398,7 +1398,7 @@ function abrirModalSol(emp,fecha,isEmp,turnoIdx){
   document.getElementById('sol-fecha-salida-nueva').value=fechaS;
   document.getElementById('sol-hora-salida-actual').value=horaS;
   document.getElementById('sol-hora-salida-nueva').value=turno.salida?horaS.slice(0,5):'';
-  document.getElementById('sol-motivo').value='';
+  document.getElementById('sol-motivo').selectedIndex=0;
   document.getElementById('overlap-error').classList.remove('on');
   document.getElementById('btn-submit-sol').disabled=false;
   if(solIsEmp){document.getElementById('sol-email-emp').value=session.email;document.getElementById('sol-email-row').style.display='none';}
@@ -1427,8 +1427,8 @@ async function enviarSolicitud(){
   var cambiaFS=horaSA!=='—'&&fechaSN!==fechaSOrig;
   if(!cambiaE&&!cambiaS&&!cambiaFE&&!cambiaFS){toast('No hay ningún cambio respecto al original','err');return;}
   var toSend=[];
-  if((cambiaE||cambiaFE)&&horaEA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaEOrig,fechaNueva:fechaEN,tipo:'ENTRADA',horaActual:normHora(horaEA),horaNueva:cambiaE?horaEN:normHora(horaEA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp});}
-  if((cambiaS||cambiaFS)&&horaSA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaSOrig,fechaNueva:fechaSN,tipo:'SALIDA',horaActual:normHora(horaSA),horaNueva:cambiaS?horaSN:normHora(horaSA),motivo:motivo||'—',emailEmp:solIsEmp?session.email:emailEmp});}
+  if((cambiaE||cambiaFE)&&horaEA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaEOrig,fechaNueva:fechaEN,tipo:'ENTRADA',horaActual:normHora(horaEA),horaNueva:cambiaE?horaEN:normHora(horaEA),motivo:motivo,emailEmp:solIsEmp?session.email:emailEmp});}
+  if((cambiaS||cambiaFS)&&horaSA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaSOrig,fechaNueva:fechaSN,tipo:'SALIDA',horaActual:normHora(horaSA),horaNueva:cambiaS?horaSN:normHora(horaSA),motivo:motivo,emailEmp:solIsEmp?session.email:emailEmp});}
   if(!toSend.length){toast('No hay cambios que enviar','err');return;}
   cerrarModalSol();setLoader(true,'Enviando solicitud...');
   var envioOk=false,envioErr='';
