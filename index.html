@@ -1972,8 +1972,11 @@ function buildTurnosInforme(emp, fecha, regs, solsRef) {
     if (solsRef) {
       solsRef.forEach(function(s) {
         if (s.emp !== emp) return;
-        if (s.tipo === 'ENTRADA' && entradaHora && normHora(s.horaActual) === normHora(entradaHora)) modE = s;
-        if (s.tipo === 'SALIDA'  && salidaHora  && normHora(s.horaActual) === normHora(salidaHora))  modS = s;
+        // Coincidir por horaActual O por horaNueva (si ya fue aprobada y cambiada)
+        var matchE = entradaHora && (normHora(s.horaActual) === normHora(entradaHora) || normHora(s.horaNueva) === normHora(entradaHora));
+        var matchS = salidaHora  && (normHora(s.horaActual) === normHora(salidaHora)  || normHora(s.horaNueva) === normHora(salidaHora));
+        if (s.tipo === 'ENTRADA' && matchE) modE = s;
+        if (s.tipo === 'SALIDA'  && matchS) modS = s;
       });
     }
     resultado.push({
@@ -2076,9 +2079,10 @@ function exportarPDFAdmin() {
       doc.text('FECHA',         marL+1,  y+4);
       doc.text('DÍA',      marL+21, y+4);
       doc.text('ENTRADA',       marL+37, y+4);
-      doc.text('SALIDA',        marL+73, y+4);
-      doc.text('TOTAL TURNO',   marL+109, y+4);
-      doc.text('MODIFICACIÓN', marL+145, y+4);
+      doc.text('SALIDA',        marL+70, y+4);
+      doc.text('T.TURNO',  marL+103, y+4);
+      doc.text('T.DÍA',   marL+127, y+4);
+      doc.text('MODIFICACIÓN', marL+150, y+4);
       y += 7;
     }
 
@@ -2121,7 +2125,10 @@ function exportarPDFAdmin() {
 
       turnos.forEach(function(t, ti) {
         var hasMod = !!(t.modEntrada || t.modSalida);
-        var ROW_H  = hasMod ? 9 : 7;
+        var dosMod = !!(t.modEntrada && t.modSalida);
+        var conMotE = !!(t.modEntrada && t.modEntrada.motivo && t.modEntrada.motivo !== '—' && t.modEntrada.motivo !== '-' && t.modEntrada.motivo !== '');
+        var conMotS = !!(t.modSalida  && t.modSalida.motivo  && t.modSalida.motivo  !== '—' && t.modSalida.motivo  !== '-' && t.modSalida.motivo  !== '');
+        var ROW_H  = dosMod ? (conMotE || conMotS ? 13 : 11) : (hasMod ? (conMotE || conMotS ? 10 : 8) : 7);
         checkPage(ROW_H + 0.5);
 
         // Fondo fila
@@ -2162,6 +2169,11 @@ function exportarPDFAdmin() {
           setRGB(C_VERDE);
           doc.setFont('times','bold'); doc.setFontSize(7);
           doc.text(t.entradaHora, marL+37, yT);
+          // Lápiz si hay modificación en entrada
+          if (t.modEntrada) {
+            setRGB(C_AMBER); doc.setFont('times','normal'); doc.setFontSize(7);
+            doc.text('✏', marL+37 + doc.getTextWidth(t.entradaHora) + 1, yT);
+          }
         } else {
           setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(6);
           doc.text('—', marL+37, yT);
@@ -2171,36 +2183,45 @@ function exportarPDFAdmin() {
         if (t.salidaHora) {
           setRGB(C_AZUL);
           doc.setFont('times','bold'); doc.setFontSize(7);
-          doc.text(t.salidaHora, marL+73, yT);
+          doc.text(t.salidaHora, marL+70, yT);
+          // Lápiz si hay modificación en salida
+          if (t.modSalida) {
+            setRGB(C_AMBER); doc.setFont('times','normal'); doc.setFontSize(7);
+            doc.text('✏', marL+70 + doc.getTextWidth(t.salidaHora) + 1, yT);
+          }
         } else {
           setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(6);
-          doc.text('—', marL+73, yT);
+          doc.text('—', marL+70, yT);
         }
 
         // TOTAL TURNO
         setRGB(C_GRIS_OSC); doc.setFont('times','normal'); doc.setFontSize(6);
-        doc.text(t.minutos != null ? minsToStr(t.minutos) : '—', marL+109, yT);
+        doc.text(t.minutos != null ? minsToStr(t.minutos) : '—', marL+103, yT);
 
-        // Total día (último turno, si hay varios)
-        if (ti === turnos.length-1 && calc.mins != null && turnos.length > 1) {
-          setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(5.5);
-          doc.text('Día: '+minsToStr(calc.mins), marL+109, y+ROW_H-1.5);
+        // TOTAL DÍA — columna propia, solo en el último turno
+        if (ti === turnos.length-1 && calc.mins != null) {
+          setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(6);
+          doc.text(minsToStr(calc.mins), marL+127, yT);
         }
 
-        // MODIFICACIÓN
+        // MODIFICACIÓN — una sola explicación por fila
         if (hasMod) {
-          setRGB(C_AMBER); doc.setFont('times','italic'); doc.setFontSize(5.5);
-          var modTxt = '';
-          if (t.modEntrada) {
-            modTxt += '✏ E: '+(t.modEntrada.motivo && t.modEntrada.motivo!=='—'
-              ? t.modEntrada.motivo.substring(0,22) : (t.modEntrada.emailEmp?'empleado':'empresa'));
+          var xMod = marL+150;
+          // Tomar la modificación disponible (entrada tiene preferencia, si no salida)
+          var modRef = t.modEntrada || t.modSalida;
+          var autor  = modRef.emailEmp ? empNombre : 'Administrador';
+          var motivo = (modRef.motivo && modRef.motivo !== '—' && modRef.motivo !== '-' && modRef.motivo !== '')
+            ? modRef.motivo.substring(0, 25) : '';
+          var yL1 = motivo ? yT - 1.5 : yT;
+          // Línea 1: Autor
+          setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(5.5);
+          doc.text('Autor: ' + autor, xMod, yL1);
+          // Línea 2: Motivo (si existe)
+          if (motivo) {
+            doc.setFont('times','italic'); doc.setFontSize(5.5);
+            setRGB(C_GRIS_MED);
+            doc.text('Motivo: ' + motivo, xMod, yL1 + 3);
           }
-          if (t.modSalida) {
-            if (modTxt) modTxt += '  ';
-            modTxt += '✏ S: '+(t.modSalida.motivo && t.modSalida.motivo!=='—'
-              ? t.modSalida.motivo.substring(0,22) : (t.modSalida.emailEmp?'empleado':'empresa'));
-          }
-          doc.text(modTxt, marL+145, yT);
         }
 
         // Error
