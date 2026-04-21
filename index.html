@@ -2030,7 +2030,7 @@ function exportarPDFAdmin() {
 
     var doc = new jsPDFLib({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     var pgW = 210, pgH = 297, marL = 10, marR = 10;
-    var HDR_H = 26;
+    var HDR_H = 30;
     var y = 0;
 
     var C_VERDE      = [21, 128, 61];
@@ -2056,17 +2056,17 @@ function exportarPDFAdmin() {
       doc.line(pgW/2, 3, pgW/2, HDR_H - 3);
       // Empresa
       doc.setTextColor(255,255,255);
-      doc.setFont('times','bold'); doc.setFontSize(7.5);
+      doc.setFont('times','bold'); doc.setFontSize(9);
       doc.text('EMPRESA: ' + EMPRESA_DATOS.nombre, marL, 7);
-      doc.setFont('times','normal'); doc.setFontSize(6.5);
+      doc.setFont('times','normal'); doc.setFontSize(8);
       doc.text('CIF: ' + EMPRESA_DATOS.cif, marL, 11.5);
       doc.text('Nº AFILIACIÓN: ' + EMPRESA_DATOS.numAfiliacion, marL, 15.5);
       doc.text('CENTRO: ' + EMPRESA_DATOS.centro, marL, 19.5);
       // Empleado
       var rx = pgW/2 + 4;
-      doc.setFont('times','bold'); doc.setFontSize(7.5);
+      doc.setFont('times','bold'); doc.setFontSize(9);
       doc.text('EMPLEADO: ' + empNombre, rx, 7);
-      doc.setFont('times','normal'); doc.setFontSize(6.5);
+      doc.setFont('times','normal'); doc.setFontSize(8);
       if (empDNI)  doc.text('DNI: ' + empDNI, rx, 11.5);
       if (empAfil) doc.text('Nº AFILIACIÓN: ' + empAfil, rx, 15.5);
       var fecOrd = Object.keys(dmap).sort();
@@ -2089,7 +2089,7 @@ function exportarPDFAdmin() {
       setFill([30, 100, 50]);
       doc.rect(marL, y, pgW-marL-marR, 6, 'F');
       doc.setTextColor(255,255,255);
-      doc.setFont('times','bold'); doc.setFontSize(5.8);
+      doc.setFont('times','bold'); doc.setFontSize(7);
       doc.text('FECHA / DÍA',   marL+1,   y+4);
       doc.text('ENTRADA',          marL+30,  y+4);
       doc.text('SALIDA',           marL+52,  y+4);
@@ -2106,11 +2106,11 @@ function exportarPDFAdmin() {
 
     // Título elegante
     setRGB(C_VERDE);
-    doc.setFont('times','bolditalic'); doc.setFontSize(11);
+    doc.setFont('times','bolditalic'); doc.setFontSize(13);
     doc.text('Informe de Fichajes', pgW/2, y, {align:'center'});
     y += 3.5;
     setRGB(C_GRIS_MED);
-    doc.setFont('times','italic'); doc.setFontSize(6.5);
+    doc.setFont('times','italic'); doc.setFontSize(8);
     doc.text(EMPRESA_DATOS.nombre + '  —  ' + empNombre, pgW/2, y, {align:'center'});
     y += 3;
     // Doble línea
@@ -2159,7 +2159,7 @@ function exportarPDFAdmin() {
                        && (t.modEntrada||t.modSalida).motivo !== '—'
                        && (t.modEntrada||t.modSalida).motivo !== '-'
                        && (t.modEntrada||t.modSalida).motivo !== '');
-        var ROW_H   = hasMod ? (conMot ? 10 : 8) : 7;
+        var ROW_H   = hasMod ? (conMot ? 11 : 9) : 8;
         checkPage(ROW_H + 0.5);
 
         // Fondo fila
@@ -2178,53 +2178,53 @@ function exportarPDFAdmin() {
 
         // FECHA (solo primer turno) + DÍA debajo
         if (ti === 0) {
-          setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(6);
+          setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(7.5);
           doc.text(isoDisplay(fecha), marL+1, y + 3.5);
-          setRGB(C_GRIS_MED); doc.setFont('times','italic'); doc.setFontSize(5.5);
+          setRGB(C_GRIS_MED); doc.setFont('times','italic'); doc.setFontSize(7);
           doc.text(dowFull, marL+1, y + 3.5 + 3);
         }
 
         // ENTRADA
         if (t.entradaHora) {
-          setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(7);
+          setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(8.5);
           doc.text(t.entradaHora, marL+30, yT);
           if (t.modEntrada) {
             var xE = marL+30 + doc.getTextWidth(t.entradaHora) + 1.5;
             dibujarMarcaMod(doc, xE, yT - 1);
           }
         } else {
-          setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(6);
+          setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(7.5);
           doc.text('—', marL+30, yT);
         }
 
         // SALIDA
         if (t.salidaHora) {
-          setRGB(C_AZUL); doc.setFont('times','bold'); doc.setFontSize(7);
+          setRGB(C_AZUL); doc.setFont('times','bold'); doc.setFontSize(8.5);
           doc.text(t.salidaHora, marL+52, yT);
           if (t.modSalida) {
             var xS = marL+52 + doc.getTextWidth(t.salidaHora) + 1.5;
             dibujarMarcaMod(doc, xS, yT - 1);
           }
         } else {
-          setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(6);
+          setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(7.5);
           doc.text('—', marL+52, yT);
         }
 
         // LUGAR
-        setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(5.5);
+        setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(7);
         doc.text('Embajadores, 177', marL+74, yT - 1.5);
         doc.text('Madrid', marL+74, yT + 1.2);
 
         // TOTAL TURNO
         if (t.minutos != null) {
-          setRGB(C_GRIS_OSC); doc.setFont('times','normal'); doc.setFontSize(6);
+          setRGB(C_GRIS_OSC); doc.setFont('times','normal'); doc.setFontSize(7.5);
           doc.text(minsToStr(t.minutos), marL+114, yT);
           semMins[semKey] += t.minutos;
         }
 
         // TOTAL DÍA — solo en el último turno del día
         if (ti === turnos.length-1 && calc.mins != null) {
-          setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(6);
+          setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(8);
           doc.text(minsToStr(calc.mins), marL+130, yT);
         }
 
@@ -2235,16 +2235,16 @@ function exportarPDFAdmin() {
           var motivo = (modRef.motivo && modRef.motivo !== '—' && modRef.motivo !== '-' && modRef.motivo !== '')
             ? modRef.motivo.substring(0, 18) : '';
           var yL1 = conMot ? yT - 1.5 : yT;
-          setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(5.5);
+          setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(7);
           doc.text('Autor: ' + autor, marL+146, yL1);
           if (motivo) {
-            setRGB(C_GRIS_MED); doc.setFont('times','italic'); doc.setFontSize(5.5);
+            setRGB(C_GRIS_MED); doc.setFont('times','italic'); doc.setFontSize(7);
             doc.text('Motivo: ' + motivo, marL+146, yL1 + 3);
           }
         }
 
         if (esError) {
-          setRGB(C_ROJO); doc.setFont('times','bold'); doc.setFontSize(5.5);
+          setRGB(C_ROJO); doc.setFont('times','bold'); doc.setFontSize(7);
           doc.text('⚠', pgW-marR-2, yT);
         }
 
@@ -2258,7 +2258,7 @@ function exportarPDFAdmin() {
         checkPage(7);
         setFill([236,253,245]); setDraw(C_VERDE_BRD); doc.setLineWidth(0.3);
         doc.rect(marL, y, pgW-marL-marR, 6, 'FD');
-        setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(6);
+        setRGB(C_VERDE); doc.setFont('times','bold'); doc.setFontSize(7.5);
         doc.text('Total Semana:  ' + minsToStr(semMins[semKey]), marL+3, y+4);
         y += 6.5;
       }
@@ -2274,7 +2274,7 @@ function exportarPDFAdmin() {
     setFill(C_VERDE);
     doc.rect(marL, y, pgW-marL-marR, 10, 'F');
     doc.setTextColor(255,255,255);
-    doc.setFont('times','bold'); doc.setFontSize(9);
+    doc.setFont('times','bold'); doc.setFontSize(11);
     doc.text('TOTAL HORAS TRABAJADAS EN EL PERÍODO:  ' + minsToStr(totalMinsGlobal), pgW/2, y+6.5, {align:'center'});
     y += 14;
 
@@ -2289,11 +2289,11 @@ function exportarPDFAdmin() {
     doc.rect(x1, y, bW, bH);
     setFill([245,245,245]);
     doc.rect(x1, y, bW, 5, 'F');
-    setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(6.5);
+    setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(7.5);
     doc.text('FIRMA EMPLEADO', x1+bW/2, y+3.5, {align:'center'});
     setDraw(C_GRIS_CLR); doc.setLineWidth(0.3);
     doc.line(x1+8, y+bH-6, x1+bW-8, y+bH-6);
-    setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(5.5);
+    setRGB(C_GRIS_MED); doc.setFont('times','normal'); doc.setFontSize(7);
     doc.text(empNombre, x1+bW/2, y+bH-2, {align:'center'});
 
     // Caja empresa
@@ -2301,7 +2301,7 @@ function exportarPDFAdmin() {
     doc.rect(x2, y, bW, bH);
     setFill([245,245,245]);
     doc.rect(x2, y, bW, 5, 'F');
-    setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(6.5);
+    setRGB(C_GRIS_OSC); doc.setFont('times','bold'); doc.setFontSize(7.5);
     doc.text('FIRMA Y SELLO EMPRESA', x2+bW/2, y+3.5, {align:'center'});
     try {
       // Imagen centrada, 50% del ancho, respetando proporción
@@ -2391,8 +2391,8 @@ function exportarExcelAdmin() {
     var data = []; // array de filas: cada fila es array de cell()
 
     // Estilos cabecera empresa
-    var hdrSt = { bg: COL.VERDE_FONDO, color: COL.BLANCO, bold: true, sz: 9, name: 'Calibri' };
-    var hdrStN = { bg: COL.VERDE_FONDO, color: COL.BLANCO, bold: false, sz: 8, name: 'Calibri' };
+    var hdrSt = { bg: COL.VERDE_FONDO, color: COL.BLANCO, bold: true, sz: 11, name: 'Calibri' };
+    var hdrStN = { bg: COL.VERDE_FONDO, color: COL.BLANCO, bold: false, sz: 10, name: 'Calibri' };
 
     // ── Fila 1: Empresa | Empleado ──
     data.push([
@@ -2423,13 +2423,13 @@ function exportarExcelAdmin() {
       empty(hdrStN), empty(hdrStN), empty(hdrStN)
     ]);
     // ── Fila 5: Título ──
-    var titSt = { bg: COL.VERDE_FONDO, color: COL.BLANCO, bold: true, italic: true, sz: 13, name: 'Times New Roman', align: 'center' };
+    var titSt = { bg: COL.VERDE_FONDO, color: COL.BLANCO, bold: true, italic: true, sz: 15, name: 'Times New Roman', align: 'center' };
     data.push([
       cell('Informe de Fichajes', titSt),
       empty(titSt), empty(titSt), empty(titSt), empty(titSt), empty(titSt), empty(titSt)
     ]);
     // ── Fila 6: Subtítulo ──
-    var subSt = { bg: COL.VERDE_FONDO, color: 'FFD1FAE5', bold: false, italic: true, sz: 8, name: 'Times New Roman', align: 'center' };
+    var subSt = { bg: COL.VERDE_FONDO, color: 'FFD1FAE5', bold: false, italic: true, sz: 10, name: 'Times New Roman', align: 'center' };
     data.push([
       cell(EMPRESA_DATOS.nombre + '  —  ' + empNombre, subSt),
       empty(subSt), empty(subSt), empty(subSt), empty(subSt), empty(subSt), empty(subSt)
@@ -2437,7 +2437,7 @@ function exportarExcelAdmin() {
 
     // ── Fila 7: Cabecera columnas ──
     var colHdrSt = function(txt) {
-      return cell(txt, { bg: COL.VERDE_COL, color: COL.BLANCO, bold: true, sz: 8, name: 'Calibri', align: 'center',
+      return cell(txt, { bg: COL.VERDE_COL, color: COL.BLANCO, bold: true, sz: 9, name: 'Calibri', align: 'center',
         border: COL.VERDE_COL });
     };
     data.push([
@@ -2492,7 +2492,7 @@ function exportarExcelAdmin() {
         var fechaCell;
         if (ti === 0) {
           fechaCell = cell(isoDisplay(fecha) + '\n' + dowCap, {
-            bg: bg, color: COL.GRIS_OSC, bold: true, sz: 8, name: 'Calibri', border: brd
+            bg: bg, color: COL.GRIS_OSC, bold: true, sz: 10, name: 'Calibri', border: brd
           });
         } else {
           fechaCell = empty({ bg: bg, border: brd });
@@ -2501,29 +2501,29 @@ function exportarExcelAdmin() {
         // Entrada
         var entColor = t.modEntrada ? COL.AMBER : COL.VERDE_TEXTO;
         var entTxt = t.entradaHora ? (t.entradaHora + (t.modEntrada ? ' ✏' : '')) : '—';
-        var entCell = cell(entTxt, { bg: bg, color: entColor, bold: !!t.entradaHora, sz: 9, name: 'Calibri', align: 'center', border: brd });
+        var entCell = cell(entTxt, { bg: bg, color: entColor, bold: !!t.entradaHora, sz: 10, name: 'Calibri', align: 'center', border: brd });
 
         // Salida
         var salColor = t.modSalida ? COL.AMBER : COL.AZUL_TEXTO;
         var salTxt = t.salidaHora ? (t.salidaHora + (t.modSalida ? ' ✏' : '')) : '—';
-        var salCell = cell(salTxt, { bg: bg, color: salColor, bold: !!t.salidaHora, sz: 9, name: 'Calibri', align: 'center', border: brd });
+        var salCell = cell(salTxt, { bg: bg, color: salColor, bold: !!t.salidaHora, sz: 10, name: 'Calibri', align: 'center', border: brd });
 
         // Lugar
-        var lugarCell = cell('Embajadores, 177\nMadrid', { bg: bg, color: COL.GRIS_MED, sz: 7, name: 'Calibri', border: brd });
+        var lugarCell = cell('Embajadores, 177\nMadrid', { bg: bg, color: COL.GRIS_MED, sz: 9, name: 'Calibri', border: brd });
 
         // T.Turno
         var tTurnoCell;
         if (t.minutos != null) {
           semMins[semKey] += t.minutos;
-          tTurnoCell = cell(minsToStr(t.minutos), { bg: bg, color: COL.GRIS_OSC, sz: 8, name: 'Calibri', align: 'center', border: brd });
+          tTurnoCell = cell(minsToStr(t.minutos), { bg: bg, color: COL.GRIS_OSC, sz: 10, name: 'Calibri', align: 'center', border: brd });
         } else {
-          tTurnoCell = cell('—', { bg: bg, color: COL.GRIS_MED, sz: 8, name: 'Calibri', align: 'center', border: brd });
+          tTurnoCell = cell('—', { bg: bg, color: COL.GRIS_MED, sz: 10, name: 'Calibri', align: 'center', border: brd });
         }
 
         // T.Día (solo último turno del día)
         var tDiaCell;
         if (ti === turnos.length - 1 && calc.mins != null) {
-          tDiaCell = cell(minsToStr(calc.mins), { bg: bg, color: COL.VERDE_TEXTO, bold: true, sz: 9, name: 'Calibri', align: 'center', border: brd });
+          tDiaCell = cell(minsToStr(calc.mins), { bg: bg, color: COL.VERDE_TEXTO, bold: true, sz: 11, name: 'Calibri', align: 'center', border: brd });
         } else {
           tDiaCell = cell('', { bg: bg, border: brd });
         }
@@ -2536,7 +2536,7 @@ function exportarExcelAdmin() {
           var motivo = (modRef.motivo && modRef.motivo !== '—' && modRef.motivo !== '-' && modRef.motivo !== '') ? modRef.motivo : '';
           modTxt = 'Autor: ' + autor + (motivo ? '\nMotivo: ' + motivo : '');
         }
-        var modCell = cell(modTxt, { bg: bg, color: COL.AMBER, sz: 7, name: 'Calibri', border: brd });
+        var modCell = cell(modTxt, { bg: bg, color: COL.AMBER, sz: 9, name: 'Calibri', border: brd });
 
         data.push([fechaCell, entCell, salCell, lugarCell, tTurnoCell, tDiaCell, modCell]);
         rowIdx++;
@@ -2544,7 +2544,7 @@ function exportarExcelAdmin() {
 
       // Total semana al final del último día de la semana
       if (esUltimoDiaSem) {
-        var semSt = { bg: COL.VERDE_SEM, color: COL.VERDE_SEM_T, bold: true, sz: 8, name: 'Calibri' };
+        var semSt = { bg: COL.VERDE_SEM, color: COL.VERDE_SEM_T, bold: true, sz: 9, name: 'Calibri' };
         var semBrd = { style:'thin', color: hex(COL.VERDE_SEM_B) };
         var semBrdSt = Object.assign({}, semSt, { _brd: semBrd });
         var semCell0 = cell('Total Semana', semSt);
@@ -2562,7 +2562,7 @@ function exportarExcelAdmin() {
     });
 
     // ── Fila total global ──
-    var totSt = { bg: COL.TOTAL_F, color: COL.BLANCO, bold: true, sz: 10, name: 'Calibri', align: 'center' };
+    var totSt = { bg: COL.TOTAL_F, color: COL.BLANCO, bold: true, sz: 11, name: 'Calibri', align: 'center' };
     var totCell = cell('TOTAL HORAS TRABAJADAS EN EL PERÍODO:  ' + minsToStr(totalMinsGlobal), totSt);
     data.push([totCell, empty(totSt), empty(totSt), empty(totSt), empty(totSt), empty(totSt), empty(totSt)]);
 
@@ -2594,11 +2594,11 @@ function exportarExcelAdmin() {
     // Alturas de fila
     var rowHeights = [];
     for (var ri = 0; ri < nRows; ri++) {
-      if (ri < 4) rowHeights.push({hpt: 18});       // meta
-      else if (ri === 4) rowHeights.push({hpt: 24}); // título
-      else if (ri === 5) rowHeights.push({hpt: 14}); // subtítulo
-      else if (ri === 6) rowHeights.push({hpt: 16}); // col header
-      else rowHeights.push({hpt: 20});               // data rows
+      if (ri < 4) rowHeights.push({hpt: 22});       // meta
+      else if (ri === 4) rowHeights.push({hpt: 28}); // título
+      else if (ri === 5) rowHeights.push({hpt: 18}); // subtítulo
+      else if (ri === 6) rowHeights.push({hpt: 18}); // col header
+      else rowHeights.push({hpt: 24});               // data rows
     }
     ws['!rows'] = rowHeights;
 
