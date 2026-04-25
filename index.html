@@ -1099,27 +1099,46 @@ function checkOverlap(){
   var fechaSN=document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
   if(!horaEN&&!horaSN)return;
   var fechasRef=[diaAnterior(diaAnterior(solActual.fecha)),diaAnterior(solActual.fecha),solActual.fecha,diaSiguiente(solActual.fecha),diaSiguiente(diaSiguiente(solActual.fecha))];
+  // intervalos: turnos completos (entrada+salida) de otros turnos
   var intervalos=[];
+  // puntosAislados: entradas o salidas sueltas (sin pareja) de otros turnos — también son límites
+  var puntosAislados=[];
   fechasRef.forEach(function(f){
     var regs=dmap[f]||[];if(!regs.length)return;
     var turnos=emparejarTurnos(regs,f);
     turnos.forEach(function(t,idx){
       if(f===solActual.fecha&&idx===solActual.turnoIdx)return;
-      if(!t.entrada||!t.salida)return;
-      var absE=isoHoraToAbsMins(t.fechaEntrada,t.entrada.hora),absS=isoHoraToAbsMins(t.fechaSalida,t.salida.hora);
-      if(absE===null||absS===null)return;
-      intervalos.push({inicio:absE,fin:absS});
+      var absE=t.entrada?isoHoraToAbsMins(t.fechaEntrada,t.entrada.hora):null;
+      var absS=t.salida ?isoHoraToAbsMins(t.fechaSalida, t.salida.hora) :null;
+      if(absE!==null&&absS!==null){
+        intervalos.push({inicio:absE,fin:absS});
+      }else{
+        // turno incompleto: registrar el punto que existe como límite aislado
+        if(absE!==null)puntosAislados.push(absE);
+        if(absS!==null)puntosAislados.push(absS);
+      }
     });
   });
-  if(!intervalos.length)return;
   function solapaConAlguno(iso,horaStr){
     var abs=isoHoraToAbsMins(iso,horaStr);if(abs===null)return false;
+    // cae dentro de un turno completo
     for(var j=0;j<intervalos.length;j++){if(abs>intervalos[j].inicio&&abs<intervalos[j].fin)return true;}
+    // coincide exactamente con una entrada/salida aislada de otro turno
+    for(var k=0;k<puntosAislados.length;k++){if(abs===puntosAislados[k])return true;}
+    return false;
+  }
+  // Verificar también que la nueva hora no sea posterior a la siguiente entrada suelta
+  // (caso: hay una ENTRADA a las 09:00 del día siguiente y se pide SALIDA a las 10:00)
+  function superaPuntoAislado(iso,horaStr){
+    var abs=isoHoraToAbsMins(iso,horaStr);if(abs===null)return false;
+    for(var k=0;k<puntosAislados.length;k++){if(abs>puntosAislados[k])return true;}
     return false;
   }
   var solapa=false;
   if(horaEN&&solapaConAlguno(fechaEN,horaEN))solapa=true;
   if(horaSN&&solapaConAlguno(fechaSN,horaSN))solapa=true;
+  // La nueva SALIDA no puede ser posterior a la próxima ENTRADA suelta
+  if(!solapa&&horaSN&&superaPuntoAislado(fechaSN,horaSN))solapa=true;
   if(solapa){errEl.classList.add('on');btnEl.disabled=true;return;}
   if(horaEN&&horaSN){
     var absE=isoHoraToAbsMins(fechaEN,horaEN);var absS=isoHoraToAbsMins(fechaSN,horaSN);
@@ -1284,7 +1303,7 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     bloque+='</div>';
     bloque+='<div style="display:flex;align-items:center;gap:0;padding:8px 12px;">';
     if(turno.entrada){
-      var solPendEObj=hasPendE?solsRef.find(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaEntrada&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente';}):null;
+      var solPendEObj=hasPendE?solsRef.find(function(s){return s.emp===emp&&s.tipo==='ENTRADA'&&normHora(s.horaActual)===normHora(turno.entrada.hora)&&s.estado==='pendiente'&&(safeISO(s.fecha)===turno.fechaEntrada||safeISO(s.fecha)===fechaRealE);}):null;
       var btnClsE='hora-btn'+(hasPendE?' pending':hasApprE?' approved':'')+(isErr?' hora-btn-long':'');
       bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
       bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--green);font-weight:600">ENTRADA</span>';
@@ -1299,7 +1318,7 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     }
     bloque+='<div style="padding:0 10px;color:var(--ink3);font-size:.9rem;flex-shrink:0">→</div>';
     if(turno.salida){
-      var solPendSObj=hasPendS?solsRef.find(function(s){return s.emp===emp&&safeISO(s.fecha)===turno.fechaSalida&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente';}):null;
+      var solPendSObj=hasPendS?solsRef.find(function(s){return s.emp===emp&&s.tipo==='SALIDA'&&normHora(s.horaActual)===normHora(turno.salida.hora)&&s.estado==='pendiente'&&(safeISO(s.fecha)===turno.fechaSalida||safeISO(s.fecha)===fechaRealS);}):null;
       var btnClsS='hora-btn'+(hasPendS?' pending':hasApprS?' approved':'')+(isErr?' hora-btn-long':'');
       bloque+='<div style="flex:1;display:flex;flex-direction:column;gap:2px">';
       bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:600">SALIDA</span>';
