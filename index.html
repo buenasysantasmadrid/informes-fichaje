@@ -986,7 +986,7 @@ function parseFecha(s){
 function safeISO(s){var p=parseFecha(String(s||'').trim());return p||String(s||'').slice(0,10);}
 function horaToMins(s){var m=String(s||'').match(/^(\d{1,2}):(\d{2})/);return m?(+m[1])*60+(+m[2]):null;}
 function normHora(s){var m=horaToMins(s);if(m==null)return s||'';return('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);}
-function minsToStr(m){if(m==null||m<0)return'—';return Math.floor(m/60)+'h '+('0'+(m%60)).slice(-2)+'min';}
+function minsToStr(m){if(m==null||m<0)return'—';if(m===0)return'0 min';return Math.floor(m/60)+'h '+('0'+(m%60)).slice(-2)+'min';}
 function isoDisplay(iso){if(!iso)return'';var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function dowName(iso){var p=iso.split('-').map(Number);return DIAS_TILDE[new Date(p[0],p[1]-1,p[2]).getDay()];}
 function diaSiguiente(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
@@ -1027,7 +1027,7 @@ function construirDmap(fichajes){
         if(todos[j].tipo==='ENTRADA')break; // otra entrada antes de salida → turno sin salida
         if(todos[j].tipo==='SALIDA'){
           var absSalida=absMins(todos[j].fecha,todos[j].hora);
-          if(absSalida>absEntrada){
+          if(absSalida>=absEntrada){
             usada[j]=true;
             var sal=todos[j];
             var err=(sal.fecha!==fechaE); // errorNoche solo si la salida es de otro día (turno nocturno)
@@ -1079,12 +1079,12 @@ function calcTurnoMins(turno){
       return diasDesdeRef*1440+(horaToMins(hora)||0);
     }
     var dur=absMinsLocal(fechaS,turno.salida.hora)-absMinsLocal(fechaE,turno.entrada.hora);
-    return dur>0?dur:null;
+    return dur>=0?dur:null;
   }
   // Mismo día: ajuste nocturno normal
   var me=horaToMins(turno.entrada.hora)||0,ms=horaToMins(turno.salida.hora)||0;
   if(me<UMBRAL_NOCHE)me+=1440;if(ms<UMBRAL_NOCHE)ms+=1440;
-  var dur=ms-me;return dur>0?dur:null;
+  var dur=ms-me;return dur>=0?dur:null;
 }
 function turnoTipoError(turno){
   // Devuelve: null (sin error), 'sinEntrada', 'corto' (<5min), 'largo' (>11h)
@@ -1336,7 +1336,7 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     bloque+='<span style="font-size:.6rem;font-weight:600;color:'+(isErr?'var(--red)':'var(--ink3)')+';letter-spacing:.08em;text-transform:uppercase">Turno '+(turnos.length-t)+'</span>';
     if(turnoMins!=null)bloque+='<span style="font-size:.6rem;color:var(--ink3)">'+minsToStr(turnoMins)+'</span>';
     if(isErr){
-      var errMsg=tipoErr==='corto'?'🔴 FICHAJE DUPLICADO (<5min)':tipoErr==='largo'?'🔴 TURNO EXCESIVO (>11h)':tipoErr==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 OJO! ERROR';
+      var errMsg=tipoErr==='corto'?'🔴 ERROR FICHAJE':tipoErr==='largo'?'🔴 TURNO EXCESIVO (>11h)':tipoErr==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 OJO! ERROR';
       bloque+='<span style="font-size:.63rem;color:var(--red);font-weight:700">'+errMsg+'</span>';
     }
     bloque+='</div>';
@@ -1387,7 +1387,7 @@ function renderCard(emp,fecha,regs){
   if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
   if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 DUPLICADO (<5min)':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
+  if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 ERROR FICHAJE':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
   var tabla=buildFilasTurnos(emp,fecha,regs,false,solicitudes);
   return'<div class="day-card '+cls+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
@@ -1397,7 +1397,7 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
   if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 DUPLICADO (<5min)':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
+  if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 ERROR FICHAJE':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
   var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
   return'<div class="day-card '+cls+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
