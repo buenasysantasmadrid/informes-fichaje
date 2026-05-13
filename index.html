@@ -1704,7 +1704,65 @@ async function rechazar(id){
   }else{toast('Error: '+err,'err');}
 }
 
-function refreshCard(emp,fecha){var id='dc-'+empId(emp)+'-'+fecha;var card=document.getElementById(id);if(!card)return;var wasOpen=card.classList.contains('open');var regs=(editData[emp]&&editData[emp][fecha])||[];var tmp=document.createElement('div');tmp.innerHTML=renderCard(emp,fecha,regs);var nc=tmp.firstElementChild;if(wasOpen)nc.classList.add('open');card.replaceWith(nc);}
+function refreshCard(emp,fecha){
+  var id='dc-'+empId(emp)+'-'+fecha;
+  var card=document.getElementById(id);
+  if(!card)return;
+  var wasOpen=card.classList.contains('open');
+  var regs=(editData[emp]&&editData[emp][fecha])||[];
+  var tmp=document.createElement('div');
+  tmp.innerHTML=renderCard(emp,fecha,regs);
+  var nc=tmp.firstElementChild;
+  if(wasOpen)nc.classList.add('open');
+  card.replaceWith(nc);
+  refreshWeekTotal(emp,fecha,false);
+}
+function refreshEmpCard(fecha){
+  var emp=session.nombre;
+  var id='edc-'+empId(emp)+'-'+fecha;
+  var card=document.getElementById(id);
+  if(!card)return;
+  var wasOpen=card.classList.contains('open');
+  var regs=(empEditData[fecha])||[];
+  var tmp=document.createElement('div');
+  tmp.innerHTML=renderEmpCard(emp,fecha,regs);
+  var nc=tmp.firstElementChild;
+  if(wasOpen)nc.classList.add('open');
+  card.replaceWith(nc);
+  refreshWeekTotal(emp,fecha,true);
+}
+function refreshWeekTotal(emp,fecha,isEmp){
+  // Encuentra el separador de semana (week-sep) que agrupa esta fecha
+  var cardId=(isEmp?'edc-':'dc-')+empId(emp)+'-'+fecha;
+  var card=document.getElementById(cardId);
+  if(!card)return;
+  // El week-sep está antes del primer card del grupo: buscamos el sep anterior
+  var sep=null;
+  var el=card.previousElementSibling;
+  while(el){
+    if(el.classList.contains('week-sep')){sep=el;break;}
+    el=el.previousElementSibling;
+  }
+  if(!sep)return;
+  // Recalculamos todos los días de este sep hasta el siguiente sep o fin
+  var totalMins=0;
+  var sibling=sep.nextElementSibling;
+  while(sibling&&!sibling.classList.contains('week-sep')){
+    // Extraer fecha del id de la card
+    var sid=sibling.id||'';
+    var fmatch=sid.match(/-(\d{4}-\d{2}-\d{2})$/);
+    if(fmatch){
+      var f=fmatch[1];
+      var dmap=isEmp?empEditData:editData[emp];
+      var regs=(dmap&&dmap[f])||[];
+      var calc=calcDia(regs,f);
+      if(calc.mins!=null)totalMins+=calc.mins;
+    }
+    sibling=sibling.nextElementSibling;
+  }
+  var lbl=sep.querySelector('.week-lbl');
+  if(lbl)lbl.textContent='Total semana · '+minsToStr(totalMins);
+}
 
 // ── EMPLEADO SOLICITUDES HORAS ──
 function erendSolicitudes(){
