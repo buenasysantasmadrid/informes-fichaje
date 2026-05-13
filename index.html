@@ -1001,14 +1001,15 @@ function diasEntreISO(desde,hasta){
 
 // ── TURNOS ──
 function construirDmap(fichajes){
-  function absMins(fecha,hora){
+  // Usamos segundos absolutos para precisión total HH:MM:SS
+  function absSecs(fecha,hora){
     var p=fecha.split('-').map(Number);
     var d=new Date(p[0],p[1]-1,p[2]);
     var diasDesdeRef=Math.round((d-new Date(2020,0,1))/86400000);
-    return diasDesdeRef*1440+(horaToMins(hora)||0);
+    return diasDesdeRef*86400+(horaToSecs(hora)||0);
   }
   // Ordenar todo cronológicamente
-  var todos=fichajes.slice().sort(function(a,b){return absMins(a.fecha,a.hora)-absMins(b.fecha,b.hora);});
+  var todos=fichajes.slice().sort(function(a,b){return absSecs(a.fecha,a.hora)-absSecs(b.fecha,b.hora);});
   var usada=new Array(todos.length).fill(false);
   var dmap={};
 
@@ -1021,14 +1022,14 @@ function construirDmap(fichajes){
       var fechaE=reg.fecha;
       if(!dmap[fechaE])dmap[fechaE]=[];
       dmap[fechaE].push({tipo:'ENTRADA',hora:reg.hora,fechaReal:reg.fecha,errorNoche:false});
-      var absEntrada=absMins(reg.fecha,reg.hora);
+      var absEntrada=absSecs(reg.fecha,reg.hora);
 
       // Buscar la siguiente SALIDA sin límite de días — siempre van en pareja entrada→salida
       // No paramos al encontrar otra ENTRADA: la salida puede llegar días después
       for(var j=i+1;j<todos.length;j++){
         if(usada[j])continue;
         if(todos[j].tipo==='SALIDA'){
-          var absSalida=absMins(todos[j].fecha,todos[j].hora);
+          var absSalida=absSecs(todos[j].fecha,todos[j].hora);
           if(absSalida>=absEntrada){
             usada[j]=true;
             var sal=todos[j];
@@ -1074,19 +1075,21 @@ function calcTurnoMins(turno){
   var fechaS=turno.salida.fechaReal||turno.fechaSalida||'';
   // Si tenemos fechas reales distintas, calculamos en minutos absolutos
   if(fechaE&&fechaS&&fechaE!==fechaS){
-    function absMinsLocal(fecha,hora){
+    function absSecsLocal(fecha,hora){
       var p=fecha.split('-').map(Number);
       var d=new Date(p[0],p[1]-1,p[2]);
       var diasDesdeRef=Math.round((d-new Date(2020,0,1))/86400000);
-      return diasDesdeRef*1440+(horaToMins(hora)||0);
+      return diasDesdeRef*86400+(horaToSecs(hora)||0);
     }
-    var dur=absMinsLocal(fechaS,turno.salida.hora)-absMinsLocal(fechaE,turno.entrada.hora);
+    var durSecs=absSecsLocal(fechaS,turno.salida.hora)-absSecsLocal(fechaE,turno.entrada.hora);
+    var dur=durSecs/60; // convertir a minutos para consistencia con el resto
     return dur>=0?dur:null;
   }
-  // Mismo día: ajuste nocturno normal
-  var me=horaToMins(turno.entrada.hora)||0,ms=horaToMins(turno.salida.hora)||0;
-  if(me<UMBRAL_NOCHE)me+=1440;if(ms<UMBRAL_NOCHE)ms+=1440;
-  var dur=ms-me;return dur>=0?dur:null;
+  // Mismo día: usar segundos para precisión, luego convertir a minutos
+  var se=horaToSecs(turno.entrada.hora)||0,ss=horaToSecs(turno.salida.hora)||0;
+  var UMBRAL_NOCHE_SECS=UMBRAL_NOCHE*60;
+  if(se<UMBRAL_NOCHE_SECS)se+=86400;if(ss<UMBRAL_NOCHE_SECS)ss+=86400;
+  var durSecs=ss-se;return durSecs>=0?durSecs/60:null;
 }
 function turnoTipoError(turno){
   // Devuelve: null (sin error), 'sinEntrada', 'corto' (<5min), 'largo' (>11h)
@@ -1118,7 +1121,7 @@ function calcDia(regs,fechaDia){
 
 // ── OVERLAP CHECK ──
 function isoToAbsDay(iso){var ref=new Date(2020,0,1);var p=iso.split('-').map(Number);var d=new Date(p[0],p[1]-1,p[2]);return Math.round((d-ref)/86400000);}
-function isoHoraToAbsMins(iso,horaStr){var dayOffset=isoToAbsDay(iso)*1440;var m=horaToMins(horaStr);if(m===null)return null;return dayOffset+m;}
+function isoHoraToAbsMins(iso,horaStr){var dayOffset=isoToAbsDay(iso)*86400;var s=horaToSecs(horaStr);if(s===null)return null;return dayOffset+s;}
 function checkOverlap(){
   if(!solActual)return;
   var errEl=document.getElementById('overlap-error'),btnEl=document.getElementById('btn-submit-sol');
