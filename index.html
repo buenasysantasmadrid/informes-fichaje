@@ -969,7 +969,7 @@ function parsearTabla(table){
   for(var i=0;i<table.rows.length;i++){
     var c=table.rows[i].c||[];
     var get=function(idx){return(c[idx]&&c[idx].v!=null)?String(c[idx].v).trim():'';};
-    var fecha=parseFecha(get(0)),tipo=get(1).toUpperCase(),hora=get(2).substring(0,5);
+    var fecha=parseFecha(get(0)),tipo=get(1).toUpperCase(),hora=get(2).substring(0,8)||get(2);
     if(!fecha||(tipo!=='ENTRADA'&&tipo!=='SALIDA')||!hora)continue;
     out.push({fecha:fecha,tipo:tipo,hora:hora});
   }
@@ -984,9 +984,11 @@ function parseFecha(s){
   return null;
 }
 function safeISO(s){var p=parseFecha(String(s||'').trim());return p||String(s||'').slice(0,10);}
-function horaToMins(s){var m=String(s||'').match(/^(\d{1,2}):(\d{2})/);return m?(+m[1])*60+(+m[2]):null;}
-function normHora(s){var m=horaToMins(s);if(m==null)return s||'';return('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);}
-function minsToStr(m){if(m==null||m<0)return'—';if(m===0)return'0 min';return Math.floor(m/60)+'h '+('0'+(m%60)).slice(-2)+'min';}
+function horaToSecs(s){var m=String(s||'').match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);return m?(+m[1])*3600+(+m[2])*60+(m[3]?+m[3]:0):null;}
+function horaToMins(s){var sec=horaToSecs(s);return sec===null?null:sec/60;}
+function normHora(s){var sec=horaToSecs(s);if(sec===null)return s||'';var h=Math.floor(sec/3600);var mn=Math.floor((sec%3600)/60);var ss=sec%60;return('0'+h).slice(-2)+':'+('0'+mn).slice(-2)+':'+('0'+ss).slice(-2);}
+function normHoraDisplay(s){var sec=horaToSecs(s);if(sec===null)return s||'';var h=Math.floor(sec/3600);var mn=Math.floor((sec%3600)/60);return('0'+h).slice(-2)+':'+('0'+mn).slice(-2);}
+function minsToStr(m){if(m==null||m<0)return'—';if(m===0)return'0 min';if(m<1){var s=Math.round(m*60);return s+'s';}return Math.floor(m/60)+'h '+('0'+(m%60)).slice(-2)+'min';}
 function isoDisplay(iso){if(!iso)return'';var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function dowName(iso){var p=iso.split('-').map(Number);return DIAS_TILDE[new Date(p[0],p[1]-1,p[2]).getDay()];}
 function diaSiguiente(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
@@ -1021,17 +1023,17 @@ function construirDmap(fichajes){
       dmap[fechaE].push({tipo:'ENTRADA',hora:reg.hora,fechaReal:reg.fecha,errorNoche:false});
       var absEntrada=absMins(reg.fecha,reg.hora);
 
-      // Buscar la siguiente SALIDA sin límite de días — siempre van en pareja
+      // Buscar la siguiente SALIDA sin límite de días — siempre van en pareja entrada→salida
+      // No paramos al encontrar otra ENTRADA: la salida puede llegar días después
       for(var j=i+1;j<todos.length;j++){
         if(usada[j])continue;
-        if(todos[j].tipo==='ENTRADA')break; // otra entrada antes de salida → turno sin salida
         if(todos[j].tipo==='SALIDA'){
           var absSalida=absMins(todos[j].fecha,todos[j].hora);
           if(absSalida>=absEntrada){
             usada[j]=true;
             var sal=todos[j];
-            var err=(sal.fecha!==fechaE); // errorNoche solo si la salida es de otro día (turno nocturno)
-            dmap[fechaE].push({tipo:'SALIDA',hora:sal.hora,fechaReal:sal.fecha,errorNoche:err});
+            var multiDia=(sal.fecha!==fechaE);
+            dmap[fechaE].push({tipo:'SALIDA',hora:sal.hora,fechaReal:sal.fecha,errorNoche:false,multiDia:multiDia});
             break;
           }
         }
@@ -1107,8 +1109,8 @@ function calcDia(regs,fechaDia){
     var tr=turnos[i];
     var te=turnoTipoError(tr);
     if(te){hayError=true;if(!tipoError)tipoError=te;}
-    if(tr.entrada&&(!primera||tr.entrada.hora<primera))primera=tr.entrada.hora;
-    if(tr.salida&&(!ultima||tr.salida.hora>ultima))ultima=tr.salida.hora;
+    if(tr.entrada&&(!primera||tr.entrada.hora<primera))primera=normHoraDisplay(tr.entrada.hora);
+    if(tr.salida&&(!ultima||tr.salida.hora>ultima))ultima=normHoraDisplay(tr.salida.hora);
     var tm=calcTurnoMins(tr);if(tm!=null)totalMins+=tm;
   }
   return{primera:primera,ultima:ultima,mins:totalMins||null,hayError:hayError,tipoError:tipoError};
@@ -1348,10 +1350,10 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
       bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--green);font-weight:600">ENTRADA</span>';
       if(fechaDifE)bloque+='<span style="font-size:.58rem;color:var(--ink3)">'+isoDisplay(fechaRealE)+'</span>';
       if(hasPendE){
-        bloque+='<button class="'+btnClsE+'" disabled title="Solicitud pendiente">'+turno.entrada.hora+' ⏳</button>';
+        bloque+='<button class="'+btnClsE+'" disabled title="Solicitud pendiente">'+normHoraDisplay(turno.entrada.hora)+' ⏳</button>';
         if(isEmp&&solPendEObj)bloque+='<button class="btn-cancelar-sol" onclick="cancelarSolicitud(\''+esc(solPendEObj.id)+'\',true)">✕ Cancelar solicitud</button>';
       }else{
-        bloque+='<button class="'+btnClsE+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+turno.entrada.hora+' <span class="pencil">✏</span></button>';
+        bloque+='<button class="'+btnClsE+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+normHoraDisplay(turno.entrada.hora)+' <span class="pencil">✏</span></button>';
       }
       bloque+='</div>';
     }
@@ -1363,10 +1365,10 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
       bloque+='<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:600">SALIDA</span>';
       if(fechaDifS)bloque+='<span style="font-size:.58rem;color:var(--red);font-weight:600">'+isoDisplay(fechaRealS)+'</span>';
       if(hasPendS){
-        bloque+='<button class="'+btnClsS+'" disabled title="Solicitud pendiente">'+turno.salida.hora+' ⏳</button>';
+        bloque+='<button class="'+btnClsS+'" disabled title="Solicitud pendiente">'+normHoraDisplay(turno.salida.hora)+' ⏳</button>';
         if(isEmp&&solPendSObj)bloque+='<button class="btn-cancelar-sol" onclick="cancelarSolicitud(\''+esc(solPendSObj.id)+'\',true)">✕ Cancelar solicitud</button>';
       }else{
-        bloque+='<button class="'+btnClsS+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+turno.salida.hora+' <span class="pencil">✏</span></button>';
+        bloque+='<button class="'+btnClsS+'" onclick="abrirModalSol(\''+esc(emp)+'\',\''+fecha+'\','+(isEmp?'true':'false')+','+turnoIdx+')">'+normHoraDisplay(turno.salida.hora)+' <span class="pencil">✏</span></button>';
       }
       bloque+='</div>';
     }else{
@@ -1388,8 +1390,10 @@ function renderCard(emp,fecha,regs){
   if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
   if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 ERROR FICHAJE':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
+  var turnos2=emparejarTurnos(regs,fecha);
+  var autoOpen=(turnos2.length>1||calc.hayError)?'open':'';
   var tabla=buildFilasTurnos(emp,fecha,regs,false,solicitudes);
-  return'<div class="day-card '+cls+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
+  return'<div class="day-card '+cls+' '+autoOpen+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
 function renderEmpCard(emp,fecha,regs){
   var calc=calcDia(regs,fecha),cls=calc.hayError?'has-error':'';
@@ -1398,8 +1402,10 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
   if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 ERROR FICHAJE':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
+  var turnos2=emparejarTurnos(regs,fecha);
+  var autoOpen=(turnos2.length>1||calc.hayError)?'open':'';
   var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
-  return'<div class="day-card '+cls+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
+  return'<div class="day-card '+cls+' '+autoOpen+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
 function toggleCard(card){card.classList.toggle('open');}
 
