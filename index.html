@@ -609,7 +609,8 @@ const DIAS_TILDE = ['domingo','lunes','martes','miércoles','jueves','viernes','
 const ADMIN_MAIL = 'luciana@buenasysantas.es';
 const ADMIN_PIN  = '2136';
 const UMBRAL_NOCHE = 120;
-const MAX_TURNO_MINS = 12 * 60;
+const MAX_TURNO_MINS = 11 * 60;
+const MIN_TURNO_MINS = 5;
 
 let SCRIPT_URL = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec';
 let session=null,empleados=[],editData={},solicitudes=[],esolicitudes=[];
@@ -998,43 +999,50 @@ function diasEntreISO(desde,hasta){
 
 // ── TURNOS ──
 function construirDmap(fichajes){
-  var UMBRAL=UMBRAL_NOCHE;
   function absMins(fecha,hora){
     var p=fecha.split('-').map(Number);
     var d=new Date(p[0],p[1]-1,p[2]);
     var diasDesdeRef=Math.round((d-new Date(2020,0,1))/86400000);
     return diasDesdeRef*1440+(horaToMins(hora)||0);
   }
+  // Ordenar todo cronológicamente
   var todos=fichajes.slice().sort(function(a,b){return absMins(a.fecha,a.hora)-absMins(b.fecha,b.hora);});
   var usada=new Array(todos.length).fill(false);
   var dmap={};
+
   for(var i=0;i<todos.length;i++){
     if(usada[i])continue;
     var reg=todos[i];
+
     if(reg.tipo==='ENTRADA'){
       usada[i]=true;
       var fechaE=reg.fecha;
       if(!dmap[fechaE])dmap[fechaE]=[];
       dmap[fechaE].push({tipo:'ENTRADA',hora:reg.hora,fechaReal:reg.fecha,errorNoche:false});
       var absEntrada=absMins(reg.fecha,reg.hora);
+
+      // Buscar la siguiente SALIDA sin límite de días — siempre van en pareja
       for(var j=i+1;j<todos.length;j++){
         if(usada[j])continue;
+        if(todos[j].tipo==='ENTRADA')break; // otra entrada antes de salida → turno sin salida
         if(todos[j].tipo==='SALIDA'){
           var absSalida=absMins(todos[j].fecha,todos[j].hora);
-          var diff=absSalida-absEntrada;
-          if(diff>0&&diff<1800){
+          if(absSalida>absEntrada){
             usada[j]=true;
             var sal=todos[j];
-            var err=(sal.fecha!==fechaE);
+            var err=(sal.fecha!==fechaE); // errorNoche solo si la salida es de otro día (turno nocturno)
             dmap[fechaE].push({tipo:'SALIDA',hora:sal.hora,fechaReal:sal.fecha,errorNoche:err});
             break;
           }
         }
       }
+
     }else{
+      // SALIDA sin ENTRADA previa en este período → viene de un turno que empezó antes
+      // No la marcamos como error, simplemente la ignoramos (no se puede calcular duración)
       usada[i]=true;
-      if(!dmap[reg.fecha])dmap[reg.fecha]=[];
-      dmap[reg.fecha].push({tipo:'SALIDA',hora:reg.hora,fechaReal:reg.fecha,errorNoche:true});
+      // No la añadimos al dmap: no tiene sentido mostrar una salida huérfana
+      // Si el admin quiere verla, puede cargar un período más amplio
     }
   }
   return dmap;
@@ -1060,29 +1068,50 @@ function emparejarTurnos(regs,fechaDia){
 }
 function calcTurnoMins(turno){
   if(!turno.entrada||!turno.salida)return null;
+  var fechaE=turno.entrada.fechaReal||turno.fechaEntrada||'';
+  var fechaS=turno.salida.fechaReal||turno.fechaSalida||'';
+  // Si tenemos fechas reales distintas, calculamos en minutos absolutos
+  if(fechaE&&fechaS&&fechaE!==fechaS){
+    function absMinsLocal(fecha,hora){
+      var p=fecha.split('-').map(Number);
+      var d=new Date(p[0],p[1]-1,p[2]);
+      var diasDesdeRef=Math.round((d-new Date(2020,0,1))/86400000);
+      return diasDesdeRef*1440+(horaToMins(hora)||0);
+    }
+    var dur=absMinsLocal(fechaS,turno.salida.hora)-absMinsLocal(fechaE,turno.entrada.hora);
+    return dur>0?dur:null;
+  }
+  // Mismo día: ajuste nocturno normal
   var me=horaToMins(turno.entrada.hora)||0,ms=horaToMins(turno.salida.hora)||0;
   if(me<UMBRAL_NOCHE)me+=1440;if(ms<UMBRAL_NOCHE)ms+=1440;
   var dur=ms-me;return dur>0?dur:null;
 }
-function turnoEsError(turno){
-  if(!turno.entrada)return false;
-  if(turno.errorNoche)return true;
+function turnoTipoError(turno){
+  // Devuelve: null (sin error), 'sinEntrada', 'corto' (<5min), 'largo' (>11h)
+  if(!turno.entrada)return'sinEntrada';
+  if(!turno.salida)return null; // turno abierto, en curso
   var mins=calcTurnoMins(turno);
-  if(mins!=null&&mins>MAX_TURNO_MINS)return true;
-  return false;
+  if(mins===null)return null;
+  if(mins<MIN_TURNO_MINS)return'corto';
+  if(mins>MAX_TURNO_MINS)return'largo';
+  return null;
+}
+function turnoEsError(turno){
+  return turnoTipoError(turno)!==null;
 }
 function calcDia(regs,fechaDia){
-  if(!regs||!regs.length)return{primera:null,ultima:null,mins:0,hayError:false};
+  if(!regs||!regs.length)return{primera:null,ultima:null,mins:0,hayError:false,tipoError:null};
   var turnos=emparejarTurnos(regs,fechaDia||'0000-00-00');
-  var primera=null,ultima=null,totalMins=0,hayError=false;
+  var primera=null,ultima=null,totalMins=0,hayError=false,tipoError=null;
   for(var i=0;i<turnos.length;i++){
     var tr=turnos[i];
-    if(turnoEsError(tr))hayError=true;
+    var te=turnoTipoError(tr);
+    if(te){hayError=true;if(!tipoError)tipoError=te;}
     if(tr.entrada&&(!primera||tr.entrada.hora<primera))primera=tr.entrada.hora;
     if(tr.salida&&(!ultima||tr.salida.hora>ultima))ultima=tr.salida.hora;
     var tm=calcTurnoMins(tr);if(tm!=null)totalMins+=tm;
   }
-  return{primera:primera,ultima:ultima,mins:totalMins||null,hayError:hayError};
+  return{primera:primera,ultima:ultima,mins:totalMins||null,hayError:hayError,tipoError:tipoError};
 }
 
 // ── OVERLAP CHECK ──
@@ -1101,8 +1130,9 @@ function checkOverlap(){
   var fechasRef=[diaAnterior(diaAnterior(solActual.fecha)),diaAnterior(solActual.fecha),solActual.fecha,diaSiguiente(solActual.fecha),diaSiguiente(diaSiguiente(solActual.fecha))];
   // intervalos: turnos completos (entrada+salida) de otros turnos
   var intervalos=[];
-  // puntosAislados: entradas o salidas sueltas (sin pareja) de otros turnos — también son límites
-  var puntosAislados=[];
+  // puntosAisladosEntrada: solo ENTRADAS sueltas de otros turnos (no salidas antiguas)
+  // Una salida aislada del pasado NO puede bloquear fichajes futuros
+  var puntosAisladosEntrada=[];
   fechasRef.forEach(function(f){
     var regs=dmap[f]||[];if(!regs.length)return;
     var turnos=emparejarTurnos(regs,f);
@@ -1113,9 +1143,9 @@ function checkOverlap(){
       if(absE!==null&&absS!==null){
         intervalos.push({inicio:absE,fin:absS});
       }else{
-        // turno incompleto: registrar el punto que existe como límite aislado
-        if(absE!==null)puntosAislados.push(absE);
-        if(absS!==null)puntosAislados.push(absS);
+        // Solo registramos entradas aisladas como límite superior para salidas propuestas
+        // Las salidas aisladas de días pasados NO deben bloquear fichajes futuros
+        if(absE!==null)puntosAisladosEntrada.push(absE);
       }
     });
   });
@@ -1123,15 +1153,20 @@ function checkOverlap(){
     var abs=isoHoraToAbsMins(iso,horaStr);if(abs===null)return false;
     // cae dentro de un turno completo
     for(var j=0;j<intervalos.length;j++){if(abs>intervalos[j].inicio&&abs<intervalos[j].fin)return true;}
-    // coincide exactamente con una entrada/salida aislada de otro turno
-    for(var k=0;k<puntosAislados.length;k++){if(abs===puntosAislados[k])return true;}
+    // coincide exactamente con una entrada aislada de otro turno
+    for(var k=0;k<puntosAisladosEntrada.length;k++){if(abs===puntosAisladosEntrada[k])return true;}
     return false;
   }
-  // Verificar también que la nueva hora no sea posterior a la siguiente entrada suelta
-  // (caso: hay una ENTRADA a las 09:00 del día siguiente y se pide SALIDA a las 10:00)
+  // Una SALIDA propuesta no puede quedar DESPUÉS de la siguiente ENTRADA aislada futura
+  // (caso: hay una ENTRADA a las 09:00 del día siguiente y se pide SALIDA a las 10:00 de ese día)
   function superaPuntoAislado(iso,horaStr){
     var abs=isoHoraToAbsMins(iso,horaStr);if(abs===null)return false;
-    for(var k=0;k<puntosAislados.length;k++){if(abs>puntosAislados[k])return true;}
+    for(var k=0;k<puntosAisladosEntrada.length;k++){
+      var pe=puntosAisladosEntrada[k];
+      // Solo bloquea si la entrada aislada es POSTERIOR a la hora propuesta Y muy cercana (mismo día/turno)
+      // Una entrada del futuro lejano (>3 días) no debe bloquear
+      if(pe>abs&&pe-abs<1440*3)return true;
+    }
     return false;
   }
   var solapa=false;
@@ -1281,7 +1316,8 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   for(var t=0;t<turnosRev.length;t++){
     var turno=turnosRev[t];
     var turnoIdx=turnos.length-1-t;
-    var isErr=turnoEsError(turno);
+    var tipoErr=turnoTipoError(turno);
+    var isErr=tipoErr!==null;
     var turnoMins=calcTurnoMins(turno);
     var fechaRealE=turno.entrada?(turno.entrada.fechaReal||fecha):fecha;
     var fechaRealS=turno.salida?(turno.salida.fechaReal||fecha):fecha;
@@ -1299,7 +1335,10 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
     bloque+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 12px;'+hdrBg+';'+hdrBrd+'">';
     bloque+='<span style="font-size:.6rem;font-weight:600;color:'+(isErr?'var(--red)':'var(--ink3)')+';letter-spacing:.08em;text-transform:uppercase">Turno '+(turnos.length-t)+'</span>';
     if(turnoMins!=null)bloque+='<span style="font-size:.6rem;color:var(--ink3)">'+minsToStr(turnoMins)+'</span>';
-    if(isErr)bloque+='<span style="font-size:.63rem;color:var(--red);font-weight:700">🔴 OJO! ERROR</span>';
+    if(isErr){
+      var errMsg=tipoErr==='corto'?'🔴 FICHAJE DUPLICADO (<5min)':tipoErr==='largo'?'🔴 TURNO EXCESIVO (>11h)':tipoErr==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 OJO! ERROR';
+      bloque+='<span style="font-size:.63rem;color:var(--red);font-weight:700">'+errMsg+'</span>';
+    }
     bloque+='</div>';
     bloque+='<div style="display:flex;align-items:center;gap:0;padding:8px 12px;">';
     if(turno.entrada){
@@ -1348,7 +1387,7 @@ function renderCard(emp,fecha,regs){
   if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
   if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  if(calc.hayError)chips+='<span class="chip c-long">🔴 ERROR FICHAJE</span>';
+  if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 DUPLICADO (<5min)':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
   var tabla=buildFilasTurnos(emp,fecha,regs,false,solicitudes);
   return'<div class="day-card '+cls+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
@@ -1358,7 +1397,7 @@ function renderEmpCard(emp,fecha,regs){
   if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
   if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
   if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  if(calc.hayError)chips+='<span class="chip c-long">🔴 OJO! ERROR</span>';
+  if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 DUPLICADO (<5min)':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
   var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
   return'<div class="day-card '+cls+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
 }
