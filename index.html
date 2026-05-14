@@ -1657,9 +1657,13 @@ function renderSolicitudes(){
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
     var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    var turnoHtml='';
-    if(s.turnoEntrada||s.turnoSalida){turnoHtml='<div style="font-size:.67rem;color:var(--ink2);margin-top:.35rem;padding:.25rem .5rem;background:var(--cream2);border-radius:5px;line-height:1.7">'+(s.turnoEntrada?'▶ Entrada: <strong>'+s.turnoEntrada+'</strong>':'')+((s.turnoEntrada&&s.turnoSalida)?'&nbsp;&nbsp;':'')+(s.turnoSalida?'◼ Salida: <strong>'+s.turnoSalida+'</strong>':'')+'</div>';}
-    return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'"><div class="sol-info"><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong>'+(hayFN?' → <strong>'+isoDisplay(fechaNuevaISO)+'</strong>':'')+'<br><span>Tipo:</span> '+s.tipo+'<br><span>Hora:</span> <strong>'+s.horaActual+'</strong> → <strong>'+s.horaNueva+'</strong><br><span>Motivo:</span> '+esc(s.motivo)+(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')+turnoHtml+'</div><div class="sol-fecha-req">'+formatFechaReq(s.fechaReq)+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
+    // Turno completo: tachar solo el fichaje modificado
+    var esE=(s.tipo==='ENTRADA');
+    var horaE=s.turnoEntrada||'—', horaS=s.turnoSalida||'—';
+    var lineaE=esE?'▶ <s>'+s.horaActual+'</s> → <b>'+s.horaNueva+'</b>'+(hayFN?' ('+isoDisplay(fechaNuevaISO)+')':''):'▶ '+horaE;
+    var lineaS=!esE?'◼ <s>'+s.horaActual+'</s> → <b>'+s.horaNueva+'</b>'+(hayFN?' ('+isoDisplay(fechaNuevaISO)+')':''):'◼ '+horaS;
+    var turnoHtml=(s.turnoEntrada||s.turnoSalida)?'<div style="font-size:.72rem;margin-top:.4rem;padding:.3rem .6rem;background:var(--cream2);border-radius:6px;line-height:2">'+lineaE+'&nbsp;&nbsp;'+lineaS+'</div>':'';
+    return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'"><div class="sol-info"><div class="sol-emp">'+esc(s.emp)+'</div><div class="sol-detail"><span>Fecha:</span> <strong>'+isoDisplay(fechaISO)+'</strong><br>'+turnoHtml+'<span>Motivo:</span> '+esc(s.motivo)+(s.emailEmp?'<br><span>Email:</span> '+esc(s.emailEmp):'')+'</div><div class="sol-fecha-req">'+formatFechaReq(s.fechaReq)+'</div></div><div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
   }).join('');
 }
 
@@ -1827,13 +1831,14 @@ function erendSolicitudes(){
     var fechaStr=hayFN?isoDisplay(fechaISO)+' → '+isoDisplay(fechaNuevaISO):isoDisplay(fechaISO);
     var horaStr=normHora(s.horaActual)+(s.horaNueva&&normHora(s.horaNueva)!==normHora(s.horaActual)?' → '+normHora(s.horaNueva):'');
     var fechaReqFmt=formatFechaReq(s.fechaReq);
-    var turnoEmpHtml='';
-    if(s.turnoEntrada||s.turnoSalida){turnoEmpHtml='<div style="font-size:.67rem;color:var(--ink2);margin:.3rem 0 .4rem;padding:.25rem .5rem;background:var(--cream2);border-radius:5px;line-height:1.8">'+(s.turnoEntrada?'▶ '+s.turnoEntrada:'')+(s.turnoEntrada&&s.turnoSalida?'&nbsp;&nbsp;':'')+(s.turnoSalida?'◼ '+s.turnoSalida:'')+'</div>';}
+    var esEmp=(s.tipo==='ENTRADA');
+    var horaEmp=s.turnoEntrada||'—', horaSmp=s.turnoSalida||'—';
+    var lineaEmp=esEmp?'▶ <s style="color:var(--red)">'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b>':'▶ '+horaEmp;
+    var linaSmp=!esEmp?'◼ <s style="color:var(--red)">'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b>':'◼ '+horaSmp;
+    var turnoEmpHtml=(s.turnoEntrada||s.turnoSalida)?'<div style="font-size:.72rem;color:var(--ink);margin:.3rem 0 .4rem;padding:.3rem .6rem;background:var(--cream2);border-radius:6px;line-height:2">'+lineaEmp+'&nbsp;&nbsp;'+linaSmp+'</div>':'';
     return'<div class="sol-card '+s.estado+'">'
       +'<div class="sol-info">'
-        +'<div style="font-size:.65rem;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:var(--ink2);background:var(--cream2);display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:.5rem">'+s.tipo+'</div>'
         +'<div style="font-size:.77rem;color:var(--ink);font-weight:500;margin-bottom:.2rem">📅 '+fechaStr+'</div>'
-        +'<div style="font-size:.77rem;color:var(--ink);margin-bottom:.3rem">🕐 '+horaStr+'</div>'
         +turnoEmpHtml
         +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.67rem;color:var(--ink3);margin-bottom:.4rem;font-style:italic">'+esc(s.motivo)+'</div>':'')
         +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqFmt+'</div>'
