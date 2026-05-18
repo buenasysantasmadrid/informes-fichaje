@@ -1693,6 +1693,12 @@ function renderSolicitudes(){
     var fEOrig=safeISO(s.fechaEntradaOrig||s.fecha),fENew=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
     var fSOrig=safeISO(s.fechaSalidaOrig||s.fecha),fSNew=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
     var lineaE='',lineaS='';
+    // Compatibilidad: si no hay campos nuevos, construirlos desde los antiguos
+    var tieneNuevo=s.cambiaEntrada||s.cambiaSalida;
+    if(!tieneNuevo&&s.tipo){
+      if(s.tipo==='ENTRADA'){s.cambiaEntrada=true;s.horaEntradaActual=s.horaActual||s.horaEntradaActual;s.horaEntradaNueva=s.horaNueva||s.horaEntradaNueva;fEOrig=safeISO(s.fecha);fENew=safeISO(s.fechaNueva||s.fecha);s.horaSalidaActual=s.turnoSalida||'—';}
+      else{s.cambiaSalida=true;s.horaSalidaActual=s.horaActual||s.horaSalidaActual;s.horaSalidaNueva=s.horaNueva||s.horaSalidaNueva;fSOrig=safeISO(s.fecha);fSNew=safeISO(s.fechaNueva||s.fecha);s.horaEntradaActual=s.turnoEntrada||'—';}
+    }
     if(s.eliminarTurno){
       if(s.cambiaEntrada)lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <s style="color:var(--red)">'+isoDisplay(fEOrig)+' '+normHoraDisplay(s.horaEntradaActual)+'</s>'+elimBadge+'</div>';
       else lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';
@@ -1873,6 +1879,12 @@ function erendSolicitudes(){
     var fEOrig=safeISO(s.fechaEntradaOrig||s.fecha),fENew=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
     var fSOrig=safeISO(s.fechaSalidaOrig||s.fecha),fSNew=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
     var lineaE='',lineaS='';
+    // Compatibilidad formato antiguo
+    var tieneNuevoE=s.cambiaEntrada||s.cambiaSalida;
+    if(!tieneNuevoE&&s.tipo){
+      if(s.tipo==='ENTRADA'){s.cambiaEntrada=true;s.horaEntradaActual=s.horaActual||s.horaEntradaActual;s.horaEntradaNueva=s.horaNueva||s.horaEntradaNueva;fEOrig=safeISO(s.fecha);fENew=safeISO(s.fechaNueva||s.fecha);s.horaSalidaActual=s.turnoSalida||'—';}
+      else{s.cambiaSalida=true;s.horaSalidaActual=s.horaActual||s.horaSalidaActual;s.horaSalidaNueva=s.horaNueva||s.horaSalidaNueva;fSOrig=safeISO(s.fecha);fSNew=safeISO(s.fechaNueva||s.fecha);s.horaEntradaActual=s.turnoEntrada||'—';}
+    }
     if(s.eliminarTurno){
       if(s.cambiaEntrada)lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <s style="color:var(--red)">'+isoDisplay(fEOrig)+' '+normHoraDisplay(s.horaEntradaActual)+'</s>'+elimBadge+'</div>';
       else lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';
