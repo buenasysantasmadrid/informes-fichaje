@@ -593,7 +593,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
     <div class="overlap-error" id="overlap-error">⚠ ERROR: la hora/fecha nueva se solapa con otro turno existente.</div>
     <hr class="modal-divider">
     <div class="modal-row" id="sol-email-row"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
-    <div class="modal-row"><label>Motivo <span style="color:var(--red);font-weight:600">*</span></label><select id="sol-motivo" style="padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;width:100%;transition:border-color .15s"><option value="OLVIDO DE FICHAJE">OLVIDO DE FICHAJE</option><option value="ERROR EN EL SISTEMA">ERROR EN EL SISTEMA</option><option value="OTROS">OTROS</option></select></div>
+    <div class="modal-row"><label>Motivo <span style="color:var(--red);font-weight:600">*</span></label><select id="sol-motivo" style="padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;width:100%;transition:border-color .15s"><option value="OLVIDO DE FICHAJE">OLVIDO DE FICHAJE</option><option value="NO FUNCIONABA EL SISTEMA">NO FUNCIONABA EL SISTEMA</option><option value="ERROR EN EL SISTEMA">ERROR EN EL SISTEMA</option><option value="OTROS">OTROS</option></select></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cerrarModalSol()">Cancelar</button>
       <button class="btn-submit" id="btn-submit-sol" onclick="enviarSolicitud()">Enviar solicitud</button>
@@ -704,8 +704,20 @@ function rebuildApprovedSet(sols){
   approvedSet=new Set();
   sols.forEach(function(s){
     if(s.estado==='aprobada'){
-      var fechaKey=safeISO(s.fechaNueva||s.fecha);
-      approvedSet.add(s.emp+'|'+fechaKey+'|'+s.tipo+'|'+normHora(s.horaNueva));
+      // Nuevo formato combinado
+      if(s.cambiaEntrada){
+        var fE=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
+        approvedSet.add(s.emp+'|'+fE+'|ENTRADA|'+normHora(s.horaEntradaNueva));
+      }
+      if(s.cambiaSalida){
+        var fS=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
+        approvedSet.add(s.emp+'|'+fS+'|SALIDA|'+normHora(s.horaSalidaNueva));
+      }
+      // Compatibilidad formato antiguo
+      if(!s.cambiaEntrada&&!s.cambiaSalida&&s.tipo&&s.horaNueva){
+        var fechaKey=safeISO(s.fechaNueva||s.fecha);
+        approvedSet.add(s.emp+'|'+fechaKey+'|'+s.tipo+'|'+normHora(s.horaNueva));
+      }
     }
   });
 }
@@ -1493,23 +1505,33 @@ async function enviarSolicitud(){
   var cambiaS=horaSA!=='—'&&horaSN&&horaSN!==normHora(horaSA);
   var cambiaFS=horaSA!=='—'&&fechaSN!==fechaSOrig;
   if(!cambiaE&&!cambiaS&&!cambiaFE&&!cambiaFS){toast('No hay ningún cambio respecto al original','err');return;}
-  var toSend=[];
-  if((cambiaE||cambiaFE)&&horaEA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaEOrig,fechaNueva:fechaEN,tipo:'ENTRADA',horaActual:normHora(horaEA),horaNueva:cambiaE?horaEN:normHora(horaEA),motivo:motivo,emailEmp:solIsEmp?session.email:emailEmp,turnoEntrada:horaEA!=='—'?normHoraDisplay(horaEA):'—',turnoSalida:horaSA!=='—'?normHoraDisplay(horaSA):'—'});}
-  if((cambiaS||cambiaFS)&&horaSA!=='—'){toSend.push({action:'guardarSolicitud',emp:solActual.emp,fecha:fechaSOrig,fechaNueva:fechaSN,tipo:'SALIDA',horaActual:normHora(horaSA),horaNueva:cambiaS?horaSN:normHora(horaSA),motivo:motivo,emailEmp:solIsEmp?session.email:emailEmp,turnoEntrada:horaEA!=='—'?normHoraDisplay(horaEA):'—',turnoSalida:horaSA!=='—'?normHoraDisplay(horaSA):'—'});}
-  if(!toSend.length){toast('No hay cambios que enviar','err');return;}
+  // Enviamos UNA sola solicitud combinada con toda la info de entrada y salida
+  var payload={
+    action:'guardarSolicitud',
+    emp:solActual.emp,
+    motivo:motivo,
+    emailEmp:solIsEmp?session.email:emailEmp,
+    cambiaEntrada:((cambiaE||cambiaFE)&&horaEA!=='—')?true:false,
+    fechaEntradaOrig:fechaEOrig,
+    fechaEntradaNueva:fechaEN,
+    horaEntradaActual:horaEA!=='—'?normHora(horaEA):'—',
+    horaEntradaNueva:horaEA!=='—'?(cambiaE?horaEN:normHora(horaEA)):'—',
+    cambiaSalida:((cambiaS||cambiaFS)&&horaSA!=='—')?true:false,
+    fechaSalidaOrig:fechaSOrig,
+    fechaSalidaNueva:fechaSN,
+    horaSalidaActual:horaSA!=='—'?normHora(horaSA):'—',
+    horaSalidaNueva:horaSA!=='—'?(cambiaS?horaSN:normHora(horaSA)):'—'
+  };
   cerrarModalSol();setLoader(true,'Enviando solicitud...');
   var envioOk=false,envioErr='';
   try{
-    for(var i=0;i<toSend.length;i++){
-      setLoader(true,'Enviando '+(i+1)+' de '+toSend.length+'...');
-      var res=await callScriptJSONP(toSend[i]);
-      if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'El script devolvió error');
-    }
+    var res=await callScriptJSONP(payload);
+    if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'El script devolvió error');
     envioOk=true;
   }catch(e){envioErr=e.message;}
   setLoader(false);
   if(envioOk){
-    toast('Solicitud'+(toSend.length>1?'es':'')+' enviada'+(toSend.length>1?'s':'')+' ✓','ok');
+    toast('Solicitud enviada ✓','ok');
     try{
       if(solIsEmp){
         esolicitudes=await loadSolicitudes(session.nombre);
@@ -1656,23 +1678,29 @@ function renderSolicitudes(){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
-    var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    var esE=(s.tipo==='ENTRADA');
-    var horaE=s.turnoEntrada||'—', horaS=s.turnoSalida||'—';
-    // Línea ENTRADA
-    var lineaEntrada='<div style="font-size:.75rem;margin-bottom:.2rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+isoDisplay(fechaISO)+'</span> '+(esE?'<span style="font-weight:600">'+normHoraDisplay(s.horaActual)+'</span>':'<span style="font-weight:600">'+normHoraDisplay(horaE)+'</span>')+'</div>';
-    // Línea SALIDA
-    var lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+isoDisplay(fechaISO)+'</span> '+(!esE?'<span style="font-weight:600">'+normHoraDisplay(s.horaActual)+'</span>':'<span style="font-weight:600">'+normHoraDisplay(horaS)+'</span>')+'</div>';
-    // Línea MODIFICACIÓN
-    var modFecha=hayFN?' '+isoDisplay(fechaNuevaISO):'';
-    var lineaMod='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--amber)">MODIFICACIÓN</span> '+s.tipo+' Hora: <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b>'+modFecha+'</div>';
+    var lineaEntrada='',lineaSalida='';
+    var fEOrig=safeISO(s.fechaEntradaOrig||s.fecha);
+    var fENew=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
+    var fSOrig=safeISO(s.fechaSalidaOrig||s.fecha);
+    var fSNew=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
+    if(s.cambiaEntrada){
+      var hfe=fENew&&fENew!==fEOrig;
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> '+(hfe?'<s>'+isoDisplay(fEOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaEntradaActual)+'</s> → '+(hfe?'<b>'+isoDisplay(fENew)+' '+normHoraDisplay(s.horaEntradaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaEntradaNueva)+'</b>')+'</div>';
+    } else {
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||s.turnoEntrada||'—')+'</span></div>';
+    }
+    if(s.cambiaSalida){
+      var hfs=fSNew&&fSNew!==fSOrig;
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> '+(hfs?'<s>'+isoDisplay(fSOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaSalidaActual)+'</s> → '+(hfs?'<b>'+isoDisplay(fSNew)+' '+normHoraDisplay(s.horaSalidaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaSalidaNueva)+'</b>')+'</div>';
+    } else {
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||s.turnoSalida||'—')+'</span></div>';
+    }
     return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
       +'<div class="sol-info">'
         +'<div class="sol-emp">'+esc(s.emp)+'</div>'
         +'<div class="sol-detail" style="margin-top:.4rem">'
           +lineaEntrada
           +lineaSalida
-          +lineaMod
           +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
           +(s.emailEmp?'<div style="font-size:.72rem;color:var(--ink2)"><span>Email:</span> '+esc(s.emailEmp)+'</div>':'')
         +'</div>'
@@ -1729,29 +1757,46 @@ async function aprobar(id){
   setLoader(true,'Aprobando...');
   var ok=false,err='';
   try{
-    var res=await callScriptJSONP({action:'aprobarSolicitud',id:sol.id,emp:sol.emp,fecha:safeISO(sol.fecha),fechaNueva:safeISO(sol.fechaNueva||sol.fecha),tipo:sol.tipo,horaActual:sol.horaActual,horaNueva:sol.horaNueva,emailEmp:sol.emailEmp||''});
+    var res=await callScriptJSONP({
+      action:'aprobarSolicitud',
+      id:sol.id,emp:sol.emp,
+      emailEmp:sol.emailEmp||'',
+      motivo:sol.motivo||'',
+      cambiaEntrada:sol.cambiaEntrada||false,
+      fechaEntradaOrig:safeISO(sol.fechaEntradaOrig||sol.fecha),
+      fechaEntradaNueva:safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),
+      horaEntradaActual:sol.horaEntradaActual||'—',
+      horaEntradaNueva:sol.horaEntradaNueva||'—',
+      cambiaSalida:sol.cambiaSalida||false,
+      fechaSalidaOrig:safeISO(sol.fechaSalidaOrig||sol.fecha),
+      fechaSalidaNueva:safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha),
+      horaSalidaActual:sol.horaSalidaActual||'—',
+      horaSalidaNueva:sol.horaSalidaNueva||'—'
+    });
     if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'Error al aprobar');
     ok=true;
   }catch(e){err=e.message;}
   setLoader(false);
   if(ok){
+    // Actualizar editData en memoria para entrada y salida
     if(editData[sol.emp]){
-      var fO=safeISO(sol.fecha),fN=safeISO(sol.fechaNueva||sol.fecha),regs=editData[sol.emp][fO];
-      if(regs){
+      function patchReg(tipo,fechaOrig,fechaNueva,horaActual,horaNueva){
+        var fO=fechaOrig,fN=fechaNueva||fechaOrig,regs=editData[sol.emp][fO];
+        if(!regs)return;
         for(var i=0;i<regs.length;i++){
-          if(regs[i].tipo===sol.tipo&&normHora(regs[i].hora)===normHora(sol.horaActual)){
+          if(regs[i].tipo===tipo&&normHora(regs[i].hora)===normHora(horaActual)){
             if(fN!==fO){
               regs.splice(i,1);
               if(!editData[sol.emp][fN])editData[sol.emp][fN]=[];
-              editData[sol.emp][fN].push({tipo:sol.tipo,hora:sol.horaNueva,modificado:true});
+              editData[sol.emp][fN].push({tipo:tipo,hora:horaNueva,modificado:true});
               refreshCard(sol.emp,fO);refreshCard(sol.emp,fN);
-            }else{
-              regs[i].hora=sol.horaNueva;regs[i].modificado=true;refreshCard(sol.emp,fO);
-            }
+            }else{regs[i].hora=horaNueva;regs[i].modificado=true;refreshCard(sol.emp,fO);}
             break;
           }
         }
       }
+      if(sol.cambiaEntrada)patchReg('ENTRADA',safeISO(sol.fechaEntradaOrig||sol.fecha),safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),sol.horaEntradaActual,sol.horaEntradaNueva);
+      if(sol.cambiaSalida)patchReg('SALIDA',safeISO(sol.fechaSalidaOrig||sol.fecha),safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha),sol.horaSalidaActual,sol.horaSalidaNueva);
     }
     toast('Aprobado ✓','ok');
     try{solicitudes=await loadSolicitudes();rebuildApprovedSet(solicitudes);updateBadge();renderSolicitudes();}catch(e2){}
@@ -1842,21 +1887,30 @@ function erendSolicitudes(){
   el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
-    var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
     var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
     var fechaReqFmt=formatFechaReq(s.fechaReq);
-    var esEmp=(s.tipo==='ENTRADA');
-    var horaEmp=s.turnoEntrada||'—', horaSmp=s.turnoSalida||'—';
-    var lineaEmpE='<div style="font-size:.75rem;margin-bottom:.2rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+isoDisplay(fechaISO)+'</span> <span style="font-weight:600">'+normHoraDisplay(esEmp?s.horaActual:horaEmp)+'</span></div>';
-    var lineaEmpS='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+isoDisplay(fechaISO)+'</span> <span style="font-weight:600">'+normHoraDisplay(!esEmp?s.horaActual:horaSmp)+'</span></div>';
-    var modFechaEmp=hayFN?' '+isoDisplay(fechaNuevaISO):'';
-    var lineaModEmp='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--amber)">MODIFICACIÓN</span> '+s.tipo+' Hora: <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b>'+modFechaEmp+'</div>';
+    var lineaEmpE='',lineaEmpS='';
+    var fEOrig=safeISO(s.fechaEntradaOrig||s.fecha);
+    var fENew=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
+    var fSOrig=safeISO(s.fechaSalidaOrig||s.fecha);
+    var fSNew=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
+    if(s.cambiaEntrada){
+      var hfe=fENew&&fENew!==fEOrig;
+      lineaEmpE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> '+(hfe?'<s>'+isoDisplay(fEOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaEntradaActual)+'</s> → '+(hfe?'<b>'+isoDisplay(fENew)+' '+normHoraDisplay(s.horaEntradaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaEntradaNueva)+'</b>')+'</div>';
+    } else {
+      lineaEmpE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';
+    }
+    if(s.cambiaSalida){
+      var hfs=fSNew&&fSNew!==fSOrig;
+      lineaEmpS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> '+(hfs?'<s>'+isoDisplay(fSOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaSalidaActual)+'</s> → '+(hfs?'<b>'+isoDisplay(fSNew)+' '+normHoraDisplay(s.horaSalidaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaSalidaNueva)+'</b>')+'</div>';
+    } else {
+      lineaEmpS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||'—')+'</span></div>';
+    }
     return'<div class="sol-card '+s.estado+'">'
       +'<div class="sol-info">'
         +'<div class="sol-detail">'
           +lineaEmpE
           +lineaEmpS
-          +lineaModEmp
           +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
           +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqFmt+'</div>'
         +'</div>'
