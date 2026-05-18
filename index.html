@@ -808,7 +808,7 @@ async function initEmpleado(){
   document.getElementById('hdr-emp-info').classList.add('on');
   document.getElementById('nav-emp').style.display='flex';
   document.getElementById('emp-shell').style.display='block';
-  eswitch('fichajes');
+  eswitchSinRecargar('fichajes');
   document.getElementById('ereport-fichajes').innerHTML='<div class="empty"><div class="spin" style="width:36px;height:36px;border-width:3px;margin-bottom:.75rem"></div><h2 style="font-size:1rem;color:var(--ink2)">Estamos actualizando, paciencia!</h2></div>';
   esolicitudes=await loadSolicitudes(session.nombre);
   esolicitudesVac=await loadSolicitudesVacaciones(session.nombre);
@@ -879,6 +879,15 @@ function admSwitchSol(sec,btn){
   }
 }
 
+function eswitchSinRecargar(tab){
+  document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('#emp-shell .page').forEach(function(p){p.classList.remove('active');});
+  ['epage-fichajes','epage-solicitudes','epage-calendario','epage-vacaciones'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.classList.remove('active');
+  });
+  var navTab=document.getElementById('etab-'+tab);if(navTab)navTab.classList.add('active');
+  var page=document.getElementById('epage-'+tab);if(page)page.classList.add('active');
+}
 function eswitch(tab){
   document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#emp-shell .page').forEach(function(p){p.classList.remove('active');});
@@ -891,6 +900,13 @@ function eswitch(tab){
   if(navTab)navTab.classList.add('active');
   var page=document.getElementById('epage-'+tab);
   if(page)page.classList.add('active');
+  if(tab==='fichajes'){
+    // Recargar fichajes y solicitudes al volver a esta pestaña
+    Promise.all([
+      fetchSheet(session.nombre).then(function(t){var f=parsearTabla(t);empEditData=construirDmap(f);}).catch(function(){}),
+      loadSolicitudes(session.nombre).then(function(d){esolicitudes=d;rebuildApprovedSet(esolicitudes);updateEbadge();}).catch(function(){})
+    ]).then(function(){renderEmpFichajesTab();}).catch(function(){renderEmpFichajesTab();});
+  }
   if(tab==='solicitudes'){
     loadSolicitudes(session.nombre).then(function(data){
       esolicitudes=data;rebuildApprovedSet(esolicitudes);updateEbadge();erendSolicitudes();
@@ -900,7 +916,9 @@ function eswitch(tab){
     var hoyMin=new Date().toISOString().slice(0,10);
     document.getElementById('vac-desde').min=hoyMin;
     document.getElementById('vac-hasta').min=hoyMin;
-    loadSolicitudesVacaciones(session.nombre).then(function(data){esolicitudesVac=data;erendVacaciones();});
+    Promise.all([
+      loadSolicitudesVacaciones(session.nombre).then(function(data){esolicitudesVac=data;erendVacaciones();}),
+    ]);
     loadYRenderBalanceVacaciones();
   }
 }
@@ -1304,12 +1322,18 @@ function renderEmpReport(){
 }
 function renderEmpFichajesTab(){
   var rep=document.getElementById('ereport-fichajes');
-  var dmap=empEditData,fechas=Object.keys(dmap).sort().reverse();
-  if(!fechas.length){rep.innerHTML='<div class="empty"><div class="spin" style="width:36px;height:36px;border-width:3px;margin-bottom:.75rem"></div><h2 style="font-size:1rem;color:var(--ink2)">Estamos actualizando, paciencia!</h2></div>';return;}
+  var allFechas=Object.keys(empEditData).sort().reverse();
+  if(!allFechas.length){rep.innerHTML='<div class="empty"><div class="spin" style="width:36px;height:36px;border-width:3px;margin-bottom:.75rem"></div><h2 style="font-size:1rem;color:var(--ink2)">Estamos actualizando, paciencia!</h2></div>';return;}
+  // Filtrar solo el último mes
+  var hoy=new Date();
+  var hace30=new Date(hoy.getFullYear(),hoy.getMonth()-1,hoy.getDate()).toISOString().slice(0,10);
+  var fechas=allFechas.filter(function(f){return f>=hace30;});
+  if(!fechas.length)fechas=allFechas.slice(0,30); // fallback: hasta 30 entradas
+  var dmapMes={};fechas.forEach(function(f){dmapMes[f]=empEditData[f];});
   var fechasAsc=fechas.slice().reverse();
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump2"><button class="btn-jump" onclick="jumpToDateFichajes()">Ir</button></div>';
-  var cards=buildCardsConSemana(fechas,dmap,session.nombre,true);
-  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
+  var cards=buildCardsConSemana(fechas,dmapMes,session.nombre,true);
+  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">Últimos 30 días · '+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
 }
 function jumpToDateFichajes(){
   var el=document.getElementById('emp-date-jump2');if(!el)return;
