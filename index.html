@@ -610,16 +610,17 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 
 <div class="modal-ov" id="modal-nuevo-fichaje" onclick="if(event.target===this)cerrarModalNuevoFichaje()">
   <div class="modal-box" style="max-width:360px">
-    <div class="modal-title">➕ Añadir día completo</div>
+    <div class="modal-title" id="nf-titulo">➕ Solicitar fichaje olvidado</div>
     <div id="modal-nf-emp-info" style="font-size:.75rem;font-weight:600;color:var(--green-acc);margin-bottom:1rem"></div>
     <div class="modal-row"><label>Fecha</label><input type="date" id="nf-fecha" style="padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);width:100%"></div>
     <div class="modal-row" style="display:flex;gap:12px">
       <div style="flex:1"><label>Hora entrada</label><input type="time" id="nf-hora-entrada" step="60" style="padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);width:100%"></div>
       <div style="flex:1"><label>Hora salida</label><input type="time" id="nf-hora-salida" step="60" style="padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);width:100%"></div>
     </div>
+    <div class="modal-row" id="nf-motivo-row"><label>Motivo <span style="color:var(--red);font-weight:600">*</span></label><select id="nf-motivo" style="padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;width:100%"><option value="OLVIDO DE FICHAJE">OLVIDO DE FICHAJE</option><option value="NO FUNCIONABA EL SISTEMA">NO FUNCIONABA EL SISTEMA</option><option value="ERROR EN EL SISTEMA">ERROR EN EL SISTEMA</option><option value="FICHAJE POR ERROR">FICHAJE POR ERROR</option><option value="OTROS">OTROS</option></select></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cerrarModalNuevoFichaje()">Cancelar</button>
-      <button class="btn-submit" onclick="enviarNuevoFichaje()">Añadir fichaje</button>
+      <button class="btn-submit" id="nf-btn-submit" onclick="enviarNuevoFichaje()">Solicitar fichaje</button>
     </div>
   </div>
 </div>
@@ -1336,7 +1337,8 @@ function renderEmpFichajesTab(){
   var fechasAsc=fechas.slice().reverse();
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump2"><button class="btn-jump" onclick="jumpToDateFichajes()">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmapMes,session.nombre,true);
-  rep.innerHTML='<div class="emp-block"><div class="emp-name">'+esc(session.nombre)+'</div><div class="emp-meta">Últimos 30 días · '+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
+  var btnNuevoEmp='<button onclick="abrirModalNuevoFichaje(session.nombre,true)" title="Solicitar fichaje olvidado" style="background:var(--green-acc);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1">+</button>';
+  rep.innerHTML='<div class="emp-block"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem"><div class="emp-name" style="margin-bottom:0">'+esc(session.nombre)+'</div>'+btnNuevoEmp+'</div><div class="emp-meta">Últimos 30 días · '+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
 }
 function jumpToDateFichajes(){
   var el=document.getElementById('emp-date-jump2');if(!el)return;
@@ -1530,13 +1532,19 @@ function actualizarEstadoEliminar(){
 function cerrarModalSol(){document.getElementById('modal-sol').classList.remove('on');solActual=null;}
 
 var nfEmpActual=null,nfIsEmp=false;
-function abrirModalNuevoFichaje(emp,isEmp){
+function abrirModalNuevoFichaje(empArg,isEmp){
+  var emp=typeof empArg==='string'?empArg:(session&&session.nombre?session.nombre:'');
   nfEmpActual=emp;nfIsEmp=!!isEmp;
   document.getElementById('modal-nf-emp-info').textContent=emp;
   var hoy=new Date().toISOString().slice(0,10);
   document.getElementById('nf-fecha').value=hoy;
   document.getElementById('nf-hora-entrada').value='';
   document.getElementById('nf-hora-salida').value='';
+  document.getElementById('nf-motivo').selectedIndex=0;
+  var esEmp=!!isEmp;
+  document.getElementById('nf-titulo').textContent=esEmp?'➕ Solicitar fichaje olvidado':'➕ Añadir fichaje';
+  document.getElementById('nf-btn-submit').textContent=esEmp?'Solicitar fichaje':'Añadir fichaje';
+  document.getElementById('nf-motivo-row').style.display=esEmp?'':'none';
   document.getElementById('modal-nuevo-fichaje').classList.add('on');
 }
 function cerrarModalNuevoFichaje(){
@@ -1547,42 +1555,60 @@ async function enviarNuevoFichaje(){
   var fecha=document.getElementById('nf-fecha').value;
   var horaE=document.getElementById('nf-hora-entrada').value;
   var horaS=document.getElementById('nf-hora-salida').value;
+  var motivo=document.getElementById('nf-motivo').value;
   if(!fecha){toast('Selecciona una fecha','err');return;}
   if(!horaE&&!horaS){toast('Indica al menos una hora','err');return;}
   if(horaE&&horaS&&horaS<=horaE){toast('La salida debe ser posterior a la entrada','err');return;}
   var fechaDisp=isoDisplay(fecha);
   cerrarModalNuevoFichaje();
-  setLoader(true,'Añadiendo fichaje...');
+  setLoader(true,'Enviando solicitud...');
   var ok=true,errMsg='';
   try{
-    if(horaE){
-      var r1=await callScriptJSONP({action:'addFichaje',nombre:nfEmpActual,fecha:fechaDisp,tipo:'ENTRADA',hora:horaE});
-      if(!r1||r1.ok===false)throw new Error(r1&&r1.msg?r1.msg:'Error añadiendo entrada');
-    }
-    if(horaS){
-      var r2=await callScriptJSONP({action:'addFichaje',nombre:nfEmpActual,fecha:fechaDisp,tipo:'SALIDA',hora:horaS});
-      if(!r2||r2.ok===false)throw new Error(r2&&r2.msg?r2.msg:'Error añadiendo salida');
+    if(nfIsEmp){
+      // Empleado → envía solicitud de fichaje nuevo (no inserta directamente)
+      var payload={
+        action:'guardarSolicitud',
+        emp:nfEmpActual,
+        motivo:motivo||'OLVIDO DE FICHAJE',
+        emailEmp:session.email||'',
+        eliminarTurno:false,
+        fichajeNuevo:true,
+        cambiaEntrada:!!horaE,
+        fechaEntradaOrig:fecha,
+        fechaEntradaNueva:fecha,
+        horaEntradaActual:'—',
+        horaEntradaNueva:horaE?normHora(horaE):'—',
+        cambiaSalida:!!horaS,
+        fechaSalidaOrig:fecha,
+        fechaSalidaNueva:fecha,
+        horaSalidaActual:'—',
+        horaSalidaNueva:horaS?normHora(horaS):'—'
+      };
+      var res=await callScriptJSONP(payload);
+      if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'Error al enviar');
+      esolicitudes=await loadSolicitudes(session.nombre);
+      rebuildApprovedSet(esolicitudes);updateEbadge();erendSolicitudes();
+      setTimeout(function(){eswitch('solicitudes');},400);
+    }else{
+      // Admin → inserta directamente
+      if(horaE){
+        var r1=await callScriptJSONP({action:'addFichaje',nombre:nfEmpActual,fecha:fechaDisp,tipo:'ENTRADA',hora:horaE});
+        if(!r1||r1.ok===false)throw new Error(r1&&r1.msg?r1.msg:'Error añadiendo entrada');
+      }
+      if(horaS){
+        var r2=await callScriptJSONP({action:'addFichaje',nombre:nfEmpActual,fecha:fechaDisp,tipo:'SALIDA',hora:horaS});
+        if(!r2||r2.ok===false)throw new Error(r2&&r2.msg?r2.msg:'Error añadiendo salida');
+      }
+      try{
+        var t=await fetchSheet(nfEmpActual);
+        editData[nfEmpActual]=construirDmap(parsearTabla(t));
+        renderReport();
+      }catch(e2){renderReport();}
     }
   }catch(e){ok=false;errMsg=e.message;}
   setLoader(false);
-  if(ok){
-    toast('Fichaje añadido ✓','ok');
-    // Recargar datos del empleado afectado
-    try{
-      var t=await fetchSheet(nfEmpActual||session.nombre);
-      var f=parsearTabla(t);
-      var dmap=construirDmap(f);
-      if(nfIsEmp){empEditData=dmap;renderEmpFichajesTab();}
-      else{
-        // construirDmap con fichajes de un solo empleado devuelve {fecha:[regs]}
-        // Las claves son fechas ISO directamente
-        editData[nfEmpActual]=dmap;
-        renderReport();
-      }
-    }catch(e2){
-      if(!nfIsEmp)renderReport();
-    }
-  }else{toast('Error: '+errMsg,'err');}
+  if(ok){toast(nfIsEmp?'Solicitud enviada ✓':'Fichaje añadido ✓','ok');}
+  else{toast('Error: '+errMsg,'err');}
 }
 
 async function enviarSolicitud(){
@@ -1718,8 +1744,7 @@ function renderEmp(emp){
   if(!fechas.length)return'<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">Sin fichajes en el período.</div></div>';
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="adm-date-jump-'+empId(emp)+'"><button class="btn-jump" onclick="jumpToDateAdmin(\''+esc(emp)+'\')">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmap,emp,false);
-  var btnNuevo='<button onclick="abrirModalNuevoFichaje(\''+esc(emp)+'\',false)" title="Añadir día completo" style="background:var(--green-acc);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1">+</button>';
-  return'<div class="emp-block" data-emp="'+esc(emp)+'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem"><div class="emp-name" style="margin-bottom:0">'+esc(emp)+'</div>'+btnNuevo+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
+  return'<div class="emp-block" data-emp="'+esc(emp)+'"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
 }
 function jumpToDateAdmin(emp){var el=document.getElementById('adm-date-jump-'+empId(emp));if(!el)return;var fecha=el.value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,emp);}
 
