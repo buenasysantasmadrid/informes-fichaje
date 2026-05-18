@@ -711,20 +711,9 @@ function rebuildApprovedSet(sols){
   approvedSet=new Set();
   sols.forEach(function(s){
     if(s.estado==='aprobada'){
-      // Nuevo formato combinado
-      if(s.cambiaEntrada){
-        var fE=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
-        approvedSet.add(s.emp+'|'+fE+'|ENTRADA|'+normHora(s.horaEntradaNueva));
-      }
-      if(s.cambiaSalida){
-        var fS=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
-        approvedSet.add(s.emp+'|'+fS+'|SALIDA|'+normHora(s.horaSalidaNueva));
-      }
-      // Compatibilidad formato antiguo
-      if(!s.cambiaEntrada&&!s.cambiaSalida&&s.tipo&&s.horaNueva){
-        var fechaKey=safeISO(s.fechaNueva||s.fecha);
-        approvedSet.add(s.emp+'|'+fechaKey+'|'+s.tipo+'|'+normHora(s.horaNueva));
-      }
+      if(s.cambiaEntrada){var fE=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);approvedSet.add(s.emp+'|'+fE+'|ENTRADA|'+normHora(s.horaEntradaNueva));}
+      if(s.cambiaSalida){var fS=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);approvedSet.add(s.emp+'|'+fS+'|SALIDA|'+normHora(s.horaSalidaNueva));}
+      if(!s.cambiaEntrada&&!s.cambiaSalida&&s.tipo&&s.horaNueva){var fechaKey=safeISO(s.fechaNueva||s.fecha);approvedSet.add(s.emp+'|'+fechaKey+'|'+s.tipo+'|'+normHora(s.horaNueva));}
     }
   });
 }
@@ -898,17 +887,12 @@ function eswitchSinRecargar(tab){
 function eswitch(tab){
   document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#emp-shell .page').forEach(function(p){p.classList.remove('active');});
-  // las páginas que no tienen nav-tab
   ['epage-fichajes','epage-solicitudes','epage-calendario','epage-vacaciones'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.classList.remove('active');
   });
-  // activar nav-tab si existe
-  var navTab=document.getElementById('etab-'+tab);
-  if(navTab)navTab.classList.add('active');
-  var page=document.getElementById('epage-'+tab);
-  if(page)page.classList.add('active');
+  var navTab=document.getElementById('etab-'+tab);if(navTab)navTab.classList.add('active');
+  var page=document.getElementById('epage-'+tab);if(page)page.classList.add('active');
   if(tab==='fichajes'){
-    // Recargar fichajes y solicitudes al volver a esta pestaña
     Promise.all([
       fetchSheet(session.nombre).then(function(t){var f=parsearTabla(t);empEditData=construirDmap(f);}).catch(function(){}),
       loadSolicitudes(session.nombre).then(function(d){esolicitudes=d;rebuildApprovedSet(esolicitudes);updateEbadge();}).catch(function(){})
@@ -923,13 +907,10 @@ function eswitch(tab){
     var hoyMin=new Date().toISOString().slice(0,10);
     document.getElementById('vac-desde').min=hoyMin;
     document.getElementById('vac-hasta').min=hoyMin;
-    Promise.all([
-      loadSolicitudesVacaciones(session.nombre).then(function(data){esolicitudesVac=data;erendVacaciones();}),
-    ]);
+    loadSolicitudesVacaciones(session.nombre).then(function(data){esolicitudesVac=data;erendVacaciones();});
     loadYRenderBalanceVacaciones();
   }
 }
-
 function renderEmpleados(){
   document.getElementById('emp-list').innerHTML=empleados.map(function(e){
     return'<label class="emp-row"><input type="checkbox" class="echk" value="'+esc(e.nombre)+'" checked><label>'+esc(e.nombre)+'</label></label>';
@@ -1331,11 +1312,10 @@ function renderEmpFichajesTab(){
   var rep=document.getElementById('ereport-fichajes');
   var allFechas=Object.keys(empEditData).sort().reverse();
   if(!allFechas.length){rep.innerHTML='<div class="empty"><div class="spin" style="width:36px;height:36px;border-width:3px;margin-bottom:.75rem"></div><h2 style="font-size:1rem;color:var(--ink2)">Estamos actualizando, paciencia!</h2></div>';return;}
-  // Filtrar solo el último mes
   var hoy=new Date();
   var hace30=new Date(hoy.getFullYear(),hoy.getMonth()-1,hoy.getDate()).toISOString().slice(0,10);
   var fechas=allFechas.filter(function(f){return f>=hace30;});
-  if(!fechas.length)fechas=allFechas.slice(0,30); // fallback: hasta 30 entradas
+  if(!fechas.length)fechas=allFechas.slice(0,30);
   var dmapMes={};fechas.forEach(function(f){dmapMes[f]=empEditData[f];});
   var fechasAsc=fechas.slice().reverse();
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="emp-date-jump2"><button class="btn-jump" onclick="jumpToDateFichajes()">Ir</button></div>';
@@ -1534,7 +1514,6 @@ function actualizarEstadoEliminar(){
 function cerrarModalSol(){document.getElementById('modal-sol').classList.remove('on');solActual=null;}
 
 async function enviarSolicitud(){
-async function enviarSolicitud(){
   if(!solActual)return;
   var eliminar=document.getElementById('sol-eliminar-check')&&document.getElementById('sol-eliminar-check').checked;
   if(!eliminar&&document.getElementById('btn-submit-sol').disabled){toast('Corrige el solapamiento antes de enviar','err');return;}
@@ -1546,14 +1525,9 @@ async function enviarSolicitud(){
   var fechaEOrig=turno.entrada?(turno.entrada.fechaReal||turno.fechaEntrada||solActual.fecha):(turno.fechaEntrada||solActual.fecha);
   var fechaSOrig=turno.salida?(turno.salida.fechaReal||turno.fechaSalida||solActual.fecha):(turno.fechaSalida||solActual.fecha);
   if(eliminar){
-    var payload={
-      action:'guardarSolicitud',emp:solActual.emp,motivo:motivo||'FICHAJE POR ERROR',
-      emailEmp:solIsEmp?session.email:emailEmp,eliminarTurno:true,
-      cambiaEntrada:horaEA!=='—',fechaEntradaOrig:fechaEOrig,fechaEntradaNueva:fechaEOrig,
-      horaEntradaActual:horaEA!=='—'?normHora(horaEA):'—',horaEntradaNueva:horaEA!=='—'?normHora(horaEA):'—',
-      cambiaSalida:horaSA!=='—',fechaSalidaOrig:fechaSOrig,fechaSalidaNueva:fechaSOrig,
-      horaSalidaActual:horaSA!=='—'?normHora(horaSA):'—',horaSalidaNueva:horaSA!=='—'?normHora(horaSA):'—'
-    };
+    var payload={action:'guardarSolicitud',emp:solActual.emp,motivo:motivo||'FICHAJE POR ERROR',emailEmp:solIsEmp?session.email:emailEmp,eliminarTurno:true,
+      cambiaEntrada:horaEA!=='—',fechaEntradaOrig:fechaEOrig,fechaEntradaNueva:fechaEOrig,horaEntradaActual:horaEA!=='—'?normHora(horaEA):'—',horaEntradaNueva:horaEA!=='—'?normHora(horaEA):'—',
+      cambiaSalida:horaSA!=='—',fechaSalidaOrig:fechaSOrig,fechaSalidaNueva:fechaSOrig,horaSalidaActual:horaSA!=='—'?normHora(horaSA):'—',horaSalidaNueva:horaSA!=='—'?normHora(horaSA):'—'};
     cerrarModalSol();setLoader(true,'Enviando solicitud...');
     try{
       var res2=await callScriptJSONP(payload);
@@ -1564,69 +1538,31 @@ async function enviarSolicitud(){
     }catch(eElim){toast('Error al enviar: '+eElim.message,'err');}
     setLoader(false);return;
   }
-  var motivo=document.getElementById('sol-motivo').value.trim();
-  var emailEmp=document.getElementById('sol-email-emp').value.trim();
-  var turno=solActual.turno;
-  var horaEA=document.getElementById('sol-hora-entrada-actual').value;
   var horaEN=normHora(document.getElementById('sol-hora-entrada-nueva').value);
   var fechaEN=document.getElementById('sol-fecha-entrada-nueva').value||solActual.fecha;
-  var horaSA=document.getElementById('sol-hora-salida-actual').value;
   var horaSN=normHora(document.getElementById('sol-hora-salida-nueva').value);
   var fechaSN=document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
-  var fechaEOrig=turno.entrada?(turno.entrada.fechaReal||turno.fechaEntrada||solActual.fecha):(turno.fechaEntrada||solActual.fecha);
-  var fechaSOrig=turno.salida?(turno.salida.fechaReal||turno.fechaSalida||solActual.fecha):(turno.fechaSalida||solActual.fecha);
   var cambiaE=horaEA!=='—'&&horaEN&&horaEN!==normHora(horaEA);
   var cambiaFE=horaEA!=='—'&&fechaEN!==fechaEOrig;
   var cambiaS=horaSA!=='—'&&horaSN&&horaSN!==normHora(horaSA);
   var cambiaFS=horaSA!=='—'&&fechaSN!==fechaSOrig;
   if(!cambiaE&&!cambiaS&&!cambiaFE&&!cambiaFS){toast('No hay ningún cambio respecto al original','err');return;}
-  // Enviamos UNA sola solicitud combinada con toda la info de entrada y salida
-  var payload={
-    action:'guardarSolicitud',
-    emp:solActual.emp,
-    motivo:motivo,
-    emailEmp:solIsEmp?session.email:emailEmp,
-    cambiaEntrada:((cambiaE||cambiaFE)&&horaEA!=='—')?true:false,
-    fechaEntradaOrig:fechaEOrig,
-    fechaEntradaNueva:fechaEN,
-    horaEntradaActual:horaEA!=='—'?normHora(horaEA):'—',
-    horaEntradaNueva:horaEA!=='—'?(cambiaE?horaEN:normHora(horaEA)):'—',
-    cambiaSalida:((cambiaS||cambiaFS)&&horaSA!=='—')?true:false,
-    fechaSalidaOrig:fechaSOrig,
-    fechaSalidaNueva:fechaSN,
-    horaSalidaActual:horaSA!=='—'?normHora(horaSA):'—',
-    horaSalidaNueva:horaSA!=='—'?(cambiaS?horaSN:normHora(horaSA)):'—'
-  };
+  var payload={action:'guardarSolicitud',emp:solActual.emp,motivo:motivo,emailEmp:solIsEmp?session.email:emailEmp,eliminarTurno:false,
+    cambiaEntrada:((cambiaE||cambiaFE)&&horaEA!=='—')?true:false,fechaEntradaOrig:fechaEOrig,fechaEntradaNueva:fechaEN,horaEntradaActual:horaEA!=='—'?normHora(horaEA):'—',horaEntradaNueva:horaEA!=='—'?(cambiaE?horaEN:normHora(horaEA)):'—',
+    cambiaSalida:((cambiaS||cambiaFS)&&horaSA!=='—')?true:false,fechaSalidaOrig:fechaSOrig,fechaSalidaNueva:fechaSN,horaSalidaActual:horaSA!=='—'?normHora(horaSA):'—',horaSalidaNueva:horaSA!=='—'?(cambiaS?horaSN:normHora(horaSA)):'—'};
   cerrarModalSol();setLoader(true,'Enviando solicitud...');
   var envioOk=false,envioErr='';
-  try{
-    var res=await callScriptJSONP(payload);
-    if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'El script devolvió error');
-    envioOk=true;
-  }catch(e){envioErr=e.message;}
+  try{var res=await callScriptJSONP(payload);if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'El script devolvió error');envioOk=true;}catch(e){envioErr=e.message;}
   setLoader(false);
   if(envioOk){
     toast('Solicitud enviada ✓','ok');
     try{
-      if(solIsEmp){
-        esolicitudes=await loadSolicitudes(session.nombre);
-        rebuildApprovedSet(esolicitudes);
-        updateEbadge();
-        try{
-          var tablaTodos=await fetchSheet(session.nombre);
-          var fichajesTodos=parsearTabla(tablaTodos);
-          empEditData=construirDmap(fichajesTodos);
-        }catch(e3){}
-        renderEmpFichajesTab();
-        erendSolicitudes();
-        setTimeout(function(){eswitch('solicitudes');},400);
-      }
+      if(solIsEmp){esolicitudes=await loadSolicitudes(session.nombre);rebuildApprovedSet(esolicitudes);updateEbadge();try{var tt=await fetchSheet(session.nombre);empEditData=construirDmap(parsearTabla(tt));}catch(e3){}renderEmpFichajesTab();erendSolicitudes();setTimeout(function(){eswitch('solicitudes');},400);}
       else{solicitudes=await loadSolicitudes();rebuildApprovedSet(solicitudes);updateBadge();setTimeout(function(){switchTab('solicitudes');},600);}
     }catch(e2){}
   }else{toast('Error al enviar: '+envioErr,'err');}
 }
 
-// ── SOLICITUDES VACACIONES (EMPLEADO) ──
 async function enviarSolicitudVacaciones(){
   var desde=document.getElementById('vac-desde').value;
   var hasta=document.getElementById('vac-hasta').value;
@@ -1745,56 +1681,39 @@ function filtrarSol(f,btn){
   btn.classList.add('active');renderSolicitudes();
 }
 function renderSolicitudes(){
-  var lista=solicitudes.filter(function(s){return s.estado===solFiltro;});
-  var el=document.getElementById('sol-list');
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>No hay solicitudes '+solFiltro+'s.</p></div>';return;}
-  // Ya en orden: las últimas insertadas son las primeras en el array (insertRowAfter(1))
+  var el=document.getElementById('report-solicitudes');
+  if(!el)return;
+  var lista=solicitudes.filter(function(s){return solFiltro==='todos'||s.estado===solFiltro;});
+  if(!lista.length){el.innerHTML='<div class="empty"><p>No hay solicitudes '+solFiltro+'</p></div>';return;}
+  var elimBadge='<span style="background:var(--red);color:#fff;font-size:.6rem;padding:2px 7px;border-radius:4px;margin-left:6px;font-weight:600">🗑 ELIMINAR</span>';
   el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
-    var lineaEntrada='',lineaSalida='';
-    var fEOrig=safeISO(s.fechaEntradaOrig||s.fecha);
-    var fENew=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
-    var fSOrig=safeISO(s.fechaSalidaOrig||s.fecha);
-    var fSNew=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
-    var elimBadge='<span style="background:var(--red);color:#fff;font-size:.6rem;padding:2px 7px;border-radius:4px;margin-left:6px;font-weight:600">🗑 ELIMINAR</span>';
+    var fEOrig=safeISO(s.fechaEntradaOrig||s.fecha),fENew=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
+    var fSOrig=safeISO(s.fechaSalidaOrig||s.fecha),fSNew=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
+    var lineaE='',lineaS='';
     if(s.eliminarTurno){
-      if(s.cambiaEntrada)lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <s style="color:var(--red)">'+isoDisplay(fEOrig)+' '+normHoraDisplay(s.horaEntradaActual)+'</s>'+elimBadge+'</div>';
-      else lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';
-      if(s.cambiaSalida)lineaSalida='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <s style="color:var(--red)">'+isoDisplay(fSOrig)+' '+normHoraDisplay(s.horaSalidaActual)+'</s>'+elimBadge+'</div>';
-      else lineaSalida='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||'—')+'</span></div>';
+      if(s.cambiaEntrada)lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <s style="color:var(--red)">'+isoDisplay(fEOrig)+' '+normHoraDisplay(s.horaEntradaActual)+'</s>'+elimBadge+'</div>';
+      else lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';
+      if(s.cambiaSalida)lineaS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <s style="color:var(--red)">'+isoDisplay(fSOrig)+' '+normHoraDisplay(s.horaSalidaActual)+'</s>'+elimBadge+'</div>';
+      else lineaS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||'—')+'</span></div>';
     }else{
-    if(s.cambiaEntrada){
-      var hfe=fENew&&fENew!==fEOrig;
-      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> '+(hfe?'<s>'+isoDisplay(fEOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaEntradaActual)+'</s> → '+(hfe?'<b>'+isoDisplay(fENew)+' '+normHoraDisplay(s.horaEntradaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaEntradaNueva)+'</b>')+'</div>';
-    } else {
-      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||s.turnoEntrada||'—')+'</span></div>';
-    }
-    if(s.cambiaSalida){
-      var hfs=fSNew&&fSNew!==fSOrig;
-      lineaSalida='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> '+(hfs?'<s>'+isoDisplay(fSOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaSalidaActual)+'</s> → '+(hfs?'<b>'+isoDisplay(fSNew)+' '+normHoraDisplay(s.horaSalidaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaSalidaNueva)+'</b>')+'</div>';
-    } else {
-      lineaSalida='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||s.turnoSalida||'—')+'</span></div>';
-    }
+      if(s.cambiaEntrada){var hfe=fENew&&fENew!==fEOrig;lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> '+(hfe?'<s>'+isoDisplay(fEOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaEntradaActual)+'</s> → '+(hfe?'<b>'+isoDisplay(fENew)+' '+normHoraDisplay(s.horaEntradaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaEntradaNueva)+'</b>')+'</div>';}
+      else{lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';}
+      if(s.cambiaSalida){var hfs=fSNew&&fSNew!==fSOrig;lineaS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> '+(hfs?'<s>'+isoDisplay(fSOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaSalidaActual)+'</s> → '+(hfs?'<b>'+isoDisplay(fSNew)+' '+normHoraDisplay(s.horaSalidaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaSalidaNueva)+'</b>')+'</div>';}
+      else{lineaS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||'—')+'</span></div>';}
     }
     return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
-      +'<div class="sol-info">'
-        +'<div class="sol-emp">'+esc(s.emp)+'</div>'
-        +'<div class="sol-detail" style="margin-top:.4rem">'
-          +lineaEntrada
-          +lineaSalida
-          +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
-          +(s.emailEmp?'<div style="font-size:.72rem;color:var(--ink2)"><span>Email:</span> '+esc(s.emailEmp)+'</div>':'')
-        +'</div>'
-        +'<div class="sol-fecha-req">'+formatFechaReq(s.fechaReq)+'</div>'
-      +'</div>'
-      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div>'
-    +'</div>';
+      +'<div class="sol-info"><div class="sol-emp">'+esc(s.emp)+'</div>'
+      +'<div class="sol-detail" style="margin-top:.4rem">'+lineaE+lineaS
+      +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
+      +(s.emailEmp?'<div style="font-size:.72rem;color:var(--ink2)"><span>Email:</span> '+esc(s.emailEmp)+'</div>':'')
+      +'</div><div class="sol-fecha-req">'+formatFechaReq(s.fechaReq)+'</div></div>'
+      +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+acciones+'</div></div>';
   }).join('');
 }
 
-// ── VACACIONES ADMIN ──
 function filtrarVac(f,btn){
   vacFiltro=f;
   document.querySelectorAll('#adm-sec-vacaciones .flt-btn').forEach(function(b){b.classList.remove('active');});
@@ -1840,53 +1759,19 @@ async function aprobar(id){
   setLoader(true,'Aprobando...');
   var ok=false,err='';
   try{
-    var res=await callScriptJSONP({
-      action:'aprobarSolicitud',
-      id:sol.id,emp:sol.emp,
-      emailEmp:sol.emailEmp||'',
-      motivo:sol.motivo||'',
-      cambiaEntrada:sol.cambiaEntrada||false,
-      fechaEntradaOrig:safeISO(sol.fechaEntradaOrig||sol.fecha),
-      fechaEntradaNueva:safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),
-      horaEntradaActual:sol.horaEntradaActual||'—',
-      horaEntradaNueva:sol.horaEntradaNueva||'—',
-      cambiaSalida:sol.cambiaSalida||false,
-      fechaSalidaOrig:safeISO(sol.fechaSalidaOrig||sol.fecha),
-      fechaSalidaNueva:safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha),
-      horaSalidaActual:sol.horaSalidaActual||'—',
-      horaSalidaNueva:sol.horaSalidaNueva||'—'
-    });
+    var res=await callScriptJSONP({action:'aprobarSolicitud',id:sol.id,emp:sol.emp,emailEmp:sol.emailEmp||'',motivo:sol.motivo||'',
+      eliminarTurno:sol.eliminarTurno||false,
+      cambiaEntrada:sol.cambiaEntrada||false,fechaEntradaOrig:safeISO(sol.fechaEntradaOrig||sol.fecha),fechaEntradaNueva:safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),horaEntradaActual:sol.horaEntradaActual||'—',horaEntradaNueva:sol.horaEntradaNueva||'—',
+      cambiaSalida:sol.cambiaSalida||false,fechaSalidaOrig:safeISO(sol.fechaSalidaOrig||sol.fecha),fechaSalidaNueva:safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha),horaSalidaActual:sol.horaSalidaActual||'—',horaSalidaNueva:sol.horaSalidaNueva||'—'});
     if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'Error al aprobar');
     ok=true;
   }catch(e){err=e.message;}
   setLoader(false);
   if(ok){
-    // Actualizar editData en memoria para entrada y salida
     if(editData[sol.emp]){
-      function patchReg(tipo,fechaOrig,fechaNueva,horaActual,horaNueva){
-        var fO=fechaOrig,fN=fechaNueva||fechaOrig,regs=editData[sol.emp][fO];
-        if(!regs)return;
-        for(var i=0;i<regs.length;i++){
-          if(regs[i].tipo===tipo&&normHora(regs[i].hora)===normHora(horaActual)){
-            if(fN!==fO){
-              regs.splice(i,1);
-              if(!editData[sol.emp][fN])editData[sol.emp][fN]=[];
-              editData[sol.emp][fN].push({tipo:tipo,hora:horaNueva,modificado:true});
-              refreshCard(sol.emp,fO);refreshCard(sol.emp,fN);
-            }else{regs[i].hora=horaNueva;regs[i].modificado=true;refreshCard(sol.emp,fO);}
-            break;
-          }
-        }
-      }
+      function patchReg(tipo,fO,fN,hA,hN){var regs=editData[sol.emp][fO];if(!regs)return;for(var i=0;i<regs.length;i++){if(regs[i].tipo===tipo&&normHora(regs[i].hora)===normHora(hA)){if(fN!==fO){regs.splice(i,1);if(!editData[sol.emp][fN])editData[sol.emp][fN]=[];editData[sol.emp][fN].push({tipo:tipo,hora:hN,modificado:true});refreshCard(sol.emp,fO);refreshCard(sol.emp,fN);}else{regs[i].hora=hN;regs[i].modificado=true;refreshCard(sol.emp,fO);}break;}}}
+      function eliminarReg(tipo,fO,hA){var regs=editData[sol.emp]&&editData[sol.emp][fO];if(!regs)return;for(var ix=regs.length-1;ix>=0;ix--){if(regs[ix].tipo===tipo&&normHora(regs[ix].hora)===normHora(hA)){regs.splice(ix,1);break;}}refreshCard(sol.emp,fO);}
       if(sol.eliminarTurno){
-        function eliminarReg(tipo,fechaOrig,horaActual){
-          var regs=editData[sol.emp]&&editData[sol.emp][fechaOrig];
-          if(!regs)return;
-          for(var ix=regs.length-1;ix>=0;ix--){
-            if(regs[ix].tipo===tipo&&normHora(regs[ix].hora)===normHora(horaActual)){regs.splice(ix,1);break;}
-          }
-          refreshCard(sol.emp,fechaOrig);
-        }
         if(sol.cambiaEntrada)eliminarReg('ENTRADA',safeISO(sol.fechaEntradaOrig||sol.fecha),sol.horaEntradaActual);
         if(sol.cambiaSalida)eliminarReg('SALIDA',safeISO(sol.fechaSalidaOrig||sol.fecha),sol.horaSalidaActual);
       }else{
@@ -1977,52 +1862,38 @@ function refreshWeekTotal(emp,fecha,isEmp){
 
 // ── EMPLEADO SOLICITUDES HORAS ──
 function erendSolicitudes(){
-  var lista=esolicitudes.slice();
-  var el=document.getElementById('esol-list');
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>Pulsa cualquier hora en Mis fichajes para solicitar una corrección.</p></div>';return;}
+  var el=document.getElementById('ereport-solicitudes');if(!el)return;
+  var lista=esolicitudes;
+  if(!lista.length){el.innerHTML='<div class="empty"><p>No tienes solicitudes</p></div>';return;}
+  var elimBadge='<span style="background:var(--red);color:#fff;font-size:.6rem;padding:2px 7px;border-radius:4px;margin-left:6px;font-weight:600">🗑 ELIMINAR</span>';
   el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
-    var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
-    var fechaReqFmt=formatFechaReq(s.fechaReq);
-    var lineaEmpE='',lineaEmpS='';
-    var fEOrig=safeISO(s.fechaEntradaOrig||s.fecha);
-    var fENew=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
-    var fSOrig=safeISO(s.fechaSalidaOrig||s.fecha);
-    var fSNew=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
+    var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitud(\\\'\'+s.id+\'\\\',true)">✕ Cancelar</button>':'';
+    var fEOrig=safeISO(s.fechaEntradaOrig||s.fecha),fENew=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
+    var fSOrig=safeISO(s.fechaSalidaOrig||s.fecha),fSNew=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
+    var lineaE='',lineaS='';
     if(s.eliminarTurno){
-      var eBadge='<span style="background:var(--red);color:#fff;font-size:.6rem;padding:2px 7px;border-radius:4px;margin-left:6px;font-weight:600">🗑 ELIMINAR</span>';
-      if(s.cambiaEntrada)lineaEmpE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <s style="color:var(--red)">'+isoDisplay(fEOrig)+' '+normHoraDisplay(s.horaEntradaActual)+'</s>'+eBadge+'</div>';
-      else lineaEmpE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';
-      if(s.cambiaSalida)lineaEmpS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <s style="color:var(--red)">'+isoDisplay(fSOrig)+' '+normHoraDisplay(s.horaSalidaActual)+'</s>'+eBadge+'</div>';
-      else lineaEmpS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||'—')+'</span></div>';
-    }else{if(s.cambiaEntrada){
-      var hfe=fENew&&fENew!==fEOrig;
-      lineaEmpE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> '+(hfe?'<s>'+isoDisplay(fEOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaEntradaActual)+'</s> → '+(hfe?'<b>'+isoDisplay(fENew)+' '+normHoraDisplay(s.horaEntradaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaEntradaNueva)+'</b>')+'</div>';
-    } else {
-      lineaEmpE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';
+      if(s.cambiaEntrada)lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <s style="color:var(--red)">'+isoDisplay(fEOrig)+' '+normHoraDisplay(s.horaEntradaActual)+'</s>'+elimBadge+'</div>';
+      else lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';
+      if(s.cambiaSalida)lineaS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <s style="color:var(--red)">'+isoDisplay(fSOrig)+' '+normHoraDisplay(s.horaSalidaActual)+'</s>'+elimBadge+'</div>';
+      else lineaS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||'—')+'</span></div>';
+    }else{
+      if(s.cambiaEntrada){var hfe=fENew&&fENew!==fEOrig;lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> '+(hfe?'<s>'+isoDisplay(fEOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaEntradaActual)+'</s> → '+(hfe?'<b>'+isoDisplay(fENew)+' '+normHoraDisplay(s.horaEntradaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaEntradaNueva)+'</b>')+'</div>';}
+      else{lineaE='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA:</span> <span style="color:var(--ink2)">'+isoDisplay(fEOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaEntradaActual||'—')+'</span></div>';}
+      if(s.cambiaSalida){var hfs=fSNew&&fSNew!==fSOrig;lineaS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> '+(hfs?'<s>'+isoDisplay(fSOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaSalidaActual)+'</s> → '+(hfs?'<b>'+isoDisplay(fSNew)+' '+normHoraDisplay(s.horaSalidaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaSalidaNueva)+'</b>')+'</div>';}
+      else{lineaS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||'—')+'</span></div>';}
     }
-    if(s.cambiaSalida){
-      var hfs=fSNew&&fSNew!==fSOrig;
-      lineaEmpS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> '+(hfs?'<s>'+isoDisplay(fSOrig)+'</s> ':'<span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> ')+'<s>'+normHoraDisplay(s.horaSalidaActual)+'</s> → '+(hfs?'<b>'+isoDisplay(fSNew)+' '+normHoraDisplay(s.horaSalidaNueva)+'</b>':'<b>'+normHoraDisplay(s.horaSalidaNueva)+'</b>')+'</div>';
-    } else {
-      lineaEmpS='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--blue)">SALIDA:</span> <span style="color:var(--ink2)">'+isoDisplay(fSOrig)+'</span> <span style="font-weight:600">'+normHoraDisplay(s.horaSalidaActual||'—')+'</span></div>';
-    }
-    return'<div class="sol-card '+s.estado+'">'}
-      +'<div class="sol-info">'
-        +'<div class="sol-detail">'
-          +lineaEmpE
-          +lineaEmpS
-          +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
-          +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqFmt+'</div>'
-        +'</div>'
-      +'</div>'
+    return'<div class="sol-card '+s.estado+'">'
+      +'<div class="sol-info"><div class="sol-detail">'+lineaE+lineaS
+      +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
+      +'<div style="font-size:.58rem;color:var(--ink3)">'+formatFechaReq(s.fechaReq)+'</div>'
+      +'</div></div>'
       +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+accionCancelar+'</div>'
     +'</div>';
   }).join('');
 }
 
-// ── EXPORT ──
 function exportEmp(emp){
   var dmap=emp==='_emp'?empEditData:editData[emp];if(!dmap)return;
   var wb=XLSX.utils.book_new();
