@@ -1646,8 +1646,8 @@ async function enviarSolicitud(){
   var cambiaFS=horaSA!=='—'&&fechaSN!==fechaSOrig;
   if(!cambiaE&&!cambiaS&&!cambiaFE&&!cambiaFS){toast('No hay ningún cambio respecto al original','err');return;}
   var payload={action:'guardarSolicitud',emp:solActual.emp,motivo:motivo,emailEmp:solIsEmp?session.email:emailEmp,eliminarTurno:false,
-    cambiaEntrada:((cambiaE||cambiaFE)&&horaEA!=='—')?true:false,fechaEntradaOrig:fechaEOrig,fechaEntradaNueva:fechaEN,horaEntradaActual:horaEA!=='—'?normHora(horaEA):'—',horaEntradaNueva:horaEA!=='—'?(cambiaE?horaEN:normHora(horaEA)):'—',
-    cambiaSalida:((cambiaS||cambiaFS)&&horaSA!=='—')?true:false,fechaSalidaOrig:fechaSOrig,fechaSalidaNueva:fechaSN,horaSalidaActual:horaSA!=='—'?normHora(horaSA):'—',horaSalidaNueva:horaSA!=='—'?(cambiaS?horaSN:normHora(horaSA)):'—'};
+    cambiaEntrada:((cambiaE||cambiaFE)&&horaEA!=='—')?true:false,fechaEntradaOrig:fechaEOrig,fechaEntradaNueva:fechaEN,horaEntradaActual:horaEA!=='—'?normHoraDisplay(horaEA):'—',horaEntradaNueva:horaEA!=='—'?(cambiaE?horaEN:normHoraDisplay(horaEA)):'—',
+    cambiaSalida:((cambiaS||cambiaFS)&&horaSA!=='—')?true:false,fechaSalidaOrig:fechaSOrig,fechaSalidaNueva:fechaSN,horaSalidaActual:horaSA!=='—'?normHoraDisplay(horaSA):'—',horaSalidaNueva:horaSA!=='—'?(cambiaS?horaSN:normHoraDisplay(horaSA)):'—'};
   cerrarModalSol();setLoader(true,'Enviando solicitud...');
   var envioOk=false,envioErr='';
   try{var res=await callScriptJSONP(payload);if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'El script devolvió error');envioOk=true;}catch(e){envioErr=e.message;}
@@ -1808,8 +1808,9 @@ function renderSolicitudes(){
         lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';
       }
     } else {
-      // ENTRADA no cambia — mostrarla sin tachar
-      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+normHoraDisplay(horaE)+'</span></div>';
+      // ENTRADA no cambia — mostrar hora actual (puede ser '—' si no existe)
+      var horaEMostrar = (s.horaEntradaActual && s.horaEntradaActual!=='—') ? normHoraDisplay(s.horaEntradaActual) : (horaE!=='—'?normHoraDisplay(horaE):'—');
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaEMostrar+'</span></div>';
     }
     // Línea SALIDA
     var lineaSalida;
@@ -1821,8 +1822,9 @@ function renderSolicitudes(){
         lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';
       }
     } else {
-      // SALIDA no cambia — mostrarla sin tachar
-      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+normHoraDisplay(horaS)+'</span></div>';
+      // SALIDA no cambia — mostrar hora actual (puede ser '—' si no existe)
+      var horaSMostrar = (s.horaSalidaActual && s.horaSalidaActual!=='—') ? normHoraDisplay(s.horaSalidaActual) : (horaS!=='—'?normHoraDisplay(horaS):'—');
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaSMostrar+'</span></div>';
     }
 
     return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
