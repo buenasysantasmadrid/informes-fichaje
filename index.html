@@ -1782,25 +1782,55 @@ function renderSolicitudes(){
   var lista=solicitudes.filter(function(s){return s.estado===solFiltro;});
   var el=document.getElementById('sol-list');
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>No hay solicitudes '+solFiltro+'s.</p></div>';return;}
-  // Ya en orden: las últimas insertadas son las primeras en el array (insertRowAfter(1))
   el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
-    var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
+
+    // ── Construir líneas ENTRADA y SALIDA con tachado correcto ──
+    var fechaISO=safeISO(s.fecha), fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
+    var hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
     var esE=(s.tipo==='ENTRADA');
     var horaE=s.turnoEntrada||'—', horaS=s.turnoSalida||'—';
-    var lineaEntrada='<div style="font-size:.75rem;margin-bottom:.2rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+isoDisplay(fechaISO)+'</span> '+(esE?'<span style="font-weight:600">'+normHoraDisplay(s.horaActual)+'</span>':'<span style="font-weight:600">'+normHoraDisplay(horaE)+'</span>')+'</div>';
-    var lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+isoDisplay(fechaISO)+'</span> '+(!esE?'<span style="font-weight:600">'+normHoraDisplay(s.horaActual)+'</span>':'<span style="font-weight:600">'+normHoraDisplay(horaS)+'</span>')+'</div>';
-    var modFecha=hayFN?' '+isoDisplay(fechaNuevaISO):'';
-    var lineaMod='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--amber)">MODIFICACIÓN</span> '+s.tipo+' Hora: <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b>'+modFecha+'</div>';
+    // Hora que NO cambia (la del otro lado del turno)
+    var horaEFija  = esE ? horaE  : normHoraDisplay(s.horaActual); // si cambia SALIDA → entrada fija
+    var horaSFija  = esE ? normHoraDisplay(s.horaActual) : horaS;  // si cambia ENTRADA → salida fija
+    // Fecha fija (la del turno original, sin cambio de fecha)
+    var fechaFija  = isoDisplay(fechaISO);
+    var fechaCambio= hayFN ? isoDisplay(fechaNuevaISO) : fechaFija;
+    // Línea ENTRADA
+    var lineaEntrada;
+    if(esE){
+      // ENTRADA es la que cambia
+      if(hayFN){
+        lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <s>'+fechaFija+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';
+      } else {
+        lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';
+      }
+    } else {
+      // ENTRADA no cambia — mostrarla sin tachar
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+normHoraDisplay(horaE)+'</span></div>';
+    }
+    // Línea SALIDA
+    var lineaSalida;
+    if(!esE){
+      // SALIDA es la que cambia
+      if(hayFN){
+        lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <s>'+fechaFija+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';
+      } else {
+        lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';
+      }
+    } else {
+      // SALIDA no cambia — mostrarla sin tachar
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+normHoraDisplay(horaS)+'</span></div>';
+    }
+
     return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
       +'<div class="sol-info">'
         +'<div class="sol-emp">'+esc(s.emp)+'</div>'
         +'<div class="sol-detail" style="margin-top:.4rem">'
           +lineaEntrada
           +lineaSalida
-          +lineaMod
           +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
           +(s.emailEmp?'<div style="font-size:.72rem;color:var(--ink2)"><span>Email:</span> '+esc(s.emailEmp)+'</div>':'')
         +'</div>'
@@ -1964,21 +1994,34 @@ function erendSolicitudes(){
   el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
-    var fechaISO=safeISO(s.fecha),fechaNuevaISO=safeISO(s.fechaNueva||s.fecha),hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
     var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
     var fechaReqFmt=formatFechaReq(s.fechaReq);
-    var esEmp=(s.tipo==='ENTRADA');
-    var horaEmp=s.turnoEntrada||'—', horaSmp=s.turnoSalida||'—';
-    var lineaEmpE='<div style="font-size:.75rem;margin-bottom:.2rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+isoDisplay(fechaISO)+'</span> <span style="font-weight:600">'+normHoraDisplay(esEmp?s.horaActual:horaEmp)+'</span></div>';
-    var lineaEmpS='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+isoDisplay(fechaISO)+'</span> <span style="font-weight:600">'+normHoraDisplay(!esEmp?s.horaActual:horaSmp)+'</span></div>';
-    var modFechaEmp=hayFN?' '+isoDisplay(fechaNuevaISO):'';
-    var lineaModEmp='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--amber)">MODIFICACIÓN</span> '+s.tipo+' Hora: <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b>'+modFechaEmp+'</div>';
+
+    var fechaISO=safeISO(s.fecha), fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
+    var hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
+    var esE=(s.tipo==='ENTRADA');
+    var horaE=s.turnoEntrada||'—', horaS=s.turnoSalida||'—';
+    var fechaFija=isoDisplay(fechaISO), fechaCambio=hayFN?isoDisplay(fechaNuevaISO):fechaFija;
+    var lineaEntrada;
+    if(esE){
+      if(hayFN){lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <s>'+fechaFija+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      else{lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';}
+    }else{
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+normHoraDisplay(horaE)+'</span></div>';
+    }
+    var lineaSalida;
+    if(!esE){
+      if(hayFN){lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <s>'+fechaFija+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      else{lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';}
+    }else{
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+normHoraDisplay(horaS)+'</span></div>';
+    }
+
     return'<div class="sol-card '+s.estado+'">'
       +'<div class="sol-info">'
         +'<div class="sol-detail">'
-          +lineaEmpE
-          +lineaEmpS
-          +lineaModEmp
+          +lineaEntrada
+          +lineaSalida
           +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
           +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqFmt+'</div>'
         +'</div>'
