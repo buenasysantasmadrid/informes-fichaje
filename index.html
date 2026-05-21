@@ -694,15 +694,19 @@ async function callScriptJSONP(payload){
     return res;
   }catch(e){return{ok:false,msg:e.toString()};}
 }
-async function fetchSheet(name){
+async function fetchSheet(name,force){
   if(!SCRIPT_URL)throw new Error('Sin URL');
-  var data=await apiGetJSONPWithRetry({action:'getFichajes',nombre:name.trim()},40000,4);
+  var key='sheet_'+name.trim();
+  if(!force){var cached=cacheGet(key);if(cached)return cached;}
+  var data=await apiGetJSONPWithRetry({action:'getFichajes',nombre:name.trim()},25000,2);
   var rows=Array.isArray(data)?data:(data.data||[]);
-  return{rows:rows.map(function(r){return{c:r.map(function(v){return{v:String(v||'')};})};})};
+  var result={rows:rows.map(function(r){return{c:r.map(function(v){return{v:String(v||'')};})};})};
+  cacheSet(key,result);
+  return result;
 }
 async function loadEmpleados(){
   if(!SCRIPT_URL)throw new Error('Sin URL');
-  var data=await apiGetJSONPWithRetry({action:'getEmpleados'},40000,4);
+  var data=await apiGetJSONPWithRetry({action:'getEmpleados'},20000,2);
   var rows=Array.isArray(data)?data:(data.data||[]);
   var found=[];
   for(var i=0;i<rows.length;i++){
@@ -712,23 +716,29 @@ async function loadEmpleados(){
   }
   empleados=found;return found;
 }
-async function loadSolicitudes(empNombre){
-  if(!SCRIPT_URL)return[];
-  try{
-    var params={action:'getSolicitudes'};
-    if(empNombre)params.emp=empNombre;
-    var data=await apiGetJSONPWithRetry(params,30000,3);
-    return Array.isArray(data)?data:[];
-  }catch(e){return[];}
+async function loadSolicitudes(empNombre,force){
+  if(!SCRIPT_URL)return Promise.resolve([]);
+  var key='sol_'+(empNombre||'admin');
+  if(!force){var cached=cacheGet(key);if(cached)return Promise.resolve(cached);}
+  var params={action:'getSolicitudes'};
+  if(empNombre)params.emp=empNombre;
+  return apiGetJSONPWithRetry(params,20000,2).then(function(data){
+    var result=Array.isArray(data)?data:[];
+    cacheSet(key,result);
+    return result;
+  }).catch(function(){return cacheGet(key)||[];});
 }
-async function loadSolicitudesVacaciones(empNombre){
-  if(!SCRIPT_URL)return[];
-  try{
-    var params={action:'getSolicitudesVacaciones'};
-    if(empNombre)params.emp=empNombre;
-    var data=await apiGetJSONPWithRetry(params,30000,3);
-    return Array.isArray(data)?data:[];
-  }catch(e){return[];}
+function loadSolicitudesVacaciones(empNombre,force){
+  if(!SCRIPT_URL)return Promise.resolve([]);
+  var key='vac_'+(empNombre||'admin');
+  if(!force){var cached=cacheGet(key);if(cached)return Promise.resolve(cached);}
+  var params={action:'getSolicitudesVacaciones'};
+  if(empNombre)params.emp=empNombre;
+  return apiGetJSONPWithRetry(params,20000,2).then(function(data){
+    var result=Array.isArray(data)?data:[];
+    cacheSet(key,result);
+    return result;
+  }).catch(function(){return cacheGet(key)||[];});
 }
 function rebuildApprovedSet(sols){
   approvedSet=new Set();
@@ -876,6 +886,9 @@ function switchTab(tab){
     var bH=document.querySelector('#adm-sec-horas .flt-btn');if(bH)bH.classList.add('active');
     document.querySelectorAll('#adm-sec-vacaciones .flt-btn').forEach(function(b){b.classList.remove('active');});
     var bV=document.querySelector('#adm-sec-vacaciones .flt-btn');if(bV)bV.classList.add('active');
+    // Mostrar datos en caché inmediatamente
+    if(solicitudes.length>0){renderSolicitudes();renderVacacionesAdmin();}
+    // Actualizar en background
     Promise.all([loadSolicitudes(),loadSolicitudesVacaciones()]).then(function(results){
       solicitudes=results[0];solicitudesVac=results[1];
       solFiltro='pendiente';vacFiltro='pendiente';
@@ -924,25 +937,32 @@ function eswitch(tab){
   var navTab=document.getElementById('etab-'+tab);if(navTab)navTab.classList.add('active');
   var page=document.getElementById('epage-'+tab);if(page)page.classList.add('active');
   if(tab==='fichajes'){
+    // Mostrar datos en caché inmediatamente si existen
+    if(Object.keys(empEditData).length>0)renderEmpFichajesTab();
+    // Luego actualizar en background
     Promise.all([
       fetchSheet(session.nombre).then(function(t){var f=parsearTabla(t);empEditData=construirDmap(f);}).catch(function(){}),
       loadSolicitudes(session.nombre).then(function(d){esolicitudes=d;rebuildApprovedSet(esolicitudes);updateEbadge();}).catch(function(){})
     ]).then(function(){renderEmpFichajesTab();}).catch(function(){renderEmpFichajesTab();});
   }
   if(tab==='solicitudes'){
+    // Mostrar datos en caché inmediatamente
+    eSolFiltro='pendiente';
+    document.querySelectorAll('#epage-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});
+    var ep=document.getElementById('eflt-pendiente');if(ep)ep.classList.add('active');
+    if(esolicitudes.length>0)erendSolicitudes();
+    // Actualizar en background
     loadSolicitudes(session.nombre).then(function(data){
-      esolicitudes=data;rebuildApprovedSet(esolicitudes);updateEbadge();
-      // Ir siempre a pendientes al entrar
-      eSolFiltro='pendiente';
-      document.querySelectorAll('#epage-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});
-      var ep=document.getElementById('eflt-pendiente');if(ep)ep.classList.add('active');
-      erendSolicitudes();
+      esolicitudes=data;rebuildApprovedSet(esolicitudes);updateEbadge();erendSolicitudes();
     });
   }
   if(tab==='vacaciones'){
     var hoyMin=new Date().toISOString().slice(0,10);
     document.getElementById('vac-desde').min=hoyMin;
     document.getElementById('vac-hasta').min=hoyMin;
+    // Mostrar datos en caché inmediatamente
+    if(esolicitudesVac.length>0)erendVacaciones();
+    // Actualizar en background
     loadSolicitudesVacaciones(session.nombre).then(function(data){esolicitudesVac=data;erendVacaciones();});
     loadYRenderBalanceVacaciones();
   }
@@ -1674,6 +1694,7 @@ async function enviarSolicitud(){
   setLoader(false);
   if(envioOk){
     toast('Solicitud enviada ✓','ok');
+    cacheInvalidate('sol_'+(session.nombre||'admin'));cacheInvalidate('sheet_'+(session&&session.nombre?session.nombre:''));
     try{
       if(solIsEmp){esolicitudes=await loadSolicitudes(session.nombre);rebuildApprovedSet(esolicitudes);updateEbadge();try{var tt=await fetchSheet(session.nombre);empEditData=construirDmap(parsearTabla(tt));}catch(e3){}renderEmpFichajesTab();erendSolicitudes();setTimeout(function(){eswitch('solicitudes');},400);}
       else{solicitudes=await loadSolicitudes();rebuildApprovedSet(solicitudes);updateBadge();setTimeout(function(){switchTab('solicitudes');},600);}
@@ -1904,7 +1925,8 @@ async function aprobar(id){
       }
     }
     toast('Aprobado ✓','ok');
-    try{solicitudes=await loadSolicitudes();rebuildApprovedSet(solicitudes);updateBadge();renderSolicitudes();}catch(e2){}
+    cacheInvalidate('sol_admin');cacheInvalidate('sol_'+(sol.emp||''));
+    try{solicitudes=await loadSolicitudes(undefined,true);rebuildApprovedSet(solicitudes);updateBadge();renderSolicitudes();}catch(e2){}
   }else{toast('Error: '+err,'err');}
 }
 
