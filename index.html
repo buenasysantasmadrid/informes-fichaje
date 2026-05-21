@@ -496,8 +496,14 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
       <div id="ereport-fichajes"></div>
     </div>
     <div class="page" id="epage-solicitudes">
-      <div class="sol-header">
+      <div class="sol-header" style="margin-bottom:.5rem">
         <div class="sol-title">Mis solicitudes</div>
+      </div>
+      <div class="sol-filters" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem;padding:0 .1rem">
+        <button class="flt-btn active" id="eflt-pendiente" onclick="filtrarESol('pendiente',this)">Pendientes</button>
+        <button class="flt-btn" id="eflt-aprobada" onclick="filtrarESol('aprobada',this)">Aprobadas</button>
+        <button class="flt-btn" id="eflt-rechazada" onclick="filtrarESol('rechazada',this)">Rechazadas</button>
+        <button class="flt-btn" id="eflt-cancelada" onclick="filtrarESol('cancelada',this)">Canceladas</button>
       </div>
       <div id="esol-list"></div>
     </div>
@@ -892,6 +898,14 @@ function admSwitchSol(sec,btn){
   }
 }
 
+var eSolFiltro='pendiente';
+function filtrarESol(f,btn){
+  eSolFiltro=f;
+  document.querySelectorAll('#epage-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  erendSolicitudes();
+}
+
 function eswitchSinRecargar(tab){
   document.querySelectorAll('#nav-emp .nav-tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('#emp-shell .page').forEach(function(p){p.classList.remove('active');});
@@ -917,7 +931,12 @@ function eswitch(tab){
   }
   if(tab==='solicitudes'){
     loadSolicitudes(session.nombre).then(function(data){
-      esolicitudes=data;rebuildApprovedSet(esolicitudes);updateEbadge();erendSolicitudes();
+      esolicitudes=data;rebuildApprovedSet(esolicitudes);updateEbadge();
+      // Ir siempre a pendientes al entrar
+      eSolFiltro='pendiente';
+      document.querySelectorAll('#epage-solicitudes .flt-btn').forEach(function(b){b.classList.remove('active');});
+      var ep=document.getElementById('eflt-pendiente');if(ep)ep.classList.add('active');
+      erendSolicitudes();
     });
   }
   if(tab==='vacaciones'){
@@ -1967,33 +1986,29 @@ function refreshWeekTotal(emp,fecha,isEmp){
 
 // ── EMPLEADO SOLICITUDES HORAS ──
 function erendSolicitudes(){
-  var lista=esolicitudes.slice();
+  var lista=esolicitudes.filter(function(s){return s.estado===eSolFiltro;});
   var el=document.getElementById('esol-list');
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>Pulsa cualquier hora en Mis fichajes para solicitar una corrección.</p></div>';return;}
-  // Ordenar: pendientes primero, luego aprobadas, rechazadas, canceladas
-  var orden={'pendiente':0,'aprobada':1,'rechazada':2,'cancelada':3};
-  lista.sort(function(a,b){return (orden[a.estado]||9)-(orden[b.estado]||9);});
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>No hay solicitudes '+eSolFiltro+'s.</p></div>';return;}
   el.innerHTML=lista.map(function(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada','cancelada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada','cancelada':'Cancelada'}[s.estado]||s.estado;
-    var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
+    var accionCancelar=s.estado==='pendiente'?'<button class="btn-rechazar" style="font-size:.7rem" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
     var fechaReqFmt=formatFechaReq(s.fechaReq);
-
     var fechaISO=safeISO(s.fecha), fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
     var hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
     var esE=(s.tipo==='ENTRADA');
     var horaEActual = normHoraDisplay(s.horaEntradaActual||s.turnoEntrada||'—');
     var horaSActual = normHoraDisplay(s.horaSalidaActual||s.turnoSalida||'—');
-    var fechaFija=dowDisplay(fechaISO)+' '+isoDisplay(fechaISO);
-    var fechaCambio=hayFN?(dowDisplay(fechaNuevaISO)+' '+isoDisplay(fechaNuevaISO)):fechaFija;
+    var fechaFija=isoDisplay(fechaISO);
+    var fechaCambio=hayFN?isoDisplay(fechaNuevaISO):fechaFija;
     var lineaEntrada, lineaSalida;
     if(esE){
-      if(hayFN){lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <s>'+dowDisplay(fechaISO)+' '+isoDisplay(fechaISO)+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      if(hayFN){lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <s>'+isoDisplay(fechaISO)+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
       else{lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';}
       lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaSActual+'</span></div>';
     }else{
       lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaEActual+'</span></div>';
-      if(hayFN){lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <s>'+dowDisplay(fechaISO)+' '+isoDisplay(fechaISO)+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      if(hayFN){lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <s>'+isoDisplay(fechaISO)+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
       else{lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';}
     }
     return'<div class="sol-card '+s.estado+'">'
