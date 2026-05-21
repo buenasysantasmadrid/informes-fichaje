@@ -694,19 +694,15 @@ async function callScriptJSONP(payload){
     return res;
   }catch(e){return{ok:false,msg:e.toString()};}
 }
-async function fetchSheet(name,force){
+async function fetchSheet(name){
   if(!SCRIPT_URL)throw new Error('Sin URL');
-  var key='sheet_'+name.trim();
-  if(!force){var cached=cacheGet(key);if(cached)return cached;}
-  var data=await apiGetJSONPWithRetry({action:'getFichajes',nombre:name.trim()},25000,2);
+  var data=await apiGetJSONPWithRetry({action:'getFichajes',nombre:name.trim()},40000,4);
   var rows=Array.isArray(data)?data:(data.data||[]);
-  var result={rows:rows.map(function(r){return{c:r.map(function(v){return{v:String(v||'')};})};})};
-  cacheSet(key,result);
-  return result;
+  return{rows:rows.map(function(r){return{c:r.map(function(v){return{v:String(v||'')};})};})};
 }
 async function loadEmpleados(){
   if(!SCRIPT_URL)throw new Error('Sin URL');
-  var data=await apiGetJSONPWithRetry({action:'getEmpleados'},20000,2);
+  var data=await apiGetJSONPWithRetry({action:'getEmpleados'},40000,4);
   var rows=Array.isArray(data)?data:(data.data||[]);
   var found=[];
   for(var i=0;i<rows.length;i++){
@@ -716,29 +712,23 @@ async function loadEmpleados(){
   }
   empleados=found;return found;
 }
-async function loadSolicitudes(empNombre,force){
-  if(!SCRIPT_URL)return Promise.resolve([]);
-  var key='sol_'+(empNombre||'admin');
-  if(!force){var cached=cacheGet(key);if(cached)return Promise.resolve(cached);}
-  var params={action:'getSolicitudes'};
-  if(empNombre)params.emp=empNombre;
-  return apiGetJSONPWithRetry(params,20000,2).then(function(data){
-    var result=Array.isArray(data)?data:[];
-    cacheSet(key,result);
-    return result;
-  }).catch(function(){return cacheGet(key)||[];});
+async function loadSolicitudes(empNombre){
+  if(!SCRIPT_URL)return[];
+  try{
+    var params={action:'getSolicitudes'};
+    if(empNombre)params.emp=empNombre;
+    var data=await apiGetJSONPWithRetry(params,30000,3);
+    return Array.isArray(data)?data:[];
+  }catch(e){return[];}
 }
-function loadSolicitudesVacaciones(empNombre,force){
-  if(!SCRIPT_URL)return Promise.resolve([]);
-  var key='vac_'+(empNombre||'admin');
-  if(!force){var cached=cacheGet(key);if(cached)return Promise.resolve(cached);}
-  var params={action:'getSolicitudesVacaciones'};
-  if(empNombre)params.emp=empNombre;
-  return apiGetJSONPWithRetry(params,20000,2).then(function(data){
-    var result=Array.isArray(data)?data:[];
-    cacheSet(key,result);
-    return result;
-  }).catch(function(){return cacheGet(key)||[];});
+async function loadSolicitudesVacaciones(empNombre){
+  if(!SCRIPT_URL)return[];
+  try{
+    var params={action:'getSolicitudesVacaciones'};
+    if(empNombre)params.emp=empNombre;
+    var data=await apiGetJSONPWithRetry(params,30000,3);
+    return Array.isArray(data)?data:[];
+  }catch(e){return[];}
 }
 function rebuildApprovedSet(sols){
   approvedSet=new Set();
