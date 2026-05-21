@@ -594,11 +594,11 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
     <hr class="modal-divider">
     <div class="modal-row" id="sol-email-row"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
     <div class="modal-row"><label>Motivo <span style="color:var(--red);font-weight:600">*</span></label><select id="sol-motivo" style="padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;width:100%;transition:border-color .15s"><option value="OLVIDO DE FICHAJE">OLVIDO DE FICHAJE</option><option value="NO FUNCIONABA EL SISTEMA">NO FUNCIONABA EL SISTEMA</option><option value="ERROR EN EL SISTEMA">ERROR EN EL SISTEMA</option><option value="FICHAJE POR ERROR">FICHAJE POR ERROR</option><option value="OTROS">OTROS</option></select></div>
-    <div id="sol-eliminar-row" style="margin-bottom:.9rem;padding:10px 12px;background:var(--red-soft);border:1px solid #f5c6c2;border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleEliminarFichaje()">
+    <div id="sol-eliminar-row" style="margin-bottom:.9rem;padding:10px 12px;background:var(--cream);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleEliminarFichaje()">
       <input type="checkbox" id="sol-eliminar-check" style="width:16px;height:16px;accent-color:var(--red);flex-shrink:0;cursor:pointer" onclick="event.stopPropagation();toggleEliminarFichaje()">
       <div>
-        <div style="font-size:.74rem;font-weight:600;color:var(--red)">🗑 Solicitar eliminación del fichaje</div>
-        <div style="font-size:.62rem;color:#b91c1c;margin-top:2px">Si se aprueba, se eliminará el turno completo del registro</div>
+        <div style="font-size:.74rem;font-weight:600;color:var(--ink)">🗑 Solicitar eliminación del fichaje</div>
+        <div style="font-size:.62rem;color:var(--ink2);margin-top:2px">Si se aprueba, se eliminará el turno completo del registro</div>
       </div>
     </div>
     <div class="modal-btns">
@@ -1024,7 +1024,8 @@ function horaToMins(s){var sec=horaToSecs(s);return sec===null?null:sec/60;}
 function normHora(s){var sec=horaToSecs(s);if(sec===null)return s||'';var h=Math.floor(sec/3600);var mn=Math.floor((sec%3600)/60);var ss=sec%60;return('0'+h).slice(-2)+':'+('0'+mn).slice(-2)+':'+('0'+ss).slice(-2);}
 function normHoraDisplay(s){var sec=horaToSecs(s);if(sec===null)return s||'';var h=Math.floor(sec/3600);var mn=Math.floor((sec%3600)/60);return('0'+h).slice(-2)+':'+('0'+mn).slice(-2);}
 function minsToStr(m){if(m==null||m<0)return'—';if(m===0)return'0 min';if(m<1){var s=Math.round(m*60);return s+'s';}return Math.floor(m/60)+'h '+('0'+(m%60)).slice(-2)+'min';}
-function isoDisplay(iso){if(!iso)return'';var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function dowDisplay(iso){if(!iso)return'';var p=iso.split('-').map(Number);var d=new Date(p[0],p[1]-1,p[2]);return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()];}
+function isoDisplay(iso){if(!iso)return'';var p=iso.split('-').map(Number);var d=new Date(p[0],p[1]-1,p[2]);var dow=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()];return dow+' '+('0'+p[2]).slice(-2)+'/'+('0'+p[1]).slice(-2)+'/'+p[0];}
 function dowName(iso){var p=iso.split('-').map(Number);return DIAS_TILDE[new Date(p[0],p[1]-1,p[2]).getDay()];}
 function diaSiguiente(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function diaAnterior(iso){var p=iso.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()-1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
@@ -1640,9 +1641,9 @@ async function enviarSolicitud(){
   var fechaEN=document.getElementById('sol-fecha-entrada-nueva').value||solActual.fecha;
   var horaSN=normHora(document.getElementById('sol-hora-salida-nueva').value);
   var fechaSN=document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
-  var cambiaE=horaEA!=='—'&&horaEN&&horaEN!==normHora(horaEA);
+  var cambiaE=horaEA!=='—'&&horaEN&&normHoraDisplay(horaEN)!==normHoraDisplay(horaEA);
   var cambiaFE=horaEA!=='—'&&fechaEN!==fechaEOrig;
-  var cambiaS=horaSA!=='—'&&horaSN&&horaSN!==normHora(horaSA);
+  var cambiaS=horaSA!=='—'&&horaSN&&normHoraDisplay(horaSN)!==normHoraDisplay(horaSA);
   var cambiaFS=horaSA!=='—'&&fechaSN!==fechaSOrig;
   if(!cambiaE&&!cambiaS&&!cambiaFE&&!cambiaFS){toast('No hay ningún cambio respecto al original','err');return;}
   var payload={action:'guardarSolicitud',emp:solActual.emp,motivo:motivo,emailEmp:solIsEmp?session.email:emailEmp,eliminarTurno:false,
@@ -1787,52 +1788,28 @@ function renderSolicitudes(){
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
 
-    // ── Construir líneas ENTRADA y SALIDA con tachado correcto ──
     var fechaISO=safeISO(s.fecha), fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
     var hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
     var esE=(s.tipo==='ENTRADA');
-    var horaE=s.turnoEntrada||'—', horaS=s.turnoSalida||'—';
-    // Hora que NO cambia (la del otro lado del turno)
-    var horaEFija  = esE ? horaE  : normHoraDisplay(s.horaActual); // si cambia SALIDA → entrada fija
-    var horaSFija  = esE ? normHoraDisplay(s.horaActual) : horaS;  // si cambia ENTRADA → salida fija
-    // Fecha fija (la del turno original, sin cambio de fecha)
-    var fechaFija  = isoDisplay(fechaISO);
-    var fechaCambio= hayFN ? isoDisplay(fechaNuevaISO) : fechaFija;
-    // Línea ENTRADA
-    var lineaEntrada;
+    var horaEActual = normHoraDisplay(s.horaEntradaActual||s.turnoEntrada||'—');
+    var horaSActual = normHoraDisplay(s.horaSalidaActual||s.turnoSalida||'—');
+    var fechaFija=dowDisplay(fechaISO)+' '+isoDisplay(fechaISO);
+    var fechaCambio=hayFN?(dowDisplay(fechaNuevaISO)+' '+isoDisplay(fechaNuevaISO)):fechaFija;
+    var lineaEntrada, lineaSalida;
     if(esE){
-      // ENTRADA es la que cambia
-      if(hayFN){
-        lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <s>'+fechaFija+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';
-      } else {
-        lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';
-      }
-    } else {
-      // ENTRADA no cambia — mostrar hora actual (puede ser '—' si no existe)
-      var horaEMostrar = (s.horaEntradaActual && s.horaEntradaActual!=='—') ? normHoraDisplay(s.horaEntradaActual) : (horaE!=='—'?normHoraDisplay(horaE):'—');
-      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaEMostrar+'</span></div>';
+      if(hayFN){lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <s>'+dowDisplay(fechaISO)+' '+isoDisplay(fechaISO)+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      else{lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaSActual+'</span></div>';
+    }else{
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaEActual+'</span></div>';
+      if(hayFN){lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <s>'+dowDisplay(fechaISO)+' '+isoDisplay(fechaISO)+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      else{lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';}
     }
-    // Línea SALIDA
-    var lineaSalida;
-    if(!esE){
-      // SALIDA es la que cambia
-      if(hayFN){
-        lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <s>'+fechaFija+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';
-      } else {
-        lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';
-      }
-    } else {
-      // SALIDA no cambia — mostrar hora actual (puede ser '—' si no existe)
-      var horaSMostrar = (s.horaSalidaActual && s.horaSalidaActual!=='—') ? normHoraDisplay(s.horaSalidaActual) : (horaS!=='—'?normHoraDisplay(horaS):'—');
-      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaSMostrar+'</span></div>';
-    }
-
     return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
       +'<div class="sol-info">'
         +'<div class="sol-emp">'+esc(s.emp)+'</div>'
         +'<div class="sol-detail" style="margin-top:.4rem">'
-          +lineaEntrada
-          +lineaSalida
+          +lineaEntrada+lineaSalida
           +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
           +(s.emailEmp?'<div style="font-size:.72rem;color:var(--ink2)"><span>Email:</span> '+esc(s.emailEmp)+'</div>':'')
         +'</div>'
@@ -1993,37 +1970,36 @@ function erendSolicitudes(){
   var lista=esolicitudes.slice();
   var el=document.getElementById('esol-list');
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><h2>Sin solicitudes</h2><p>Pulsa cualquier hora en Mis fichajes para solicitar una corrección.</p></div>';return;}
+  // Ordenar: pendientes primero, luego aprobadas, rechazadas, canceladas
+  var orden={'pendiente':0,'aprobada':1,'rechazada':2,'cancelada':3};
+  lista.sort(function(a,b){return (orden[a.estado]||9)-(orden[b.estado]||9);});
   el.innerHTML=lista.map(function(s){
-    var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
-    var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
+    var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada','cancelada':'ss-rechazada'}[s.estado]||'ss-pendiente';
+    var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada','cancelada':'Cancelada'}[s.estado]||s.estado;
     var accionCancelar=s.estado==='pendiente'?'<button class="btn-cancelar-sol" style="margin-top:8px" onclick="cancelarSolicitud(\''+s.id+'\',true)">✕ Cancelar</button>':'';
     var fechaReqFmt=formatFechaReq(s.fechaReq);
 
     var fechaISO=safeISO(s.fecha), fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
     var hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
     var esE=(s.tipo==='ENTRADA');
-    var horaE=s.turnoEntrada||'—', horaS=s.turnoSalida||'—';
-    var fechaFija=isoDisplay(fechaISO), fechaCambio=hayFN?isoDisplay(fechaNuevaISO):fechaFija;
-    var lineaEntrada;
+    var horaEActual = normHoraDisplay(s.horaEntradaActual||s.turnoEntrada||'—');
+    var horaSActual = normHoraDisplay(s.horaSalidaActual||s.turnoSalida||'—');
+    var fechaFija=dowDisplay(fechaISO)+' '+isoDisplay(fechaISO);
+    var fechaCambio=hayFN?(dowDisplay(fechaNuevaISO)+' '+isoDisplay(fechaNuevaISO)):fechaFija;
+    var lineaEntrada, lineaSalida;
     if(esE){
-      if(hayFN){lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <s>'+fechaFija+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      if(hayFN){lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <s>'+dowDisplay(fechaISO)+' '+isoDisplay(fechaISO)+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
       else{lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaSActual+'</span></div>';
     }else{
-      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+normHoraDisplay(horaE)+'</span></div>';
-    }
-    var lineaSalida;
-    if(!esE){
-      if(hayFN){lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <s>'+fechaFija+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaEActual+'</span></div>';
+      if(hayFN){lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <s>'+dowDisplay(fechaISO)+' '+isoDisplay(fechaISO)+'</s> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+fechaCambio+' '+normHoraDisplay(s.horaNueva)+'</b></div>';}
       else{lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <s>'+normHoraDisplay(s.horaActual)+'</s> → <b>'+normHoraDisplay(s.horaNueva)+'</b></div>';}
-    }else{
-      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+normHoraDisplay(horaS)+'</span></div>';
     }
-
     return'<div class="sol-card '+s.estado+'">'
       +'<div class="sol-info">'
         +'<div class="sol-detail">'
-          +lineaEntrada
-          +lineaSalida
+          +lineaEntrada+lineaSalida
           +(s.motivo&&s.motivo!=='—'?'<div style="font-size:.72rem;color:var(--ink2);margin-bottom:.2rem"><span>Motivo:</span> '+esc(s.motivo)+'</div>':'')
           +'<div style="font-size:.58rem;color:var(--ink3)">'+fechaReqFmt+'</div>'
         +'</div>'
