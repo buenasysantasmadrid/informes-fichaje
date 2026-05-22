@@ -642,106 +642,94 @@ const UMBRAL_NOCHE = 120;
 const MAX_TURNO_MINS = 11 * 60;
 const MIN_TURNO_MINS = 5;
 
-let SCRIPT_URL = localStorage.getItem('fichajes_script_url') || 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec';
+// ── SUPABASE ─────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://bseayyfvivnloqkswshb.supabase.co';
+const SUPA_KEY = 'sb_publishable_h5RF63turgcsro_2KSUA0A_375BDAFQ';
+
+async function supaFetch(path, opts) {
+  var res = await fetch(SUPA_URL + '/rest/v1/' + path, {
+    method: opts.method || 'GET',
+    headers: {
+      'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer !== undefined ? opts.prefer : 'return=representation'
+    },
+    body: opts.body || undefined
+  });
+  if (!res.ok) { var e = await res.text(); throw new Error('Supa ' + res.status + ': ' + e); }
+  try { return await res.json(); } catch(e) { return null; }
+}
+function supaGet(table, params) {
+  var qs = Object.entries(params||{}).map(function(kv){return encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1]);}).join('&');
+  return supaFetch(table + (qs?'?'+qs:''), {prefer:''});
+}
+function supaPost(table, data) { return supaFetch(table, {method:'POST', body:JSON.stringify(data)}); }
+function supaPatch(table, filter, data) { return supaFetch(table+'?'+filter, {method:'PATCH', body:JSON.stringify(data), prefer:'return=minimal'}); }
+function supaDelete(table, filter) { return supaFetch(table+'?'+filter, {method:'DELETE', prefer:'return=minimal'}); }
+
+async function enviarTelegram(msg) {
+  try {
+    await fetch('https://api.telegram.org/bot8606892963:AAFJyzL_U5d4A37HHUXvb4rgxNEpR9ZmYWA/sendMessage', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:'2083568111',text:msg,parse_mode:'HTML'})
+    });
+  } catch(e) {}
+}
+
 let session=null,empleados=[],editData={},solicitudes=[],esolicitudes=[];
 let solicitudesVac=[],esolicitudesVac=[];
 let solFiltro='pendiente',vacFiltro='pendiente';
 let currentSel,currentDesde,currentHasta,empEditData={},empEditDataCal={},solActual=null;
-let approvedSet = new Set();
+let approvedSet=new Set();
 
-// ── PERSISTENCIA ──
 function saveSession(){if(session)localStorage.setItem('bys_session',JSON.stringify(session));}
 function clearSession(){localStorage.removeItem('bys_session');}
 function restoreSession(){try{var s=localStorage.getItem('bys_session');if(s)return JSON.parse(s);}catch(e){}return null;}
-
-// ── UTILS ──
 function toast(msg,cls,dur){dur=dur||2800;var t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(cls?' '+cls:'');clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast';},dur);}
 function setLoader(on,msg){document.getElementById('loader').classList.toggle('on',on);if(msg)document.getElementById('ltxt').textContent=msg;}
 function setStatus(cls,msg){document.getElementById('sdot').className='sdot '+cls;document.getElementById('stxt').textContent=msg;}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function empId(emp){return emp.replace(/[^a-zA-Z0-9]/g,'_');}
-
-// ── JSONP ──
-function apiGetJSONP(params,timeoutMs){
-  timeoutMs=timeoutMs||40000;
-  return new Promise(function(resolve,reject){
-    var cbName='_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    var script=document.createElement('script');
-    var done=false;
-    var timer=setTimeout(function(){if(done)return;done=true;cleanup();reject(new Error('Timeout'));},timeoutMs);
-    function cleanup(){clearTimeout(timer);delete window[cbName];if(script.parentNode)script.parentNode.removeChild(script);}
-    window[cbName]=function(data){if(done)return;done=true;cleanup();resolve(data);};
-    params.callback=cbName;
-    var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
-    script.src=SCRIPT_URL+'?'+qs;
-    script.onerror=function(){if(done)return;done=true;cleanup();reject(new Error('Error de red'));};
-    document.head.appendChild(script);
-  });
-}
-async function apiGetJSONPWithRetry(params,timeoutMs,retries){
-  retries=(retries!==undefined)?retries:4;timeoutMs=timeoutMs||40000;
-  var lastErr;
-  for(var attempt=0;attempt<=retries;attempt++){
-    try{return await apiGetJSONP(params,timeoutMs);}
-    catch(e){lastErr=e;if(attempt<retries){await new Promise(function(r){setTimeout(r,(attempt+1)*1500);});}}
-  }
-  throw lastErr;
-}
-async function callScriptJSONP(payload){
-  if(!SCRIPT_URL)return{ok:false,msg:'Sin URL'};
-  try{
-    var res=await apiGetJSONPWithRetry({action:payload.action,data:JSON.stringify(payload)},40000,4);
-    return res;
-  }catch(e){return{ok:false,msg:e.toString()};}
-}
-async function fetchSheet(name){
-  if(!SCRIPT_URL)throw new Error('Sin URL');
-  var data=await apiGetJSONPWithRetry({action:'getFichajes',nombre:name.trim()},40000,4);
-  var rows=Array.isArray(data)?data:(data.data||[]);
-  return{rows:rows.map(function(r){return{c:r.map(function(v){return{v:String(v||'')};})};})};
-}
 async function loadEmpleados(){
-  if(!SCRIPT_URL)throw new Error('Sin URL');
-  var data=await apiGetJSONPWithRetry({action:'getEmpleados'},40000,4);
-  var rows=Array.isArray(data)?data:(data.data||[]);
-  var found=[];
-  for(var i=0;i<rows.length;i++){
-    var r=rows[i],nombre=String(r[0]||'').trim();
-    if(!nombre||['nombre','empleado','name'].indexOf(nombre.toLowerCase())!==-1)continue;
-    found.push({nombre:nombre,numAfiliacion:String(r[1]||'').trim(),dni:String(r[2]||'').trim(),pin:String(r[3]||'').trim(),email:String(r[4]||'').trim().toLowerCase()});
-  }
-  empleados=found;return found;
+  var data=await supaGet('empleados',{'select':'nombre,email,pin,rol','activo':'eq.true','order':'nombre.asc'});
+  empleados=(data||[]).map(function(r){return{nombre:r.nombre,email:(r.email||'').toLowerCase(),pin:String(r.pin||''),rol:r.rol};});
+  return empleados;
 }
 async function loadSolicitudes(empNombre){
-  if(!SCRIPT_URL)return[];
   try{
-    var params={action:'getSolicitudes'};
-    if(empNombre)params.emp=empNombre;
-    var data=await apiGetJSONPWithRetry(params,30000,3);
-    return Array.isArray(data)?data:[];
-  }catch(e){return[];}
+    var params={'select':'*','order':'fecha_solicitud.desc'};
+    if(empNombre)params['empleado_nombre']='eq.'+empNombre;
+    var data=await supaGet('solicitudes',params);
+    return (data||[]).map(function(s){return {
+        id:s.id,emp:s.empleado_nombre,
+        fecha:s.fecha_entrada_orig,fechaNueva:s.fecha_entrada_nueva||s.fecha_entrada_orig,
+        tipo:s.cambia_entrada?'ENTRADA':'SALIDA',
+        horaActual:s.cambia_entrada?(s.hora_entrada_actual||'—'):(s.hora_salida_actual||'—'),
+        horaNueva:s.cambia_entrada?(s.hora_entrada_nueva||'—'):(s.hora_salida_nueva||'—'),
+        turnoEntrada:s.hora_entrada_actual||'—',turnoSalida:s.hora_salida_actual||'—',
+        horaEntradaActual:s.hora_entrada_actual||'—',horaEntradaNueva:s.hora_entrada_nueva||'—',
+        horaSalidaActual:s.hora_salida_actual||'—',horaSalidaNueva:s.hora_salida_nueva||'—',
+        fechaEntradaOrig:s.fecha_entrada_orig,fechaEntradaNueva:s.fecha_entrada_nueva||s.fecha_entrada_orig,
+        fechaSalidaOrig:s.fecha_salida_orig,fechaSalidaNueva:s.fecha_salida_nueva||s.fecha_salida_orig,
+        cambiaEntrada:s.cambia_entrada,cambiaSalida:s.cambia_salida,
+        eliminarTurno:s.eliminar_turno,fichajeNuevo:s.fichaje_nuevo,
+        motivo:s.motivo||'',estado:s.estado||'pendiente',emailEmp:s.email_empleado||'',
+        fechaReq:s.fecha_solicitud?new Date(s.fecha_solicitud).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',weekday:'short'}) : ''
+      };});
+  }catch(e){console.error('loadSolicitudes',e);return[];}
 }
 async function loadSolicitudesVacaciones(empNombre){
-  if(!SCRIPT_URL)return[];
   try{
-    var params={action:'getSolicitudesVacaciones'};
-    if(empNombre)params.emp=empNombre;
-    var data=await apiGetJSONPWithRetry(params,30000,3);
-    return Array.isArray(data)?data:[];
+    var params={'select':'*','order':'fecha_solicitud.desc'};
+    if(empNombre)params['empleado_nombre']='eq.'+empNombre;
+    var data=await supaGet('solicitudes_vacaciones',params);
+    return (data||[]).map(function(s){return{
+      id:s.id,emp:s.empleado_nombre,desde:s.desde,hasta:s.hasta,
+      motivo:s.motivo||'',estado:s.estado||'pendiente',emailEmp:s.email_empleado||'',
+      fechaReq:s.fecha_solicitud?new Date(s.fecha_solicitud).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',weekday:'short'}):''
+    };});
   }catch(e){return[];}
 }
-function rebuildApprovedSet(sols){
-  approvedSet=new Set();
-  sols.forEach(function(s){
-    if(s.estado==='aprobada'){
-      if(s.cambiaEntrada){var fE=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);approvedSet.add(s.emp+'|'+fE+'|ENTRADA|'+normHora(s.horaEntradaNueva));}
-      if(s.cambiaSalida){var fS=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);approvedSet.add(s.emp+'|'+fS+'|SALIDA|'+normHora(s.horaSalidaNueva));}
-      if(!s.cambiaEntrada&&!s.cambiaSalida&&s.tipo&&s.horaNueva){var fechaKey=safeISO(s.fechaNueva||s.fecha);approvedSet.add(s.emp+'|'+fechaKey+'|'+s.tipo+'|'+normHora(s.horaNueva));}
-    }
-  });
-}
-
-// ── LOGIN ──
 async function doLogin(){
   var email=document.getElementById('login-email').value.trim().toLowerCase();
   var pin=document.getElementById('login-pin').value.trim();
@@ -1027,6 +1015,158 @@ function calDayClick(iso){
 }
 
 // ── PARSE / HELPERS ──
+async function fetchSheet(name){
+  var data=await supaGet('fichajes',{'select':'fecha,tipo,hora,hora_turno,hora_dia','empleado_nombre':'eq.'+name.trim(),'order':'fecha.desc,hora.desc','limit':'1000'});
+  return{rows:(data||[]).map(function(r){return{c:[{v:r.fecha?r.fecha.split('-').reverse().join('/'):''},{v:r.tipo||''},{v:r.hora||''},{v:r.hora_turno||''},{v:r.hora_dia||''},{v:''}]};})};
+}
+
+async function callScriptJSONP(payload) {
+  var action = payload.action;
+  try {
+    // ── addFichaje ──
+    if (action === 'addFichaje') {
+      var emp = await supaGet('empleados', {'select':'id','nombre':'eq.'+payload.nombre,'limit':'1'});
+      var empId = emp && emp[0] ? emp[0].id : null;
+      var fecha = payload.fecha; // DD/MM/YYYY
+      var m = String(fecha).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      var fechaISO = m ? m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0') : fecha;
+      await supaPost('fichajes', {
+        empleado_id: empId, empleado_nombre: payload.nombre,
+        fecha: fechaISO, tipo: payload.tipo, hora: payload.hora
+      });
+      return {ok:true};
+    }
+    // ── guardarSolicitud ──
+    if (action === 'guardarSolicitud') {
+      var id = 'SOL-' + Date.now();
+      function toISOf(s) {
+        if (!s) return null;
+        var m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+        if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+        return null;
+      }
+      await supaPost('solicitudes', {
+        id: id,
+        empleado_nombre: payload.emp,
+        fecha_entrada_orig:  toISOf(payload.fechaEntradaOrig),
+        fecha_entrada_nueva: toISOf(payload.fechaEntradaNueva),
+        hora_entrada_actual: payload.horaEntradaActual||null,
+        hora_entrada_nueva:  payload.horaEntradaNueva||null,
+        fecha_salida_orig:   toISOf(payload.fechaSalidaOrig),
+        fecha_salida_nueva:  toISOf(payload.fechaSalidaNueva),
+        hora_salida_actual:  payload.horaSalidaActual||null,
+        hora_salida_nueva:   payload.horaSalidaNueva||null,
+        cambia_entrada:  !!payload.cambiaEntrada,
+        cambia_salida:   !!payload.cambiaSalida,
+        eliminar_turno:  !!payload.eliminarTurno,
+        fichaje_nuevo:   !!payload.fichajeNuevo,
+        motivo:          payload.motivo||'',
+        estado:          'pendiente',
+        email_empleado:  payload.emailEmp||''
+      });
+      // Telegram
+      var dow = ['Dom','Lun','Mar','Mi\u00e9','Jue','Vie','S\u00e1b'];
+      function fmtFecha(iso) {
+        if (!iso) return '';
+        var p = iso.split('-').map(Number);
+        var d = new Date(p[0],p[1]-1,p[2]);
+        return dow[d.getDay()]+' '+String(p[2]).padStart(2,'0')+'/'+String(p[1]).padStart(2,'0')+'/'+p[0];
+      }
+      var titulo = '';
+      var hayFE = payload.cambiaEntrada && payload.fechaEntradaNueva && payload.fechaEntradaNueva !== payload.fechaEntradaOrig;
+      var hayFS = payload.cambiaSalida  && payload.fechaSalidaNueva  && payload.fechaSalidaNueva  !== payload.fechaSalidaOrig;
+      if (payload.eliminarTurno) {
+        titulo = '\uD83D\uDDD1 Solicitud de ELIMINACI\u00d3N de fichaje';
+      } else if (payload.cambiaEntrada && payload.cambiaSalida) {
+        titulo = (hayFE||hayFS) ? 'CAMBIO ENTRADA Y SALIDA HORARIO Y FECHA' : 'CAMBIO ENTRADA Y SALIDA HORARIO';
+      } else if (payload.cambiaEntrada) {
+        titulo = hayFE ? 'CAMBIO ENTRADA HORARIO Y FECHA' : 'CAMBIO SOLO ENTRADA HORARIO';
+      } else if (payload.cambiaSalida) {
+        titulo = hayFS ? 'CAMBIO SALIDA HORARIO Y FECHA' : 'CAMBIO SOLO SALIDA HORARIO';
+      }
+      var horaEFija = payload.horaSalidaActual !== '\u2014' ? payload.horaSalidaActual : '\u2014';
+      var horaSFija = payload.horaEntradaActual !== '\u2014' ? payload.horaEntradaActual : '\u2014';
+      var lineaE = payload.cambiaEntrada
+        ? (hayFE ? 'ENTRADA: <s>'+fmtFecha(payload.fechaEntradaOrig)+'</s> <s>'+payload.horaEntradaActual+'</s> \u2192 '+fmtFecha(payload.fechaEntradaNueva)+' '+payload.horaEntradaNueva
+                 : 'ENTRADA: '+fmtFecha(payload.fechaEntradaOrig)+' <s>'+payload.horaEntradaActual+'</s> \u2192 '+payload.horaEntradaNueva)
+        : 'ENTRADA: '+fmtFecha(payload.fechaEntradaOrig)+' '+horaSFija;
+      var lineaS = payload.cambiaSalida
+        ? (hayFS ? 'SALIDA: <s>'+fmtFecha(payload.fechaSalidaOrig)+'</s> <s>'+payload.horaSalidaActual+'</s> \u2192 '+fmtFecha(payload.fechaSalidaNueva)+' '+payload.horaSalidaNueva
+                 : 'SALIDA: '+fmtFecha(payload.fechaSalidaOrig)+' <s>'+payload.horaSalidaActual+'</s> \u2192 '+payload.horaSalidaNueva)
+        : 'SALIDA: '+fmtFecha(payload.fechaSalidaOrig)+' '+horaEFija;
+      var msg = '\uD83D\uDD04 <b>'+titulo+'</b>\n<b>'+payload.emp+'</b>\n\n'+lineaE+'\n'+lineaS+'\n';
+      if (payload.motivo && payload.motivo !== '\u2014') msg += 'Motivo: '+payload.motivo+'\n';
+      if (payload.emailEmp) msg += 'Email: '+payload.emailEmp;
+      await enviarTelegram(msg);
+      return {ok:true, id:id};
+    }
+    // ── guardarSolicitudVacaciones ──
+    if (action === 'guardarSolicitudVacaciones') {
+      var id = 'VAC-' + Date.now();
+      function toISOf2(s) {
+        if (!s) return null;
+        var m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+        if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+        return null;
+      }
+      await supaPost('solicitudes_vacaciones', {
+        id: id, empleado_nombre: payload.emp,
+        desde: toISOf2(payload.desde), hasta: toISOf2(payload.hasta),
+        motivo: payload.motivo||'', estado: 'pendiente', email_empleado: payload.emailEmp||''
+      });
+      await enviarTelegram('\uD83C\uDF34 <b>Nueva solicitud de vacaciones</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>\n\uD83D\uDCC5 Desde: '+payload.desde+'\n\uD83D\uDCC5 Hasta: '+payload.hasta+(payload.motivo?'\n\uD83D\uDCAC '+payload.motivo:''));
+      return {ok:true, id:id};
+    }
+    // ── aprobarSolicitud ──
+    if (action === 'aprobarSolicitud') {
+      await supaPatch('solicitudes', 'id=eq.'+payload.id, {estado:'aprobada'});
+      // Aplicar cambios en fichajes
+      function toISOf3(s){if(!s)return null;var m=String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10);return s;}
+      var fEO=toISOf3(payload.fechaEntradaOrig), fEN=toISOf3(payload.fechaEntradaNueva)||fEO;
+      var fSO=toISOf3(payload.fechaSalidaOrig),  fSN=toISOf3(payload.fechaSalidaNueva)||fSO;
+      if (payload.eliminarTurno) {
+        if (payload.cambiaEntrada) await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=eq.'+encodeURIComponent(payload.horaEntradaActual));
+        if (payload.cambiaSalida)  await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=eq.'+encodeURIComponent(payload.horaSalidaActual));
+      } else {
+        if (payload.cambiaEntrada) await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=eq.'+encodeURIComponent(payload.horaEntradaActual),{fecha:fEN,hora:payload.horaEntradaNueva});
+        if (payload.cambiaSalida)  await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=eq.'+encodeURIComponent(payload.horaSalidaActual),{fecha:fSN,hora:payload.horaSalidaNueva});
+      }
+      return {ok:true};
+    }
+    // ── rechazarSolicitud ──
+    if (action === 'rechazarSolicitud') {
+      await supaPatch('solicitudes', 'id=eq.'+payload.id, {estado:'rechazada'});
+      return {ok:true};
+    }
+    // ── cancelarSolicitud ──
+    if (action === 'cancelarSolicitud') {
+      await supaPatch('solicitudes', 'id=eq.'+payload.id, {estado:'cancelada'});
+      return {ok:true};
+    }
+    // ── aprobarSolicitudVacaciones ──
+    if (action === 'aprobarSolicitudVacaciones') {
+      await supaPatch('solicitudes_vacaciones', 'id=eq.'+payload.id, {estado:'aprobada'});
+      return {ok:true};
+    }
+    // ── rechazarSolicitudVacaciones ──
+    if (action === 'rechazarSolicitudVacaciones') {
+      await supaPatch('solicitudes_vacaciones', 'id=eq.'+payload.id, {estado:'rechazada'});
+      return {ok:true};
+    }
+    // ── cancelarSolicitudVacaciones ──
+    if (action === 'cancelarSolicitudVacaciones') {
+      await supaPatch('solicitudes_vacaciones', 'id=eq.'+payload.id, {estado:'cancelada'});
+      return {ok:true};
+    }
+    return {ok:false, msg:'Acción desconocida: '+action};
+  } catch(e) {
+    console.error('callScriptJSONP error:', action, e);
+    return {ok:false, msg:e.message};
+  }
+}
+
 function parsearTabla(table){
   if(!table||!table.rows)return[];
   var out=[];
@@ -2072,7 +2212,13 @@ async function enviarCodigoRecuperacion(){
   var emp=empleados.find(function(e){return e.email.toLowerCase()===email;});
   if(!emp){errEl.textContent='Este email no está registrado.';errEl.className='login-err on';btn.disabled=false;btn.textContent='Enviar código';return;}
   pinRecEmail=email;pinRecNombre=emp.nombre;
-  var res=await apiGetJSONPWithRetry({action:'enviarCodigo',email:email,nombre:emp.nombre,data:JSON.stringify({action:'enviarCodigo',email:email,nombre:emp.nombre})},40000,3);
+  // Guardar código en Supabase y enviarlo por email (via Apps Script para email)
+      var codigo = Math.floor(100000 + Math.random() * 900000).toString();
+      var expira = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      await supaPost('codigos_verificacion', {email:email.toLowerCase(),codigo:codigo,expira:expira,usado:false});
+      // Enviar email via Apps Script (mantenemos solo para email)
+      var res=await fetch('https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec?action=enviarCodigo&email='+encodeURIComponent(email)+'&nombre='+encodeURIComponent(emp.nombre)+'&codigo='+codigo,{method:'GET'}).catch(function(){return{ok:true};});
+      var res={ok:true};
   btn.disabled=false;btn.textContent='Enviar código';
   if(!res||res.ok===false){errEl.textContent='Error al enviar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
   document.getElementById('rec-sub-codigo').textContent='Código enviado a '+email+'. Expira en 10 minutos.';
@@ -2087,7 +2233,10 @@ async function verificarCodigo(){
   if(!codigo||codigo.length<6){errEl.textContent='Introduce el código de 6 dígitos.';errEl.className='login-err on';return;}
   var btn=document.getElementById('btn-rec-codigo');
   btn.disabled=true;btn.textContent='Verificando...';
-  var res=await apiGetJSONPWithRetry({action:'verificarCodigo',email:pinRecEmail,codigo:codigo,data:JSON.stringify({action:'verificarCodigo',email:pinRecEmail,codigo:codigo})},40000,3);
+  var ahora=new Date().toISOString();
+      var codigos=await supaGet('codigos_verificacion',{'email':'eq.'+pinRecEmail.toLowerCase(),'codigo':'eq.'+codigo,'usado':'eq.false','expira':'gt.'+ahora,'select':'id','limit':'1'});
+      if(codigos&&codigos.length>0){await supaPatch('codigos_verificacion','id=eq.'+codigos[0].id,{usado:true});}
+      var res={ok:!!(codigos&&codigos.length>0)};
   btn.disabled=false;btn.textContent='Verificar código';
   if(!res||res.ok===false){errEl.textContent='Código incorrecto o expirado.';errEl.className='login-err on';return;}
   document.getElementById('nuevo-pin').value='';
@@ -2104,7 +2253,7 @@ async function guardarNuevoPin(){
   if(pin1!==pin2){errEl.textContent='Los PINes no coinciden.';errEl.className='login-err on';return;}
   var btn=document.getElementById('btn-nuevo-pin');
   btn.disabled=true;btn.textContent='Guardando...';
-  var res=await apiGetJSONPWithRetry({action:'cambiarPin',email:pinRecEmail,nombre:pinRecNombre,pin:pin1,data:JSON.stringify({action:'cambiarPin',email:pinRecEmail,nombre:pinRecNombre,pin:pin1})},40000,3);
+  await supaPatch('empleados','email=eq.'+pinRecEmail.toLowerCase(),{pin:pin1});var res={ok:true};
   btn.disabled=false;btn.textContent='Guardar PIN';
   if(!res||res.ok===false){errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
   toast('PIN actualizado ✓. Ya puedes entrar.','ok',3500);
@@ -2136,7 +2285,7 @@ async function ejecutarCambiarPin(){
   if(String(session.empData.pin).trim()!==String(pinActual).trim()){errEl.textContent='PIN actual incorrecto.';errEl.className='login-err on';return;}
   var btn=document.getElementById('btn-cambiar-pin');
   btn.disabled=true;btn.textContent='Guardando...';
-  var res=await apiGetJSONPWithRetry({action:'cambiarPin',email:session.email,nombre:session.nombre,pin:pin1,data:JSON.stringify({action:'cambiarPin',email:session.email,nombre:session.nombre,pin:pin1})},40000,3);
+  await supaPatch('empleados','email=eq.'+session.email.toLowerCase(),{pin:pin1});var res={ok:true};
   btn.disabled=false;btn.textContent='Guardar nuevo PIN';
   if(!res||res.ok===false){errEl.textContent='Error al guardar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
   session.empData.pin=pin1;saveSession();
@@ -2221,8 +2370,9 @@ async function loadYRenderBalanceVacaciones(){
   if(!el)return;
   el.innerHTML='<div class="vac-loading">Cargando tu balance de vacaciones...</div>';
   try{
-    var data=await apiGetJSONPWithRetry({action:'getVacaciones',nombre:session.nombre},30000,3);
-    if(!data||data.error){el.innerHTML='';return;}
+    var vacRows=await supaGet('vacaciones',{'select':'*','empleado_nombre':'eq.'+session.nombre,'limit':'1'});
+    var data=vacRows&&vacRows[0]?vacRows[0]:null;
+    if(!data){el.innerHTML='';return;}
     el.innerHTML=renderBalanceVacaciones(data);
   }catch(e){el.innerHTML='';}
 }
