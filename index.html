@@ -808,6 +808,16 @@ async function initAdmin(){
   document.getElementById('btn-gen').disabled=false;
 }
 
+async function rebuildApprovedSet(sols){
+  approvedSet=new Set();
+  sols.forEach(function(s){
+    if(s.estado==='aprobada'){
+      if(s.cambiaEntrada){var fE=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);approvedSet.add(s.emp+'|'+fE+'|ENTRADA|'+normHora(s.horaEntradaNueva));}
+      if(s.cambiaSalida){var fS=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);approvedSet.add(s.emp+'|'+fS+'|SALIDA|'+normHora(s.horaSalidaNueva));}
+      if(!s.cambiaEntrada&&!s.cambiaSalida&&s.tipo&&s.horaNueva){var fechaKey=safeISO(s.fechaNueva||s.fecha);approvedSet.add(s.emp+'|'+fechaKey+'|'+s.tipo+'|'+normHora(s.horaNueva));}
+    }
+  });
+}
 async function initEmpleado(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('on');
