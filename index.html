@@ -1202,14 +1202,12 @@ async function callScriptJSONP(payload) {
         if (payload.cambiaEntrada) await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=eq.'+encodeURIComponent(payload.horaEntradaActual),{fecha:fEN,hora:payload.horaEntradaNueva,hora_turno:'',hora_dia:''});
         if (payload.cambiaSalida)  await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=eq.'+encodeURIComponent(payload.horaSalidaActual),{fecha:fSN,hora:payload.horaSalidaNueva,hora_turno:'',hora_dia:''});
       }
-      await enviarTelegram('\u2705 <b>Solicitud de cambio APROBADA</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>'+(payload.emailEmp?'\n\uD83D\uDCE7 '+payload.emailEmp:''));
       if(payload.emailEmp) await enviarEmailEmp({action:'notificarSolicitud',email:payload.emailEmp,nombre:payload.emp,estado:'aprobada',tipo:'horas'});
       return {ok:true};
     }
     // ── rechazarSolicitud ──
     if (action === 'rechazarSolicitud') {
       await supaPatch('solicitudes', 'id=eq.'+payload.id, {estado:'rechazada'});
-      await enviarTelegram('\u274C <b>Solicitud de cambio RECHAZADA</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>'+(payload.fecha?'\n\uD83D\uDCC5 '+payload.fecha:'')+(payload.emailEmp?'\n\uD83D\uDCE7 '+payload.emailEmp:''));
       if(payload.emailEmp) await enviarEmailEmp({action:'notificarSolicitud',email:payload.emailEmp,nombre:payload.emp,estado:'rechazada',tipo:'horas'});
       return {ok:true};
     }
@@ -1221,14 +1219,12 @@ async function callScriptJSONP(payload) {
     // ── aprobarSolicitudVacaciones ──
     if (action === 'aprobarSolicitudVacaciones') {
       await supaPatch('solicitudes_vacaciones', 'id=eq.'+payload.id, {estado:'aprobada'});
-      await enviarTelegram('\u2705 <b>Vacaciones APROBADAS</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>\n\uD83D\uDCC5 Desde: '+payload.desde+'\n\uD83D\uDCC5 Hasta: '+payload.hasta+(payload.emailEmp?'\n\uD83D\uDCE7 '+payload.emailEmp:''));
       if(payload.emailEmp) await enviarEmailEmp({action:'notificarSolicitud',email:payload.emailEmp,nombre:payload.emp,estado:'aprobada',tipo:'vacaciones',desde:payload.desde||'',hasta:payload.hasta||''});
       return {ok:true};
     }
     // ── rechazarSolicitudVacaciones ──
     if (action === 'rechazarSolicitudVacaciones') {
       await supaPatch('solicitudes_vacaciones', 'id=eq.'+payload.id, {estado:'rechazada'});
-      await enviarTelegram('\u274C <b>Vacaciones RECHAZADAS</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>\n\uD83D\uDCC5 Desde: '+payload.desde+'\n\uD83D\uDCC5 Hasta: '+payload.hasta+(payload.emailEmp?'\n\uD83D\uDCE7 '+payload.emailEmp:''));
       if(payload.emailEmp) await enviarEmailEmp({action:'notificarSolicitud',email:payload.emailEmp,nombre:payload.emp,estado:'rechazada',tipo:'vacaciones',desde:payload.desde||'',hasta:payload.hasta||''});
       return {ok:true};
     }
