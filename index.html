@@ -789,6 +789,7 @@ async function initAdmin(){
   document.getElementById('nav-admin').style.display='flex';
   document.getElementById('admin-shell').style.display='grid';
   var bla=document.getElementById('btn-logout-admin');if(bla)bla.style.display='inline-flex';
+  var sb=document.getElementById('status-bar-hdr');if(sb)sb.style.display='flex';
   document.querySelectorAll('#admin-shell .page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('page-informes').classList.add('active');
   document.querySelectorAll('#nav-admin .nav-tab').forEach(function(t){t.classList.remove('active');});
@@ -1030,6 +1031,9 @@ async function fetchSheet(name){
   return{rows:(data||[]).map(function(r){return{c:[{v:r.fecha?r.fecha.split('-').reverse().join('/'):''},{v:r.tipo||''},{v:r.hora||''},{v:r.hora_turno||''},{v:r.hora_dia||''},{v:''}]};})};
 }
 
+// cacheInvalidate: no-op (el sistema de caché fue eliminado en la migración a Supabase)
+function cacheInvalidate(key) { /* sin caché */ }
+
 async function callScriptJSONP(payload) {
   var action = payload.action;
   try {
@@ -1040,9 +1044,41 @@ async function callScriptJSONP(payload) {
       var fecha = payload.fecha; // DD/MM/YYYY
       var m = String(fecha).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
       var fechaISO = m ? m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0') : fecha;
+      // Calcular hora_turno y hora_dia recargando todos los fichajes del día
+      var horaTurno = '', horaDia = '';
+      try {
+        var fichajesDia = await supaGet('fichajes', {'select':'tipo,hora','empleado_nombre':'eq.'+payload.nombre,'fecha':'eq.'+fechaISO,'order':'hora.asc'});
+        var regsExistentes = (fichajesDia || []).map(function(r){return{tipo:r.tipo,hora:r.hora};});
+        // Añadir el nuevo fichaje a la lista para calcular
+        var todosRegs = regsExistentes.concat([{tipo:payload.tipo,hora:payload.hora}]);
+        todosRegs.sort(function(a,b){return a.hora<b.hora?-1:a.hora>b.hora?1:0;});
+        var turnos = emparejarTurnos(todosRegs, fechaISO);
+        var totalMins = 0;
+        for (var ti = 0; ti < turnos.length; ti++) {
+          var mins = calcTurnoMins(turnos[ti]);
+          if (mins != null) totalMins += mins;
+        }
+        // hora_turno: duración del turno al que pertenece este fichaje (si es SALIDA)
+        if (payload.tipo === 'SALIDA') {
+          for (var ti2 = 0; ti2 < turnos.length; ti2++) {
+            var tr = turnos[ti2];
+            if (tr.salida && tr.salida.hora === payload.hora) {
+              var tm = calcTurnoMins(tr);
+              if (tm != null) horaTurno = minsToStr(tm);
+              break;
+            }
+          }
+        }
+        // hora_dia: total del día, solo en la última SALIDA
+        if (payload.tipo === 'SALIDA') {
+          var hayMasSalidas = regsExistentes.some(function(r){return r.tipo==='SALIDA'&&r.hora>payload.hora;});
+          if (!hayMasSalidas && totalMins > 0) horaDia = minsToStr(totalMins);
+        }
+      } catch(eCalc) { /* si falla el cálculo, se insertan vacíos (no rompe) */ }
       await supaPost('fichajes', {
         empleado_id: empId, empleado_nombre: payload.nombre,
-        fecha: fechaISO, tipo: payload.tipo, hora: payload.hora
+        fecha: fechaISO, tipo: payload.tipo, hora: payload.hora,
+        hora_turno: horaTurno, hora_dia: horaDia
       });
       return {ok:true};
     }
@@ -1140,14 +1176,17 @@ async function callScriptJSONP(payload) {
         if (payload.cambiaEntrada) await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=eq.'+encodeURIComponent(payload.horaEntradaActual));
         if (payload.cambiaSalida)  await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=eq.'+encodeURIComponent(payload.horaSalidaActual));
       } else {
-        if (payload.cambiaEntrada) await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=eq.'+encodeURIComponent(payload.horaEntradaActual),{fecha:fEN,hora:payload.horaEntradaNueva});
-        if (payload.cambiaSalida)  await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=eq.'+encodeURIComponent(payload.horaSalidaActual),{fecha:fSN,hora:payload.horaSalidaNueva});
+        // Al cambiar hora/fecha, hora_turno y hora_dia quedan obsoletos → se limpian
+        if (payload.cambiaEntrada) await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=eq.'+encodeURIComponent(payload.horaEntradaActual),{fecha:fEN,hora:payload.horaEntradaNueva,hora_turno:'',hora_dia:''});
+        if (payload.cambiaSalida)  await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=eq.'+encodeURIComponent(payload.horaSalidaActual),{fecha:fSN,hora:payload.horaSalidaNueva,hora_turno:'',hora_dia:''});
       }
+      await enviarTelegram('\u2705 <b>Solicitud de cambio APROBADA</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>'+(payload.emailEmp?'\n\uD83D\uDCE7 '+payload.emailEmp:''));
       return {ok:true};
     }
     // ── rechazarSolicitud ──
     if (action === 'rechazarSolicitud') {
       await supaPatch('solicitudes', 'id=eq.'+payload.id, {estado:'rechazada'});
+      await enviarTelegram('\u274C <b>Solicitud de cambio RECHAZADA</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>'+(payload.fecha?'\n\uD83D\uDCC5 '+payload.fecha:'')+(payload.emailEmp?'\n\uD83D\uDCE7 '+payload.emailEmp:''));
       return {ok:true};
     }
     // ── cancelarSolicitud ──
@@ -1158,11 +1197,13 @@ async function callScriptJSONP(payload) {
     // ── aprobarSolicitudVacaciones ──
     if (action === 'aprobarSolicitudVacaciones') {
       await supaPatch('solicitudes_vacaciones', 'id=eq.'+payload.id, {estado:'aprobada'});
+      await enviarTelegram('\u2705 <b>Vacaciones APROBADAS</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>\n\uD83D\uDCC5 Desde: '+payload.desde+'\n\uD83D\uDCC5 Hasta: '+payload.hasta+(payload.emailEmp?'\n\uD83D\uDCE7 '+payload.emailEmp:''));
       return {ok:true};
     }
     // ── rechazarSolicitudVacaciones ──
     if (action === 'rechazarSolicitudVacaciones') {
       await supaPatch('solicitudes_vacaciones', 'id=eq.'+payload.id, {estado:'rechazada'});
+      await enviarTelegram('\u274C <b>Vacaciones RECHAZADAS</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>\n\uD83D\uDCC5 Desde: '+payload.desde+'\n\uD83D\uDCC5 Hasta: '+payload.hasta+(payload.emailEmp?'\n\uD83D\uDCE7 '+payload.emailEmp:''));
       return {ok:true};
     }
     // ── cancelarSolicitudVacaciones ──
@@ -2066,7 +2107,7 @@ async function aprobar(id){
     }
     toast('Aprobado ✓','ok');
     cacheInvalidate('sol_admin');cacheInvalidate('sol_'+(sol.emp||''));
-    try{solicitudes=await loadSolicitudes(undefined,true);rebuildApprovedSet(solicitudes);updateBadge();renderSolicitudes();}catch(e2){}
+    try{solicitudes=await loadSolicitudes();rebuildApprovedSet(solicitudes);updateBadge();renderSolicitudes();}catch(e2){}
   }else{toast('Error: '+err,'err');}
 }
 
