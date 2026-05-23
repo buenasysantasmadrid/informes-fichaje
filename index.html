@@ -677,14 +677,24 @@ async function enviarTelegram(msg) {
   } catch(e) {}
 }
 
-// ── EMAIL AL EMPLEADO (vía Apps Script) ─────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec';
+// ── EMAIL AL EMPLEADO (vía Supabase Edge Function + Resend) ──────────────
 async function enviarEmailEmp(params) {
   try {
-    var qs = Object.entries(params).map(function(kv){
-      return encodeURIComponent(kv[0])+'='+encodeURIComponent(kv[1]);
-    }).join('&');
-    await fetch(APPS_SCRIPT_URL+'?'+qs, {method:'GET'}).catch(function(){});
+    await fetch(SUPA_URL+'/functions/v1/clever-service', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer '+SUPA_KEY
+      },
+      body: JSON.stringify({
+        email:  params.email  || '',
+        nombre: params.nombre || '',
+        estado: params.estado || '',
+        tipo:   params.tipo   || '',
+        desde:  params.desde  || '',
+        hasta:  params.hasta  || ''
+      })
+    });
   } catch(e) {}
 }
 
