@@ -1919,9 +1919,8 @@ function erendVacaciones(){
   var lista=esolicitudesVac;
   var el=document.getElementById('evac-list');
   if(!el)return;
-  if(!lista||!lista.length){el.innerHTML='<div class="empty" style="height:20vh"><div class="empty-ico">🌴</div><h2>Sin solicitudes</h2><p>Aún no has solicitado vacaciones.</p></div>';return;}
-  // Ya vienen ordenadas (más recientes primero desde el script)
-  el.innerHTML=lista.map(function(s){
+
+  function cardVac(s){
     var stCls={'pendiente':'ss-pendiente','aprobada':'ss-aprobada','rechazada':'ss-rechazada'}[s.estado]||'ss-pendiente';
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var desdeISO=safeISO(s.desde),hastaISO=safeISO(s.hasta);
@@ -1938,7 +1937,65 @@ function erendVacaciones(){
       +'</div>'
       +'<div class="sol-actions"><span class="sol-status '+stCls+'">'+stLabel+'</span>'+accionCancelar+'</div>'
     +'</div>';
-  }).join('');
+  }
+
+  if(!lista||!lista.length){
+    el.innerHTML='<div class="empty" style="height:20vh"><div class="empty-ico">🌴</div><h2>Sin solicitudes</h2><p>Aún no has solicitado vacaciones.</p></div>';
+    return;
+  }
+
+  var aprobadas =lista.filter(function(s){return s.estado==='aprobada';});
+  var pendientes =lista.filter(function(s){return s.estado==='pendiente';});
+  var rechazadas =lista.filter(function(s){return s.estado==='rechazada';});
+
+  // Calcular total días disfrutados (aprobadas)
+  var diasDisfrutados=0;
+  aprobadas.forEach(function(s){
+    var d=diasEntreISO(safeISO(s.desde),safeISO(s.hasta));
+    if(d>0)diasDisfrutados+=d;
+  });
+  // Calcular días pendientes de aprobación
+  var diasPendientes=0;
+  pendientes.forEach(function(s){
+    var d=diasEntreISO(safeISO(s.desde),safeISO(s.hasta));
+    if(d>0)diasPendientes+=d;
+  });
+
+  var html='';
+
+  // ── Resumen de días disfrutados ──
+  if(aprobadas.length>0){
+    html+='<div style="background:var(--teal-soft);border:1px solid var(--teal-border);border-radius:10px;padding:.85rem 1.1rem;margin-bottom:1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
+      +'<div style="font-size:.75rem;color:var(--teal);font-weight:600">🏖️ Vacaciones ya disfrutadas</div>'
+      +'<div style="font-family:\'Fraunces\',serif;font-size:1.15rem;color:var(--teal);font-weight:400">'+diasDisfrutados+' día'+(diasDisfrutados!==1?'s':'')+' naturales</div>'
+    +'</div>';
+  }
+  if(diasPendientes>0){
+    html+='<div style="background:var(--amber-soft);border:1px solid #f5e0a0;border-radius:10px;padding:.85rem 1.1rem;margin-bottom:1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
+      +'<div style="font-size:.75rem;color:var(--amber);font-weight:600">⏳ Pendientes de aprobación</div>'
+      +'<div style="font-family:\'Fraunces\',serif;font-size:1.15rem;color:var(--amber);font-weight:400">'+diasPendientes+' día'+(diasPendientes!==1?'s':'')+' naturales</div>'
+    +'</div>';
+  }
+
+  // ── Pendientes ──
+  if(pendientes.length){
+    html+='<div class="vac-hist-title" style="margin-top:.5rem">⏳ Pendientes</div>';
+    html+=pendientes.map(cardVac).join('');
+  }
+
+  // ── Disfrutadas (aprobadas) ──
+  if(aprobadas.length){
+    html+='<div class="vac-hist-title" style="margin-top:1.25rem">✅ Ya disfrutadas</div>';
+    html+=aprobadas.map(cardVac).join('');
+  }
+
+  // ── Rechazadas ──
+  if(rechazadas.length){
+    html+='<div class="vac-hist-title" style="margin-top:1.25rem;color:var(--ink3)">✕ Rechazadas</div>';
+    html+=rechazadas.map(cardVac).join('');
+  }
+
+  el.innerHTML=html;
 }
 
 async function cancelarSolicitudVac(id){
