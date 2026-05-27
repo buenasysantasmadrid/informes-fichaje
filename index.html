@@ -315,12 +315,12 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
   .side{border-right:none;border-bottom:1px solid var(--border)}
   .main{padding:1.25rem}
   .emp-main{padding:1.25rem}
-  .day-dow{width:96px;font-size:1.05rem}.day-date{width:76px;font-size:.82rem}
-  .dh-e,.dh-s{font-size:.88rem}
-  .dh-total{font-size:.88rem}
-  .dh-total-lbl{font-size:.62rem}
-  .dh-lab{font-size:.65rem}
-  .dh-dur{font-size:.72rem}
+  .day-dow{width:90px;font-size:.92rem}.day-date{width:68px;font-size:.72rem}
+  .dh-e,.dh-s{font-size:.78rem}
+  .dh-total{font-size:.78rem}
+  .dh-total-lbl{font-size:.58rem}
+  .dh-lab{font-size:.6rem}
+  .dh-dur{font-size:.65rem}
   .sol-card,.vac-card{grid-template-columns:1fr}
   .summary-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
   .hdr-emp-info{display:none !important}
@@ -329,7 +329,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
   .cal-day{font-size:.82rem;height:34px;line-height:34px}
   .cal-dow{font-size:.62rem;height:30px;line-height:30px}
   .chip{font-size:.75rem;padding:5px 11px}
-  .hora-btn{font-size:.9rem;padding:6px 12px}
+  .hora-btn{font-size:.8rem;padding:5px 10px}
   .day-body{padding:.9rem 1rem}
   .nav-tab{font-size:.78rem;padding:.85rem 1.1rem}
   .sol-card,.vac-card{padding:.9rem 1rem}
@@ -338,6 +338,15 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
   .sum-hours{font-size:1.05rem}
   .sum-dow{font-size:.88rem}
   .sum-date{font-size:.65rem}
+  .sol-section-tab{font-size:.82rem;padding:.75rem 1.2rem}
+  .sol-card{font-size:.82rem}
+  .vac-card{font-size:.82rem}
+  .sol-detail{font-size:.82rem}
+  .sol-emp{font-size:.92rem}
+  .sol-fecha-req{font-size:.72rem}
+  .btn-logout{font-size:.75rem;padding:6px 15px}
+  .cambiar-pin-btn{font-size:.75rem;padding:6px 15px}
+  .cfg-menu button{font-size:.82rem;padding:12px 16px}
 }
 </style>
 </head>
@@ -1709,7 +1718,7 @@ function buildDayHead(fecha,calc,turnos){
 function renderCard(emp,fecha,regs){
   var calc=calcDia(regs,fecha),cls=calc.hayError?'has-error':'';
   var turnos2=emparejarTurnos(regs,fecha);
-  var autoOpen=calc.hayError?'open':'';
+  var autoOpen='';
   var tabla=buildFilasTurnos(emp,fecha,regs,false,solicitudes);
   var head=buildDayHead(fecha,calc,turnos2);
   return'<div class="day-card '+cls+' '+autoOpen+'" id="dc-'+empId(emp)+'-'+fecha+'">'+head+'<div class="day-body">'+tabla+'</div></div>';
@@ -1717,7 +1726,7 @@ function renderCard(emp,fecha,regs){
 function renderEmpCard(emp,fecha,regs){
   var calc=calcDia(regs,fecha),cls=calc.hayError?'has-error':'';
   var turnos2=emparejarTurnos(regs,fecha);
-  var autoOpen=calc.hayError?'open':'';
+  var autoOpen='';
   var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
   var head=buildDayHead(fecha,calc,turnos2);
   return'<div class="day-card '+cls+' '+autoOpen+'" id="edc-'+empId(emp)+'-'+fecha+'">'+head+'<div class="day-body">'+tabla+'</div></div>';
