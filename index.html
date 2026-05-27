@@ -1686,25 +1686,60 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   return html;
 }
 
+function buildDayHead(fecha,calc,turnos){
+  var onclick='onclick="toggleCard(this.parentElement)"';
+  if(turnos.length<=1){
+    // cabecera simple: 1 línea igual que siempre
+    var chips='';
+    if(calc.primera)chips+='<span class="chip c-in">▶ '+calc.primera+'</span>';
+    if(calc.ultima)chips+='<span class="chip c-out">◼ '+calc.ultima+'</span>';
+    if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
+    if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 ERROR FICHAJE':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
+    return'<div class="day-head" '+onclick+'><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div>';
+  }
+  // cabecera multi-turno: columna izquierda fija + una línea por turno
+  var turnosAsc=turnos.slice().reverse();
+  var lines='';
+  for(var i=0;i<turnosAsc.length;i++){
+    var tr=turnosAsc[i];
+    var tipoErr=turnoTipoError(tr);
+    var tMins=calcTurnoMins(tr);
+    var eHora=tr.entrada?normHoraDisplay(tr.entrada.hora):'—';
+    var sHora=tr.salida?normHoraDisplay(tr.salida.hora):'—';
+    var clsE=tipoErr?'color:var(--red)':'color:var(--green)';
+    var clsS=tipoErr?'color:var(--red)':'color:var(--blue)';
+    lines+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+    lines+='<span style="font-size:.58rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;width:22px;flex-shrink:0">T'+(i+1)+'</span>';
+    lines+='<span class="chip c-in" style="'+clsE+'">▶ '+eHora+'</span>';
+    lines+='<span class="chip c-out" style="'+clsS+'">◼ '+sHora+'</span>';
+    if(tMins!=null)lines+='<span class="chip c-dur">'+minsToStr(tMins)+'</span>';
+    if(tipoErr){var em2=tipoErr==='corto'?'🔴 ERROR':tipoErr==='largo'?'🔴 >11h':tipoErr==='sinEntrada'?'🔴 SIN ENT':'🔴 ERROR';lines+='<span class="chip c-long">'+em2+'</span>';}
+    lines+='</div>';
+  }
+  return'<div class="day-head" style="align-items:flex-start" '+onclick+'>'
+    +'<div style="display:flex;flex-direction:column;width:110px;flex-shrink:0;padding-top:1px">'
+    +'<span class="day-dow">'+dowName(fecha)+'</span>'
+    +'<span class="day-date">'+isoDisplay(fecha)+'</span>'
+    +'</div>'
+    +'<div style="flex:1;display:flex;flex-direction:column;gap:5px">'+lines+'</div>'
+    +'<span class="day-chevron">▾</span>'
+    +'</div>';
+}
 function renderCard(emp,fecha,regs){
   var calc=calcDia(regs,fecha),cls=calc.hayError?'has-error':'';
-  var chips='';
-  if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 ERROR FICHAJE':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
   var turnos2=emparejarTurnos(regs,fecha);
-  var autoOpen=(turnos2.length>1||calc.hayError)?'open':'';
+  var autoOpen=calc.hayError?'open':'';
   var tabla=buildFilasTurnos(emp,fecha,regs,false,solicitudes);
-  return'<div class="day-card '+cls+' '+autoOpen+'" id="dc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
+  var head=buildDayHead(fecha,calc,turnos2);
+  return'<div class="day-card '+cls+' '+autoOpen+'" id="dc-'+empId(emp)+'-'+fecha+'">'+head+'<div class="day-body">'+tabla+'</div></div>';
 }
 function renderEmpCard(emp,fecha,regs){
   var calc=calcDia(regs,fecha),cls=calc.hayError?'has-error':'';
-  var chips='';
-  if(calc.mins!=null)chips+='<span class="chip c-dur">'+minsToStr(calc.mins)+'</span>';
-  if(calc.hayError){var em=calc.tipoError==='corto'?'🔴 ERROR FICHAJE':calc.tipoError==='largo'?'🔴 TURNO >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENTRADA':'🔴 ERROR FICHAJE';chips+='<span class="chip c-long">'+em+'</span>';}
   var turnos2=emparejarTurnos(regs,fecha);
-  var autoOpen=(turnos2.length>1||calc.hayError)?'open':'';
+  var autoOpen=calc.hayError?'open':'';
   var tabla=buildFilasTurnos(emp,fecha,regs,true,esolicitudes);
-  return'<div class="day-card '+cls+' '+autoOpen+'" id="edc-'+empId(emp)+'-'+fecha+'"><div class="day-head" onclick="toggleCard(this.parentElement)"><span class="day-dow">'+dowName(fecha)+'</span><span class="day-date">'+isoDisplay(fecha)+'</span><div class="day-chips">'+chips+'</div><span class="day-chevron">▾</span></div><div class="day-body">'+tabla+'</div></div>';
+  var head=buildDayHead(fecha,calc,turnos2);
+  return'<div class="day-card '+cls+' '+autoOpen+'" id="edc-'+empId(emp)+'-'+fecha+'">'+head+'<div class="day-body">'+tabla+'</div></div>';
 }
 function toggleCard(card){card.classList.toggle('open');}
 
