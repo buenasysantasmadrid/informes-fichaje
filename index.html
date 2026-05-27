@@ -1509,7 +1509,7 @@ function exportarTodosAdmin(){
     var dmap=editData[emp];if(!dmap)return;
     var rows=Object.keys(dmap).sort().map(function(f){
       var calc=calcDia(dmap[f]||[],f);
-      return{'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};
+      var fp=f.split('-').map(Number);var fdisp=('0'+fp[2]).slice(-2)+'/'+('0'+fp[1]).slice(-2)+'/'+fp[0];return{'Dia':dowName(f),'Fecha':fdisp,'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};
     });
     var ws=XLSX.utils.json_to_sheet(rows);
     ws['!cols']=[{wch:12},{wch:11},{wch:11},{wch:13},{wch:10},{wch:13}];
@@ -2320,7 +2320,7 @@ function erendSolicitudes(){
 function exportEmp(emp){
   var dmap=emp==='_emp'?empEditData:editData[emp];if(!dmap)return;
   var wb=XLSX.utils.book_new();
-  var rows=Object.keys(dmap).sort().map(function(f){var calc=calcDia(dmap[f]||[],f);return{'Dia':dowName(f),'Fecha':isoDisplay(f),'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};});
+  var rows=Object.keys(dmap).sort().map(function(f){var calc=calcDia(dmap[f]||[],f);var fp=f.split('-').map(Number);var fdisp=('0'+fp[2]).slice(-2)+'/'+('0'+fp[1]).slice(-2)+'/'+fp[0];return{'Dia':dowName(f),'Fecha':fdisp,'1a Entrada':calc.primera||'—','Ultima Salida':calc.ultima||'—','Total':minsToStr(calc.mins),'Horas decimal':calc.mins!=null?+(calc.mins/60).toFixed(2):''};});
   var ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:12},{wch:11},{wch:11},{wch:13},{wch:10},{wch:13}];
   var sheetName=emp==='_emp'?session.nombre:emp;
   XLSX.utils.book_append_sheet(wb,ws,sheetName.substring(0,28).replace(/[:\\\/\?\*\[\]]/g,'_'));
