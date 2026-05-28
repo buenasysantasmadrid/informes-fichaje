@@ -194,6 +194,10 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .dh-s{font-size:.78rem;font-weight:300;color:#2c5fa0}
 .dh-arr{font-size:.7rem;color:var(--border2);flex-shrink:0}
 .dh-dur{font-size:.65rem;color:var(--ink3);margin-left:auto;font-weight:300}
+.day-head-multi{align-items:flex-start!important;padding-top:.55rem!important;padding-bottom:.55rem!important}
+.dh-turnos{flex:1;display:flex;flex-direction:column;gap:3px}
+.dh-turno-row{display:flex;align-items:center;gap:4px;width:100%}
+.dh-chev-multi{align-self:flex-start;margin-top:3px}
 .day-card.open .day-chevron{transform:rotate(180deg);opacity:.7}
 .day-body{display:none;border-top:1px solid var(--border);background:#f8f9fa;padding:.85rem 1.2rem}
 .day-card.open .day-body{display:block}
@@ -1706,9 +1710,10 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
   return out;
 }
 
+function isoShort(iso){if(!iso)return'';var p=iso.split('-').map(Number);var MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];return('0'+p[2]).slice(-2)+' '+MESES[p[1]-1];}
 function buildDayHead(fecha,calc,turnos){
   var onclick='onclick="toggleCard(this.parentElement)"';
-  var dow=dowName(fecha);var dat=isoDisplay(fecha);
+  var dow=dowName(fecha);var dat=isoShort(fecha);
   var chevron='<span class="day-chevron">\u25be</span>';
   var isErr=calc.hayError;
   var errBadge=isErr?'<span style="font-size:.55rem;color:var(--red);font-weight:500;margin-left:4px">'+(calc.tipoError==='largo'?'>11h':calc.tipoError==='sinEntrada'?'sin ent.':'error')+'</span>':'';
@@ -1725,17 +1730,32 @@ function buildDayHead(fecha,calc,turnos){
       +'</div>';
   }
   var turnosAsc=turnos.slice().reverse();
-  var eHora=turnosAsc[0].entrada?normHoraDisplay(turnosAsc[0].entrada.hora):'\u2014';
-  var sHora=turnosAsc[turnosAsc.length-1].salida?normHoraDisplay(turnosAsc[turnosAsc.length-1].salida.hora):'\u2014';
-  var totalDia=calc.mins!=null?minsToStr(calc.mins):'';
-  var clsE=isErr?'color:var(--red)':'';var clsS=isErr?'color:var(--red)':'';
-  return'<div class="day-head" '+onclick+'>'
-    +'<span class="dh-left"><span class="day-dow">'+dow+'</span><span class="day-date">'+dat+'</span></span>'
-    +'<span class="dh-e" style="flex:1;text-align:right;'+clsE+'">'+eHora+'</span>'
-    +'<span class="dh-s" style="flex:1;text-align:right;'+clsS+'">'+sHora+'</span>'
-    +'<span class="dh-total" style="flex:1;text-align:right">'+totalDia+errBadge+'<span style="font-size:.55rem;color:var(--ink3);margin-left:3px">·'+turnosAsc.length+'T</span></span>'
-    +chevron
-    +'</div>';
+  var isErr=calc.hayError;
+  var errBadge=isErr?'<span style="font-size:.55rem;color:var(--red);font-weight:500;margin-left:4px">'+(calc.tipoError==='largo'?'>11h':calc.tipoError==='sinEntrada'?'sin ent.':'error')+'</span>':'';
+  var html='<div class="day-head day-head-multi" '+onclick+'>';
+  html+='<span class="dh-left" style="align-self:flex-start;padding-top:2px"><span class="day-dow">'+dow+'</span><span class="day-date">'+dat+'</span></span>';
+  html+='<span class="dh-turnos">';
+  for(var i=0;i<turnosAsc.length;i++){
+    var tr=turnosAsc[i];
+    var tipoErr=turnoTipoError(tr);
+    var tMins=calcTurnoMins(tr);
+    var eH=tr.entrada?normHoraDisplay(tr.entrada.hora):'\u2014';
+    var sH=tr.salida?normHoraDisplay(tr.salida.hora):'\u2014';
+    var cE=tipoErr?'color:var(--red)':'color:#2d7a4a';
+    var cS=tipoErr?'color:var(--red)':'color:#2c5fa0';
+    var durStr=tMins!=null?minsToStr(tMins):'\u2014';
+    var tErr=tipoErr?'<span style="font-size:.52rem;color:var(--red);margin-left:3px">'+(tipoErr==='largo'?'>11h':tipoErr==='sinEntrada'?'sin ent.':'error')+'</span>':'';
+    html+='<span class="dh-turno-row">'
+      +'<span style="font-size:.58rem;color:var(--ink3);font-weight:300;min-width:14px;flex-shrink:0">T'+(i+1)+'</span>'
+      +'<span style="flex:1;text-align:right;font-size:.78rem;font-weight:300;'+cE+'">'+eH+'</span>'
+      +'<span style="flex:1;text-align:right;font-size:.78rem;font-weight:300;'+cS+'">'+sH+'</span>'
+      +'<span style="flex:1;text-align:right;font-size:.78rem;font-weight:'+(i===turnosAsc.length-1?'400':'300')+';color:var(--ink2)">'+durStr+tErr+'</span>'
+      +'</span>';
+  }
+  html+='</span>';
+  html+=i===0?chevron:'<span class="day-chevron dh-chev-multi">\u25be</span>';
+  html+='</div>';
+  return html;
 }
 function renderCard(emp,fecha,regs){
   var calc=calcDia(regs,fecha),cls=calc.hayError?'has-error':'';
