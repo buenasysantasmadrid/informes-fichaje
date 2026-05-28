@@ -147,47 +147,66 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .date-search-bar input[type=date]{font-family:'Outfit',sans-serif;font-size:.72rem;background:transparent;border:none;outline:none;color:var(--ink);cursor:pointer;}
 .btn-jump{padding:4px 12px;font-size:.63rem;font-family:'Outfit',sans-serif;background:var(--green);color:#fff;border:none;border-radius:5px;cursor:pointer;transition:background .12s;}
 .btn-jump:hover{background:var(--green-acc)}
-.days{display:flex;flex-direction:column;gap:8px}
-.week-sep{display:flex;align-items:center;gap:10px;margin:6px 0 2px;padding:0 2px}
-.week-sep::before,.week-sep::after{content:'';flex:1;height:1px;background:var(--border2)}
-.week-lbl{font-size:.68rem;letter-spacing:.03em;white-space:nowrap;background:var(--green3);color:var(--green-acc);border:1px solid var(--green4);border-radius:20px;padding:4px 14px;font-weight:600}
-.day-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s}
-.day-card:hover{box-shadow:var(--shadow2)}
-.day-card.has-error{border-left:3px solid var(--red);background:var(--red-soft)}
-.day-head{display:flex;align-items:center;padding:.85rem 1.2rem;cursor:pointer;user-select:none}
-.day-dow{font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:600;color:var(--ink);width:110px;flex-shrink:0;text-transform:capitalize}
-.day-date{font-size:.7rem;color:var(--ink3);width:80px;flex-shrink:0;font-weight:400}
+/* ── ESTILO D: tabla con filas alternas, tipografía fina ── */
+.days{display:flex;flex-direction:column;gap:0}
+
+/* Separador de semana: texto pequeño uppercase, sin píldora */
+.week-sep{display:flex;align-items:center;gap:0;margin:14px 0 0;padding:0}
+.week-sep::before,.week-sep::after{display:none}
+.week-lbl{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);padding:5px 0 4px;font-weight:400;border-bottom:none;background:none;border:none;border-radius:0}
+
+/* Cabecera de columnas sobre la primera tarjeta de cada semana */
+.week-col-hdr{display:flex;align-items:center;padding:4px 1.2rem;background:var(--cream2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.week-col-hdr span{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:400}
+.wch-day{flex:2}
+.wch-in{flex:1;text-align:right}
+.wch-out{flex:1;text-align:right}
+.wch-tot{flex:1;text-align:right}
+
+/* Tarjeta de día: sin borde, sin sombra, sin radio — fila de tabla */
+.day-card{background:#fff;border:none;border-bottom:1px solid var(--border);border-radius:0;overflow:hidden;box-shadow:none;transition:background .15s}
+.day-card:hover{background:#f9fafb}
+.day-card.has-error{border-left:3px solid var(--red);background:#fff8f8}
+/* Filas alternas */
+.day-card:nth-child(even){background:var(--cream)}
+.day-card:nth-child(even):hover{background:#eef0f3}
+
+.day-head{display:flex;align-items:center;padding:.65rem 1.2rem;cursor:pointer;user-select:none}
+.day-dow{font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:300;color:var(--ink2);width:110px;flex-shrink:0;text-transform:capitalize}
+.day-date{font-size:.68rem;color:var(--ink3);width:80px;flex-shrink:0;font-weight:300}
 .day-chips{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:.7rem;font-weight:500;white-space:nowrap}
-.c-in{background:var(--green3);color:var(--green);border:1px solid var(--green4)}
-.c-out{background:var(--blue-soft);color:var(--blue);border:1px solid #c5d8fc}
-.c-dur{background:var(--cream2);color:var(--ink2);border:1px solid var(--border2)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:.7rem;font-weight:400;white-space:nowrap}
+.c-in{background:transparent;color:#2d7a4a;border:none;font-weight:400}
+.c-out{background:transparent;color:#2c5fa0;border:none;font-weight:400}
+.c-dur{background:transparent;color:var(--ink3);border:none;font-weight:300}
 .c-err{background:var(--red-soft);color:var(--red);border:1px solid #f5c6c2}
 .c-wrn{background:var(--amber-soft);color:var(--amber);border:1px solid #f5e0a0}
-.c-long{background:var(--red-soft);color:var(--red);border:1px solid #f5c6c2;font-weight:600}
-.day-chevron{margin-left:auto;color:var(--ink3);font-size:.65rem;transition:transform .2s;padding-left:8px}
+.c-long{color:var(--red);font-weight:500}
+.day-chevron{margin-left:auto;color:var(--ink3);font-size:.6rem;transition:transform .2s;padding-left:8px;opacity:.45}
 .dh-left{display:flex;flex-direction:column;width:80px;flex-shrink:0;padding-top:1px}
-.dh-center{flex:1;display:flex;flex-direction:column;gap:5px}
+.dh-center{flex:1;display:flex;flex-direction:column;gap:4px}
 .dh-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;flex-shrink:0;padding:0 8px}
-.dh-total{font-size:.82rem;font-weight:600;color:var(--ink);white-space:nowrap}
-.dh-total-lbl{font-size:.55rem;color:var(--ink3)}
+.dh-total{font-size:.78rem;font-weight:400;color:var(--ink2);white-space:nowrap}
+.dh-total-lbl{font-size:.53rem;color:var(--ink3);font-weight:300}
 .dh-trow{display:flex;align-items:center;gap:5px;flex-wrap:nowrap}
-.dh-lab{font-size:.6rem;font-weight:600;color:var(--ink3);width:18px;flex-shrink:0;text-transform:uppercase}
-.dh-e{font-size:.82rem;font-weight:600;color:var(--green)}
-.dh-s{font-size:.82rem;font-weight:600;color:var(--blue)}
-.dh-arr{font-size:.75rem;color:var(--ink3);flex-shrink:0}
-.dh-dur{font-size:.68rem;color:var(--ink3);margin-left:auto}
-.day-card.open .day-chevron{transform:rotate(180deg)}
-.day-body{display:none;border-top:1px solid var(--border);background:var(--cream);padding:1rem 1.2rem}
+.dh-lab{font-size:.58rem;font-weight:300;color:var(--ink3);width:18px;flex-shrink:0;text-transform:uppercase}
+.dh-e{font-size:.78rem;font-weight:300;color:#2d7a4a}
+.dh-s{font-size:.78rem;font-weight:300;color:#2c5fa0}
+.dh-arr{font-size:.7rem;color:var(--border2);flex-shrink:0}
+.dh-dur{font-size:.65rem;color:var(--ink3);margin-left:auto;font-weight:300}
+.day-card.open .day-chevron{transform:rotate(180deg);opacity:.7}
+.day-body{display:none;border-top:1px solid var(--border);background:#f8f9fa;padding:.85rem 1.2rem}
 .day-card.open .day-body{display:block}
+
+/* Tabla interior del detalle */
 .ft{width:100%;border-collapse:collapse;margin-bottom:.6rem}
-.ft th{font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:4px 10px;text-align:left;border-bottom:1px solid var(--border)}
-.ft td{padding:6px 10px;font-size:.76rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.ft th{font-size:.53rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);padding:4px 10px;text-align:left;border-bottom:1px solid var(--border);font-weight:400}
+.ft td{padding:5px 10px;font-size:.73rem;font-weight:300;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--ink2)}
 .ft tbody tr:last-child td{border-bottom:none}
-.ft tbody tr:hover td{background:rgba(45,106,63,.025)}
-.t-in{color:var(--green);font-weight:500}
-.t-out{color:var(--blue);font-weight:500}
-.t-long{color:var(--red);font-weight:600}
+.ft tbody tr:hover td{background:rgba(45,106,63,.02)}
+.t-in{color:#2d7a4a;font-weight:400}
+.t-out{color:#2c5fa0;font-weight:400}
+.t-long{color:var(--red);font-weight:500}
 .turno-sep td{border-top:2px dashed var(--border2)!important;padding-top:10px!important}
 .hora-btn{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:5px;font-family:'Outfit',sans-serif;font-size:.76rem;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--ink);transition:all .15s}
 .hora-btn:hover{background:var(--green3);border-color:var(--green4);color:var(--green)}
@@ -315,12 +334,12 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
   .side{border-right:none;border-bottom:1px solid var(--border)}
   .main{padding:1.25rem}
   .emp-main{padding:1.25rem}
-  .day-dow{width:90px;font-size:.92rem}.day-date{width:68px;font-size:.72rem}
-  .dh-e,.dh-s{font-size:.78rem}
-  .dh-total{font-size:.78rem}
-  .dh-total-lbl{font-size:.58rem}
-  .dh-lab{font-size:.6rem}
-  .dh-dur{font-size:.65rem}
+  .day-dow{font-size:.8rem}.day-date{font-size:.65rem}
+  .dh-e,.dh-s{font-size:.75rem}
+  .dh-total{font-size:.75rem}
+  .dh-left{width:72px}
+  .day-head{padding:.6rem .9rem}
+  .week-col-hdr{padding:4px .9rem}
   .sol-card,.vac-card{grid-template-columns:1fr}
   .summary-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
   .hdr-emp-info{display:none !important}
@@ -1690,30 +1709,33 @@ function buildFilasTurnos(emp,fecha,regs,isEmp,solsRef){
 function buildDayHead(fecha,calc,turnos){
   var onclick='onclick="toggleCard(this.parentElement)"';
   var dow=dowName(fecha);var dat=isoDisplay(fecha);
-  var leftCol='<div class="dh-left"><span class="day-dow">'+dow+'</span><span class="day-date">'+dat+'</span></div>';
-  var chevron='<span class="day-chevron">▾</span>';
+  var chevron='<span class="day-chevron">\u25be</span>';
+  var isErr=calc.hayError;
+  var errBadge=isErr?'<span style="font-size:.55rem;color:var(--red);font-weight:500;margin-left:4px">'+(calc.tipoError==='largo'?'>11h':calc.tipoError==='sinEntrada'?'sin ent.':'error')+'</span>':'';
   if(turnos.length<=1){
-    var eHora=calc.primera||'—';var sHora=calc.ultima||'—';var isErr=calc.hayError;
-    var clsE=isErr?'color:var(--red)':'color:var(--green)';var clsS=isErr?'color:var(--red)':'color:var(--blue)';
-    var center='<div class="dh-center"><div class="dh-trow"><span class="dh-e" style="'+clsE+'">'+eHora+'</span><span class="dh-arr">→</span><span class="dh-s" style="'+clsS+'">'+sHora+'</span></div></div>';
+    var eHora=calc.primera||'\u2014';var sHora=calc.ultima||'\u2014';
+    var clsE=isErr?'color:var(--red)':'';var clsS=isErr?'color:var(--red)':'';
     var totalStr=calc.mins!=null?minsToStr(calc.mins):'';
-    var errStr=isErr?(calc.tipoError==='corto'?'🔴 ERROR':calc.tipoError==='largo'?'🔴 >11h':calc.tipoError==='sinEntrada'?'🔴 SIN ENT':'🔴 ERROR'):'';
-    var right='<div class="dh-right">'+(totalStr?'<span class="dh-total">'+totalStr+'</span><span class="dh-total-lbl">total</span>':'')+(errStr?'<span style="font-size:.6rem;color:var(--red);font-weight:700">'+errStr+'</span>':'')+'</div>';
-    return'<div class="day-head" '+onclick+'>'+leftCol+center+right+chevron+'</div>';
+    return'<div class="day-head" '+onclick+'>'
+      +'<span class="dh-left"><span class="day-dow">'+dow+'</span><span class="day-date">'+dat+'</span></span>'
+      +'<span class="dh-e" style="flex:1;text-align:right;'+clsE+'">'+eHora+'</span>'
+      +'<span class="dh-s" style="flex:1;text-align:right;'+clsS+'">'+sHora+'</span>'
+      +'<span class="dh-total" style="flex:1;text-align:right">'+totalStr+errBadge+'</span>'
+      +chevron
+      +'</div>';
   }
-  var turnosAsc=turnos.slice().reverse();var lines='';
-  for(var i=0;i<turnosAsc.length;i++){
-    var tr=turnosAsc[i];var tipoErr=turnoTipoError(tr);var tMins=calcTurnoMins(tr);
-    var eH=tr.entrada?normHoraDisplay(tr.entrada.hora):'—';var sH=tr.salida?normHoraDisplay(tr.salida.hora):'—';
-    var cE=tipoErr?'color:var(--red)':'color:var(--green)';var cS=tipoErr?'color:var(--red)':'color:var(--blue)';
-    lines+='<div class="dh-trow"><span class="dh-lab">T'+(i+1)+'</span><span class="dh-e" style="'+cE+'">'+eH+'</span><span class="dh-arr">→</span><span class="dh-s" style="'+cS+'">'+sH+'</span>';
-    if(tMins!=null)lines+='<span class="dh-dur">'+minsToStr(tMins)+'</span>';
-    if(tipoErr){var em2=tipoErr==='corto'?'🔴 ERROR':tipoErr==='largo'?'🔴 >11h':tipoErr==='sinEntrada'?'🔴 SIN ENT':'🔴 ERROR';lines+='<span style="font-size:.6rem;color:var(--red);font-weight:700">'+em2+'</span>';}
-    lines+='</div>';
-  }
+  var turnosAsc=turnos.slice().reverse();
+  var eHora=turnosAsc[0].entrada?normHoraDisplay(turnosAsc[0].entrada.hora):'\u2014';
+  var sHora=turnosAsc[turnosAsc.length-1].salida?normHoraDisplay(turnosAsc[turnosAsc.length-1].salida.hora):'\u2014';
   var totalDia=calc.mins!=null?minsToStr(calc.mins):'';
-  var rightM='<div class="dh-right">'+(totalDia?'<span class="dh-total">'+totalDia+'</span><span class="dh-total-lbl">total</span>':'')+'</div>';
-  return'<div class="day-head" style="align-items:flex-start" '+onclick+'>'+leftCol+'<div class="dh-center">'+lines+'</div>'+rightM+chevron+'</div>';
+  var clsE=isErr?'color:var(--red)':'';var clsS=isErr?'color:var(--red)':'';
+  return'<div class="day-head" '+onclick+'>'
+    +'<span class="dh-left"><span class="day-dow">'+dow+'</span><span class="day-date">'+dat+'</span></span>'
+    +'<span class="dh-e" style="flex:1;text-align:right;'+clsE+'">'+eHora+'</span>'
+    +'<span class="dh-s" style="flex:1;text-align:right;'+clsS+'">'+sHora+'</span>'
+    +'<span class="dh-total" style="flex:1;text-align:right">'+totalDia+errBadge+'<span style="font-size:.55rem;color:var(--ink3);margin-left:3px">·'+turnosAsc.length+'T</span></span>'
+    +chevron
+    +'</div>';
 }
 function renderCard(emp,fecha,regs){
   var calc=calcDia(regs,fecha),cls=calc.hayError?'has-error':'';
@@ -1745,9 +1767,13 @@ function buildCardsConSemana(fechas,dmap,emp,isEmp){
   }
   if(semActual!==null)grupos.push({semana:semActual,mins:semMins,cards:semCards.slice()});
   var html='';
+  var colHdr='<div class="week-col-hdr"><span class="wch-day">D\u00eda</span><span class="wch-in">Entrada</span><span class="wch-out">Salida</span><span class="wch-tot">Total</span></div>';
   for(var g=0;g<grupos.length;g++){
     var gr=grupos[g];
-    html+='<div class="week-sep"><span class="week-lbl">Total semana · '+minsToStr(gr.mins)+'</span></div>';
+    var semParts=gr.semana.split('_');
+    var semLabel='Semana '+semParts[0]+' \u00b7 '+minsToStr(gr.mins);
+    html+='<div class="week-sep"><span class="week-lbl">'+semLabel+'</span></div>';
+    html+=colHdr;
     html+=gr.cards.join('');
   }
   return html;
