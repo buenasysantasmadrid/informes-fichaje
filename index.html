@@ -2263,20 +2263,20 @@ async function aprobar(id){
   }catch(e){err=e.message;}
   setLoader(false);
   if(ok){
-    if(editData[sol.emp]){
-      function patchReg(tipo,fO,fN,hA,hN){var regs=editData[sol.emp][fO];if(!regs)return;for(var i=0;i<regs.length;i++){if(regs[i].tipo===tipo&&normHora(regs[i].hora)===normHora(hA)){if(fN!==fO){regs.splice(i,1);if(!editData[sol.emp][fN])editData[sol.emp][fN]=[];editData[sol.emp][fN].push({tipo:tipo,hora:hN,modificado:true});refreshCard(sol.emp,fO);refreshCard(sol.emp,fN);}else{regs[i].hora=hN;regs[i].modificado=true;refreshCard(sol.emp,fO);}break;}}}
-      function eliminarReg(tipo,fO,hA){var regs=editData[sol.emp]&&editData[sol.emp][fO];if(!regs)return;for(var ix=regs.length-1;ix>=0;ix--){if(regs[ix].tipo===tipo&&normHora(regs[ix].hora)===normHora(hA)){regs.splice(ix,1);break;}}refreshCard(sol.emp,fO);}
-      if(sol.eliminarTurno){
-        if(sol.cambiaEntrada)eliminarReg('ENTRADA',safeISO(sol.fechaEntradaOrig||sol.fecha),sol.horaEntradaActual);
-        if(sol.cambiaSalida)eliminarReg('SALIDA',safeISO(sol.fechaSalidaOrig||sol.fecha),sol.horaSalidaActual);
-      }else{
-        if(sol.cambiaEntrada)patchReg('ENTRADA',safeISO(sol.fechaEntradaOrig||sol.fecha),safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),sol.horaEntradaActual,sol.horaEntradaNueva);
-        if(sol.cambiaSalida)patchReg('SALIDA',safeISO(sol.fechaSalidaOrig||sol.fecha),safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha),sol.horaSalidaActual,sol.horaSalidaNueva);
-      }
-    }
     toast('Aprobado ✓','ok');
     cacheInvalidate('sol_admin');cacheInvalidate('sol_'+(sol.emp||''));
     try{solicitudes=await loadSolicitudes();rebuildApprovedSet(solicitudes);updateBadge();renderSolicitudes();}catch(e2){}
+    if(editData[sol.emp]!==undefined){
+      try{
+        var table=await fetchSheet(sol.emp);
+        var fichajes=parsearTabla(table);
+        var filt=fichajes.filter(function(f){return f.fecha>=currentDesde&&f.fecha<=currentHasta;});
+        editData[sol.emp]=construirDmap(filt);
+        var fechasAfectadas=[safeISO(sol.fechaEntradaOrig||sol.fecha),safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),safeISO(sol.fechaSalidaOrig||sol.fecha),safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha)];
+        var vistas=new Set(fechasAfectadas.filter(Boolean));
+        vistas.forEach(function(f){refreshCard(sol.emp,f);refreshWeekTotal(sol.emp,f,false);});
+      }catch(e3){}
+    }
   }else{toast('Error: '+err,'err');}
 }
 
