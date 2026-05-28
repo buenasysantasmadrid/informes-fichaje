@@ -163,13 +163,14 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .wch-out{flex:1;text-align:right}
 .wch-tot{flex:1;text-align:right}
 
-/* Tarjeta de día: sin borde, sin sombra, sin radio — fila de tabla */
-.day-card{background:#fff;border:none;border-bottom:1px solid var(--border);border-radius:0;overflow:hidden;box-shadow:none;transition:background .15s}
-.day-card:hover{background:#f9fafb}
-.day-card.has-error{border-left:3px solid var(--red);background:#fff8f8}
+/* Tarjeta de día: bordes redondeados, fondo verde muy claro */
+.day-card{background:#f4f8f5;border:none;border-bottom:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:none;transition:background .15s;margin-bottom:3px}
+.day-card:hover{background:#ecf4ee}
+.day-card.has-error{border-left:3px solid var(--red);background:#fff0f0!important}
+.day-card.has-error:hover{background:#ffe4e4!important}
 /* Filas alternas */
-.day-card:nth-child(even){background:#e4e8ed}
-.day-card:nth-child(even):hover{background:#dde1e6}
+.day-card:nth-child(even){background:#e6eeea}
+.day-card:nth-child(even):hover{background:#dde8e1}
 
 .day-head{display:flex;align-items:center;padding:.65rem 1.2rem;cursor:pointer;user-select:none}
 .day-dow{font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:600;color:var(--ink);width:110px;flex-shrink:0;text-transform:capitalize}
@@ -301,8 +302,9 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .modal-row input,.modal-row textarea{padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;transition:border-color .15s}
 .modal-row input:focus,.modal-row textarea:focus{border-color:var(--green)}
 .modal-row textarea{resize:vertical;min-height:70px}
-.hora-change{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
-.hora-arrow{color:var(--ink3);font-size:.8rem;text-align:center}
+.hora-change{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;width:100%}
+.hora-arrow{color:var(--ink3);font-size:.8rem;text-align:center;flex-shrink:0}
+.hora-change input{min-width:0;width:100%}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
 .btn-cancel{padding:8px 16px;font-size:.7rem;font-family:'Outfit',sans-serif;background:#fff;border:1px solid var(--border2);border-radius:6px;cursor:pointer;color:var(--ink2)}
 .btn-submit{padding:8px 18px;font-size:.7rem;font-family:'Outfit',sans-serif;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer}
@@ -364,7 +366,10 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
   .sol-section-tab{font-size:.82rem;padding:.75rem 1.2rem}
   .sol-card{font-size:.82rem}
   .vac-card{font-size:.82rem}
-  .modal-box{width:96%;padding:1.25rem;border-radius:10px}
+  .modal-box{width:96%;padding:1.25rem;border-radius:10px;box-sizing:border-box}
+  .hora-change{gap:5px}
+  .hora-change input{font-size:.68rem;padding:6px 7px}
+  .modal-row input,.modal-row textarea,.modal-row select{font-size:.72rem}
   .sol-emp{font-size:.92rem}
   .sol-fecha-req{font-size:.72rem}
   .btn-logout{font-size:.75rem;padding:6px 15px}
