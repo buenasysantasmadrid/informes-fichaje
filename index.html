@@ -172,7 +172,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .day-card:nth-child(even):hover{background:#eef0f3}
 
 .day-head{display:flex;align-items:center;padding:.65rem 1.2rem;cursor:pointer;user-select:none}
-.day-dow{font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:300;color:var(--ink2);width:110px;flex-shrink:0;text-transform:capitalize}
+.day-dow{font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:600;color:var(--ink);width:110px;flex-shrink:0;text-transform:capitalize}
 .day-date{font-size:.68rem;color:var(--ink3);width:80px;flex-shrink:0;font-weight:300}
 .day-chips{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:.7rem;font-weight:400;white-space:nowrap}
@@ -194,7 +194,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .dh-s{font-size:.78rem;font-weight:300;color:#2c5fa0}
 .dh-arr{font-size:.7rem;color:var(--border2);flex-shrink:0}
 .dh-dur{font-size:.65rem;color:var(--ink3);margin-left:auto;font-weight:300}
-.day-head-multi{align-items:flex-start!important;padding-top:.55rem!important;padding-bottom:.55rem!important}
+.day-head-multi{align-items:flex-start!important;padding-top:.9rem!important;padding-bottom:.9rem!important}
 .dh-turnos{flex:1;display:flex;flex-direction:column;gap:3px}
 .dh-turno-row{display:flex;align-items:center;gap:4px;width:100%}
 .dh-chev-multi{align-self:flex-start;margin-top:3px}
@@ -336,8 +336,8 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
   html{font-size:19px}
   .shell{grid-template-columns:1fr}
   .side{border-right:none;border-bottom:1px solid var(--border)}
-  .main{padding:1.25rem}
-  .emp-main{padding:1.25rem}
+  .main{padding:1.25rem 0}
+  .emp-main{padding:1.25rem 0}
   .day-dow{font-size:.8rem}.day-date{font-size:.65rem}
   .dh-e,.dh-s{font-size:.75rem}
   .dh-total{font-size:.75rem}
@@ -346,6 +346,8 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
   .week-col-hdr{padding:4px .9rem}
   .sol-card,.vac-card{grid-template-columns:1fr}
   .summary-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .emp-block .emp-name,.emp-block .emp-meta,.emp-block .pills,.emp-block .export-btn,.emp-block .date-search-bar,.emp-block .summary-grid,.week-sep{padding-left:1rem;padding-right:1rem}
+  .week-col-hdr,.day-head{padding-left:1rem;padding-right:1rem}
   .hdr-emp-info{display:none !important}
   .cal-picker{max-width:100%}
   .cal-grid{padding:4px 6px;grid-auto-rows:34px;}
