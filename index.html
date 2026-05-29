@@ -1251,17 +1251,18 @@ async function callScriptJSONP(payload) {
     // ── aprobarSolicitud ──
     if (action === 'aprobarSolicitud') {
       await supaPatch('solicitudes', 'id=eq.'+payload.id, {estado:'aprobada'});
-      // Aplicar cambios en fichajes
       function toISOf3(s){if(!s)return null;var m=String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10);return s;}
+      function normH(h){if(!h||h==='—')return null;var p=String(h).trim().split(':');if(p.length<2)return null;return p[0].padStart(2,'0')+':'+p[1].padStart(2,'0')+':'+((p[2]||'00')).padStart(2,'0');}
       var fEO=toISOf3(payload.fechaEntradaOrig), fEN=toISOf3(payload.fechaEntradaNueva)||fEO;
       var fSO=toISOf3(payload.fechaSalidaOrig),  fSN=toISOf3(payload.fechaSalidaNueva)||fSO;
+      var hEA=normH(payload.horaEntradaActual), hEN=normH(payload.horaEntradaNueva);
+      var hSA=normH(payload.horaSalidaActual),  hSN=normH(payload.horaSalidaNueva);
       if (payload.eliminarTurno) {
-        if (payload.cambiaEntrada) await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=eq.'+encodeURIComponent(payload.horaEntradaActual));
-        if (payload.cambiaSalida)  await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=eq.'+encodeURIComponent(payload.horaSalidaActual));
+        if (payload.cambiaEntrada && hEA) await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=gte.'+encodeURIComponent(hEA.slice(0,5))+'&hora=lte.'+encodeURIComponent(hEA.slice(0,5)+':59'));
+        if (payload.cambiaSalida  && hSA) await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=gte.'+encodeURIComponent(hSA.slice(0,5))+'&hora=lte.'+encodeURIComponent(hSA.slice(0,5)+':59'));
       } else {
-        // Al cambiar hora/fecha, hora_turno y hora_dia quedan obsoletos → se limpian
-        if (payload.cambiaEntrada) await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=eq.'+encodeURIComponent(payload.horaEntradaActual),{fecha:fEN,hora:payload.horaEntradaNueva,hora_turno:'',hora_dia:''});
-        if (payload.cambiaSalida)  await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=eq.'+encodeURIComponent(payload.horaSalidaActual),{fecha:fSN,hora:payload.horaSalidaNueva,hora_turno:'',hora_dia:''});
+        if (payload.cambiaEntrada && hEA && hEN) await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=gte.'+encodeURIComponent(hEA.slice(0,5))+'&hora=lte.'+encodeURIComponent(hEA.slice(0,5)+':59'),{fecha:fEN,hora:hEN,hora_turno:'',hora_dia:''});
+        if (payload.cambiaSalida  && hSA && hSN) await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=gte.'+encodeURIComponent(hSA.slice(0,5))+'&hora=lte.'+encodeURIComponent(hSA.slice(0,5)+':59'),{fecha:fSN,hora:hSN,hora_turno:'',hora_dia:''});
       }
       if(payload.emailEmp) await enviarEmailEmp({action:'notificarSolicitud',email:payload.emailEmp,nombre:payload.emp,estado:'aprobada',tipo:'horas'});
       return {ok:true};
@@ -1975,8 +1976,8 @@ async function enviarSolicitud(){
   var cambiaFS=horaSA!=='—'&&fechaSN!==fechaSOrig;
   if(!cambiaE&&!cambiaS&&!cambiaFE&&!cambiaFS){toast('No hay ningún cambio respecto al original','err');return;}
   var payload={action:'guardarSolicitud',emp:solActual.emp,motivo:motivo,emailEmp:solIsEmp?session.email:emailEmp,eliminarTurno:false,
-    cambiaEntrada:((cambiaE||cambiaFE)&&horaEA!=='—')?true:false,fechaEntradaOrig:fechaEOrig,fechaEntradaNueva:fechaEN,horaEntradaActual:horaEA!=='—'?normHoraDisplay(horaEA):'—',horaEntradaNueva:horaEA!=='—'?(cambiaE?horaEN:normHoraDisplay(horaEA)):'—',
-    cambiaSalida:((cambiaS||cambiaFS)&&horaSA!=='—')?true:false,fechaSalidaOrig:fechaSOrig,fechaSalidaNueva:fechaSN,horaSalidaActual:horaSA!=='—'?normHoraDisplay(horaSA):'—',horaSalidaNueva:horaSA!=='—'?(cambiaS?horaSN:normHoraDisplay(horaSA)):'—'};
+    cambiaEntrada:((cambiaE||cambiaFE)&&horaEA!=='—')?true:false,fechaEntradaOrig:fechaEOrig,fechaEntradaNueva:fechaEN,horaEntradaActual:horaEA!=='—'?normHora(horaEA):'—',horaEntradaNueva:horaEA!=='—'?(cambiaE?normHora(horaEN):normHora(horaEA)):'—',
+    cambiaSalida:((cambiaS||cambiaFS)&&horaSA!=='—')?true:false,fechaSalidaOrig:fechaSOrig,fechaSalidaNueva:fechaSN,horaSalidaActual:horaSA!=='—'?normHora(horaSA):'—',horaSalidaNueva:horaSA!=='—'?(cambiaS?normHora(horaSN):normHora(horaSA)):'—'};
   cerrarModalSol();setLoader(true,'Enviando solicitud...');
   var envioOk=false,envioErr='';
   try{var res=await callScriptJSONP(payload);if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'El script devolvió error');envioOk=true;}catch(e){envioErr=e.message;}
@@ -2263,6 +2264,17 @@ async function aprobar(id){
   }catch(e){err=e.message;}
   setLoader(false);
   if(ok){
+    // Notificar al script de Google para que actualice Sheets
+    try{
+      fetch('https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'aprobarSolicitud',emp:sol.emp,
+          eliminarTurno:sol.eliminarTurno||false,
+          cambiaEntrada:sol.cambiaEntrada||false,fechaEntradaOrig:safeISO(sol.fechaEntradaOrig||sol.fecha),fechaEntradaNueva:safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),horaEntradaActual:sol.horaEntradaActual||'—',horaEntradaNueva:sol.horaEntradaNueva||'—',
+          cambiaSalida:sol.cambiaSalida||false,fechaSalidaOrig:safeISO(sol.fechaSalidaOrig||sol.fecha),fechaSalidaNueva:safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha),horaSalidaActual:sol.horaSalidaActual||'—',horaSalidaNueva:sol.horaSalidaNueva||'—'})
+      }).catch(function(){});
+    }catch(eGas){}
     toast('Aprobado ✓','ok');
     cacheInvalidate('sol_admin');cacheInvalidate('sol_'+(sol.emp||''));
     try{solicitudes=await loadSolicitudes();rebuildApprovedSet(solicitudes);updateBadge();renderSolicitudes();}catch(e2){}
