@@ -1750,7 +1750,7 @@ function buildDayHead(fecha,calc,turnos){
     var durStr=tMins!=null?minsToStr(tMins):'\u2014';
     var tErr=tipoErr?'<span style="font-size:.52rem;color:var(--red);margin-left:3px">'+(tipoErr==='largo'?'>11h':tipoErr==='sinEntrada'?'sin ent.':'error')+'</span>':'';
     html+='<span style="display:flex;align-items:center;width:100%">'
-      +'<span style="font-size:.58rem;color:var(--ink3);font-weight:300;width:18px;flex-shrink:0;text-align:left">T'+(i+1)+'</span>'
+      +'<span style="font-size:.58rem;color:var(--ink3);font-weight:300;width:10px;flex-shrink:0;text-align:left">T'+(i+1)+'</span>'
       +'<span style="flex:1;text-align:right;font-size:.78rem;font-weight:300;'+cE+'">'+eH+'</span>'
       +'<span style="flex:1;text-align:right;font-size:.78rem;font-weight:300;'+cS+'">'+sH+'</span>'
       +'<span style="flex:1;text-align:right;font-size:.78rem;font-weight:'+(i===turnosAsc.length-1?'400':'300')+';color:var(--ink2)">'+durStr+tErr+'</span>'
