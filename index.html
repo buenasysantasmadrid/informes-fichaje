@@ -1205,7 +1205,8 @@ async function callScriptJSONP(payload) {
               fechaSalidaOrig:payload.fechaSalidaOrig, fechaSalidaNueva:payload.fechaSalidaNueva,
               horaSalidaActual:payload.horaSalidaActual, horaSalidaNueva:payload.horaSalidaNueva,
               cambiaEntrada:!!payload.cambiaEntrada, cambiaSalida:!!payload.cambiaSalida,
-              eliminarTurno:!!payload.eliminarTurno, motivo:payload.motivo||'', emailEmp:payload.emailEmp||''
+              eliminarTurno:!!payload.eliminarTurno, motivo:payload.motivo||'', emailEmp:payload.emailEmp||'',
+              soloSheet:true
             }));
         fetch(gasUrl, {method:'GET', mode:'no-cors'}).catch(function(){});
       } catch(eGas) {}
@@ -1267,7 +1268,8 @@ async function callScriptJSONP(payload) {
           + '&data=' + encodeURIComponent(JSON.stringify({
               id:id, emp:payload.emp,
               desde:payload.desde, hasta:payload.hasta,
-              motivo:payload.motivo||'', emailEmp:payload.emailEmp||''
+              motivo:payload.motivo||'', emailEmp:payload.emailEmp||'',
+              soloSheet:true
             }));
         fetch(gasUrl2, {method:'GET', mode:'no-cors'}).catch(function(){});
       } catch(eGas) {}
