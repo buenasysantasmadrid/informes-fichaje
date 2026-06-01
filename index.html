@@ -2205,27 +2205,42 @@ function renderSolicitudes(){
     var stLabel={'pendiente':'Pendiente','aprobada':'Aprobada ✓','rechazada':'Rechazada'}[s.estado]||s.estado;
     var acciones=s.estado==='pendiente'?'<button class="btn-aprobar" onclick="aprobar(\''+s.id+'\')">Aprobar</button><button class="btn-rechazar" onclick="rechazar(\''+s.id+'\')">Rechazar</button>':'';
 
-    var fechaISO=safeISO(s.fecha), fechaNuevaISO=safeISO(s.fechaNueva||s.fecha);
-    var hayFN=fechaNuevaISO&&fechaNuevaISO!==fechaISO;
-    var esE=(s.tipo==='ENTRADA');
-    var horaEActual = normHoraDisplay(s.horaEntradaActual||s.turnoEntrada||'—');
-    var horaSActual = normHoraDisplay(s.horaSalidaActual||s.turnoSalida||'—');
-    var fechaFija=dowDisplay(fechaISO)+' '+isoDisplay(fechaISO);
-    var fechaCambio=hayFN?(dowDisplay(fechaNuevaISO)+' '+isoDisplay(fechaNuevaISO)):fechaFija;
-    var lineaEntrada, lineaSalida;
-    var horaActualDisp=normHoraDisplay(s.horaActual);
-    var horaNuevaDisp=normHoraDisplay(s.horaNueva);
-    if(esE){
-      var fechaParte=hayFN?('<s style="color:var(--ink3)">'+fechaFija+'</s> → <b>'+fechaCambio+'</b>'):'<span style="color:var(--ink2)">'+fechaFija+'</span>';
-      var horaParte='<s style="color:var(--ink3)">'+horaActualDisp+'</s> → <b>'+horaNuevaDisp+'</b>';
-      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> '+fechaParte+' '+horaParte+'</div>';
-      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaSActual+'</span></div>';
+    var lineaEntrada='', lineaSalida='';
+
+    // ENTRADA — igual que Telegram
+    if(s.cambiaEntrada){
+      var fEO=safeISO(s.fechaEntradaOrig||s.fecha);
+      var fEN=safeISO(s.fechaEntradaNueva||s.fechaEntradaOrig||s.fecha);
+      var hayFE=fEN&&fEN!==fEO;
+      var hEA=normHoraDisplay(s.horaEntradaActual||'—');
+      var hEN=normHoraDisplay(s.horaEntradaNueva||'—');
+      var parteE=hayFE
+        ?('<s style="color:var(--ink3)">'+dowDisplay(fEO)+' '+isoDisplay(fEO)+' '+hEA+'</s> → <b>'+dowDisplay(fEN)+' '+isoDisplay(fEN)+' '+hEN+'</b>')
+        :('<span style="color:var(--ink2)">'+dowDisplay(fEO)+' '+isoDisplay(fEO)+'</span> <s style="color:var(--ink3)">'+hEA+'</s> → <b>'+hEN+'</b>');
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> '+parteE+'</div>';
     }else{
-      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+fechaFija+'</span> <span style="font-weight:600">'+horaEActual+'</span></div>';
-      var fechaParteS=hayFN?('<s style="color:var(--ink3)">'+fechaFija+'</s> → <b>'+fechaCambio+'</b>'):'<span style="color:var(--ink2)">'+fechaFija+'</span>';
-      var horaParteS='<s style="color:var(--ink3)">'+horaActualDisp+'</s> → <b>'+horaNuevaDisp+'</b>';
-      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> '+fechaParteS+' '+horaParteS+'</div>';
+      var fE0=safeISO(s.fechaEntradaOrig||s.fecha);
+      var hE0=normHoraDisplay(s.horaEntradaActual||s.turnoEntrada||'—');
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+dowDisplay(fE0)+' '+isoDisplay(fE0)+'</span> <span style="font-weight:600">'+hE0+'</span></div>';
     }
+
+    // SALIDA — igual que Telegram
+    if(s.cambiaSalida){
+      var fSO=safeISO(s.fechaSalidaOrig||s.fecha);
+      var fSN=safeISO(s.fechaSalidaNueva||s.fechaSalidaOrig||s.fecha);
+      var hayFS=fSN&&fSN!==fSO;
+      var hSA=normHoraDisplay(s.horaSalidaActual||'—');
+      var hSN2=normHoraDisplay(s.horaSalidaNueva||'—');
+      var parteS=hayFS
+        ?('<s style="color:var(--ink3)">'+dowDisplay(fSO)+' '+isoDisplay(fSO)+' '+hSA+'</s> → <b>'+dowDisplay(fSN)+' '+isoDisplay(fSN)+' '+hSN2+'</b>')
+        :('<span style="color:var(--ink2)">'+dowDisplay(fSO)+' '+isoDisplay(fSO)+'</span> <s style="color:var(--ink3)">'+hSA+'</s> → <b>'+hSN2+'</b>');
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> '+parteS+'</div>';
+    }else{
+      var fS0=safeISO(s.fechaSalidaOrig||s.fecha);
+      var hS0=normHoraDisplay(s.horaSalidaActual||s.turnoSalida||'—');
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+dowDisplay(fS0)+' '+isoDisplay(fS0)+'</span> <span style="font-weight:600">'+hS0+'</span></div>';
+    }
+
     return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
       +'<div class="sol-info">'
         +'<div class="sol-emp">'+esc(s.emp)+'</div>'
