@@ -1207,7 +1207,7 @@ async function callScriptJSONP(payload) {
               cambiaEntrada:!!payload.cambiaEntrada, cambiaSalida:!!payload.cambiaSalida,
               eliminarTurno:!!payload.eliminarTurno, motivo:payload.motivo||'', emailEmp:payload.emailEmp||''
             }));
-        fetch(gasUrl, {method:'GET'}).catch(function(){});
+        fetch(gasUrl, {method:'GET', mode:'no-cors'}).catch(function(){});
       } catch(eGas) {}
       // Telegram
       var dow = ['Dom','Lun','Mar','Mi\u00e9','Jue','Vie','S\u00e1b'];
@@ -1269,7 +1269,7 @@ async function callScriptJSONP(payload) {
               desde:payload.desde, hasta:payload.hasta,
               motivo:payload.motivo||'', emailEmp:payload.emailEmp||''
             }));
-        fetch(gasUrl2, {method:'GET'}).catch(function(){});
+        fetch(gasUrl2, {method:'GET', mode:'no-cors'}).catch(function(){});
       } catch(eGas) {}
       await enviarTelegram('\uD83C\uDF34 <b>Nueva solicitud de vacaciones</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>\n\uD83D\uDCC5 Desde: '+payload.desde+'\n\uD83D\uDCC5 Hasta: '+payload.hasta+(payload.motivo?'\n\uD83D\uDCAC '+payload.motivo:''));
       return {ok:true, id:id};
