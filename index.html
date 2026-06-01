@@ -2215,13 +2215,13 @@ function renderSolicitudes(){
       var hEA=normHoraDisplay(s.horaEntradaActual||'—');
       var hEN=normHoraDisplay(s.horaEntradaNueva||'—');
       var parteE=hayFE
-        ?('<s style="color:var(--ink3)">'+dowDisplay(fEO)+' '+isoDisplay(fEO)+' '+hEA+'</s> → <b>'+dowDisplay(fEN)+' '+isoDisplay(fEN)+' '+hEN+'</b>')
-        :('<span style="color:var(--ink2)">'+dowDisplay(fEO)+' '+isoDisplay(fEO)+'</span> <s style="color:var(--ink3)">'+hEA+'</s> → <b>'+hEN+'</b>');
+        ?('<s style="color:var(--ink3)">'+isoDisplay(fEO)+' '+hEA+'</s> → <b>'+isoDisplay(fEN)+' '+hEN+'</b>')
+        :('<span style="color:var(--ink2)">'+isoDisplay(fEO)+'</span> <s style="color:var(--ink3)">'+hEA+'</s> → <b>'+hEN+'</b>');
       lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> '+parteE+'</div>';
     }else{
       var fE0=safeISO(s.fechaEntradaOrig||s.fecha);
       var hE0=normHoraDisplay(s.horaEntradaActual||s.turnoEntrada||'—');
-      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+dowDisplay(fE0)+' '+isoDisplay(fE0)+'</span> <span style="font-weight:600">'+hE0+'</span></div>';
+      lineaEntrada='<div style="font-size:.75rem;margin-bottom:.3rem"><span style="font-weight:600;color:var(--green)">ENTRADA</span> <span style="color:var(--ink2)">'+isoDisplay(fE0)+'</span> <span style="font-weight:600">'+hE0+'</span></div>';
     }
 
     // SALIDA — igual que Telegram
@@ -2232,13 +2232,13 @@ function renderSolicitudes(){
       var hSA=normHoraDisplay(s.horaSalidaActual||'—');
       var hSN2=normHoraDisplay(s.horaSalidaNueva||'—');
       var parteS=hayFS
-        ?('<s style="color:var(--ink3)">'+dowDisplay(fSO)+' '+isoDisplay(fSO)+' '+hSA+'</s> → <b>'+dowDisplay(fSN)+' '+isoDisplay(fSN)+' '+hSN2+'</b>')
-        :('<span style="color:var(--ink2)">'+dowDisplay(fSO)+' '+isoDisplay(fSO)+'</span> <s style="color:var(--ink3)">'+hSA+'</s> → <b>'+hSN2+'</b>');
+        ?('<s style="color:var(--ink3)">'+isoDisplay(fSO)+' '+hSA+'</s> → <b>'+isoDisplay(fSN)+' '+hSN2+'</b>')
+        :('<span style="color:var(--ink2)">'+isoDisplay(fSO)+'</span> <s style="color:var(--ink3)">'+hSA+'</s> → <b>'+hSN2+'</b>');
       lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> '+parteS+'</div>';
     }else{
       var fS0=safeISO(s.fechaSalidaOrig||s.fecha);
       var hS0=normHoraDisplay(s.horaSalidaActual||s.turnoSalida||'—');
-      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+dowDisplay(fS0)+' '+isoDisplay(fS0)+'</span> <span style="font-weight:600">'+hS0+'</span></div>';
+      lineaSalida='<div style="font-size:.75rem;margin-bottom:.35rem"><span style="font-weight:600;color:var(--blue)">SALIDA</span> <span style="color:var(--ink2)">'+isoDisplay(fS0)+'</span> <span style="font-weight:600">'+hS0+'</span></div>';
     }
 
     return'<div class="sol-card '+s.estado+'" id="sol-'+s.id.replace(/[^a-zA-Z0-9]/g,'-')+'">'
