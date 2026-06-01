@@ -1196,7 +1196,7 @@ async function callScriptJSONP(payload) {
       });
       // Notificar a Google Sheet
       try {
-        var gasUrl = 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec'
+        var gasUrl = 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec'
           + '?action=guardarSolicitud'
           + '&data=' + encodeURIComponent(JSON.stringify({
               id:id, emp:payload.emp,
@@ -1262,7 +1262,7 @@ async function callScriptJSONP(payload) {
       });
       // Notificar a Google Sheet
       try {
-        var gasUrl2 = 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec'
+        var gasUrl2 = 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec'
           + '?action=guardarSolicitudVacaciones'
           + '&data=' + encodeURIComponent(JSON.stringify({
               id:id, emp:payload.emp,
@@ -2296,7 +2296,7 @@ async function aprobar(id){
   if(ok){
     // Notificar al script de Google para que actualice Sheets
     try{
-      fetch('https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec',{
+      fetch('https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action:'aprobarSolicitud',emp:sol.emp,
@@ -2479,7 +2479,7 @@ async function enviarCodigoRecuperacion(){
       var expira = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       await supaPost('codigos_verificacion', {email:email.toLowerCase(),codigo:codigo,expira:expira,usado:false});
       // Enviar email via Apps Script (mantenemos solo para email)
-      var res=await fetch('https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec?action=enviarCodigo&email='+encodeURIComponent(email)+'&nombre='+encodeURIComponent(emp.nombre)+'&codigo='+codigo,{method:'GET'}).catch(function(){return{ok:true};});
+      var res=await fetch('https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec?action=enviarCodigo&email='+encodeURIComponent(email)+'&nombre='+encodeURIComponent(emp.nombre)+'&codigo='+codigo,{method:'GET'}).catch(function(){return{ok:true};});
       var res={ok:true};
   btn.disabled=false;btn.textContent='Enviar código';
   if(!res||res.ok===false){errEl.textContent='Error al enviar: '+(res&&res.msg?res.msg:'inténtalo de nuevo.');errEl.className='login-err on';return;}
