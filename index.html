@@ -2296,14 +2296,25 @@ async function aprobar(id){
   if(ok){
     // Notificar al script de Google para que actualice Sheets
     try{
-      fetch('https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'aprobarSolicitud',emp:sol.emp,
-          eliminarTurno:sol.eliminarTurno||false,
-          cambiaEntrada:sol.cambiaEntrada||false,fechaEntradaOrig:safeISO(sol.fechaEntradaOrig||sol.fecha),fechaEntradaNueva:safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),horaEntradaActual:sol.horaEntradaActual||'—',horaEntradaNueva:sol.horaEntradaNueva||'—',
-          cambiaSalida:sol.cambiaSalida||false,fechaSalidaOrig:safeISO(sol.fechaSalidaOrig||sol.fecha),fechaSalidaNueva:safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha),horaSalidaActual:sol.horaSalidaActual||'—',horaSalidaNueva:sol.horaSalidaNueva||'—'})
-      }).catch(function(){});
+      var gasUrlAprobar = 'https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0KFegjEm0XAdWEymNmie4VlU/exec'
+        + '?action=aprobarSolicitud'
+        + '&data=' + encodeURIComponent(JSON.stringify({
+            emp:sol.emp,
+            id:sol.id||'',
+            eliminarTurno:sol.eliminarTurno||false,
+            cambiaEntrada:sol.cambiaEntrada||false,
+            fechaEntradaOrig:safeISO(sol.fechaEntradaOrig||sol.fecha),
+            fechaEntradaNueva:safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),
+            horaEntradaActual:sol.horaEntradaActual||'—',
+            horaEntradaNueva:sol.horaEntradaNueva||'—',
+            cambiaSalida:sol.cambiaSalida||false,
+            fechaSalidaOrig:safeISO(sol.fechaSalidaOrig||sol.fecha),
+            fechaSalidaNueva:safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha),
+            horaSalidaActual:sol.horaSalidaActual||'—',
+            horaSalidaNueva:sol.horaSalidaNueva||'—',
+            emailEmp:sol.emailEmp||''
+          }));
+      fetch(gasUrlAprobar, {method:'GET', mode:'no-cors'}).catch(function(){});
     }catch(eGas){}
     toast('Aprobado ✓','ok');
     cacheInvalidate('sol_admin');cacheInvalidate('sol_'+(sol.emp||''));
