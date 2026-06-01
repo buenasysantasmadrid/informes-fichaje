@@ -1290,13 +1290,13 @@ async function callScriptJSONP(payload) {
         if (payload.cambiaEntrada && hEA && hEN) await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=gte.'+encodeURIComponent(hEA.slice(0,5))+'&hora=lte.'+encodeURIComponent(hEA.slice(0,5)+':59'),{fecha:fEN,hora:hEN,hora_turno:'',hora_dia:''});
         if (payload.cambiaSalida  && hSA && hSN) await supaPatch('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=gte.'+encodeURIComponent(hSA.slice(0,5))+'&hora=lte.'+encodeURIComponent(hSA.slice(0,5)+':59'),{fecha:fSN,hora:hSN,hora_turno:'',hora_dia:''});
       }
-      if(payload.emailEmp) await enviarEmailEmp({action:'notificarSolicitud',email:payload.emailEmp,nombre:payload.emp,estado:'aprobada',tipo:'horas'});
+      // email enviado por Apps Script
       return {ok:true};
     }
     // ── rechazarSolicitud ──
     if (action === 'rechazarSolicitud') {
       await supaPatch('solicitudes', 'id=eq.'+payload.id, {estado:'rechazada'});
-      if(payload.emailEmp) await enviarEmailEmp({action:'notificarSolicitud',email:payload.emailEmp,nombre:payload.emp,estado:'rechazada',tipo:'horas'});
+      // email enviado por Apps Script
       return {ok:true};
     }
     // ── cancelarSolicitud ──
