@@ -1194,6 +1194,21 @@ async function callScriptJSONP(payload) {
         estado:          'pendiente',
         email_empleado:  payload.emailEmp||''
       });
+      // Notificar a Google Sheet
+      try {
+        fetch('https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({action:'guardarSolicitud', id:id, emp:payload.emp,
+            fechaEntradaOrig:payload.fechaEntradaOrig, fechaEntradaNueva:payload.fechaEntradaNueva,
+            horaEntradaActual:payload.horaEntradaActual, horaEntradaNueva:payload.horaEntradaNueva,
+            fechaSalidaOrig:payload.fechaSalidaOrig, fechaSalidaNueva:payload.fechaSalidaNueva,
+            horaSalidaActual:payload.horaSalidaActual, horaSalidaNueva:payload.horaSalidaNueva,
+            cambiaEntrada:!!payload.cambiaEntrada, cambiaSalida:!!payload.cambiaSalida,
+            eliminarTurno:!!payload.eliminarTurno, motivo:payload.motivo||'', emailEmp:payload.emailEmp||''
+          })
+        }).catch(function(){});
+      } catch(eGas) {}
       // Telegram
       var dow = ['Dom','Lun','Mar','Mi\u00e9','Jue','Vie','S\u00e1b'];
       function fmtFecha(iso) {
@@ -1245,6 +1260,16 @@ async function callScriptJSONP(payload) {
         desde: toISOf2(payload.desde), hasta: toISOf2(payload.hasta),
         motivo: payload.motivo||'', estado: 'pendiente', email_empleado: payload.emailEmp||''
       });
+      // Notificar a Google Sheet
+      try {
+        fetch('https://script.google.com/macros/s/AKfycbypMnnN4c7Wh8FQzFFrE9r_dxH2JlfhvwikBo7-iGks0XAdWEymNmie4VlU/exec', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({action:'guardarSolicitudVacaciones', id:id,
+            emp:payload.emp, desde:payload.desde, hasta:payload.hasta,
+            motivo:payload.motivo||'', emailEmp:payload.emailEmp||''})
+        }).catch(function(){});
+      } catch(eGas) {}
       await enviarTelegram('\uD83C\uDF34 <b>Nueva solicitud de vacaciones</b>\n\n\uD83D\uDC64 <b>'+payload.emp+'</b>\n\uD83D\uDCC5 Desde: '+payload.desde+'\n\uD83D\uDCC5 Hasta: '+payload.hasta+(payload.motivo?'\n\uD83D\uDCAC '+payload.motivo:''));
       return {ok:true, id:id};
     }
