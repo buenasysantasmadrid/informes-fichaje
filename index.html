@@ -774,8 +774,8 @@ function setStatus(cls,msg){document.getElementById('sdot').className='sdot '+cl
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function empId(emp){return emp.replace(/[^a-zA-Z0-9]/g,'_');}
 async function loadEmpleados(){
-  var data=await supaGet('empleados',{'select':'nombre,email,pin,rol','activo':'eq.true','order':'nombre.asc'});
-  empleados=(data||[]).map(function(r){return{nombre:r.nombre,email:(r.email||'').toLowerCase(),pin:String(r.pin||''),rol:r.rol};});
+  var data=await supaGet('empleados',{'select':'nombre,email,pin,rol,num_afiliacion,dni','activo':'eq.true','order':'nombre.asc'});
+  empleados=(data||[]).map(function(r){return{nombre:r.nombre,email:(r.email||'').toLowerCase(),pin:String(r.pin||''),rol:r.rol,numAfiliacion:r.num_afiliacion||'',dni:r.dni||''};});
   return empleados;
 }
 async function loadSolicitudes(empNombre){
@@ -2760,7 +2760,7 @@ function buildTurnosInforme(emp, fecha, regs, solsRef) {
 
 // Marcador de modificación: icono PNG de lápiz incrustado en base64
 function dibujarMarcaMod(doc, cx, cy) {
-  var sz = 2.2; // tamaño en mm
+  var sz = 3.5; // tamaño en mm (más grande y visible)
   try {
     doc.addImage(LAPIZ_MOD_B64, 'PNG', cx, cy - sz + 1, sz, sz, '', 'FAST');
   } catch(e) {
@@ -2857,7 +2857,7 @@ function exportarPDFAdmin() {
       // Columna LUGAR eliminada
       doc.text('T.TURNO',          marL+114, y+4);
       doc.text('T.DÍA',       marL+130, y+4);
-      doc.text('MOD.',             marL+146, y+4);
+      doc.text('MODIFICACIÓN',      marL+138, y+4);
       y += 7;
     }
 
@@ -3098,7 +3098,7 @@ function exportarExcelAdmin() {
     GRIS_OSC    : 'FF374151', // fecha bold
     GRIS_MED    : 'FF6B7280', // día italic
     GRIS_CLR    : 'FFD1D5DB', // borde claro
-    AMBER       : 'FF92400E', // modificación
+    AMBER       : 'FF111827', // modificación (lápiz oscuro)
     ROJO        : 'FFDC2626', // error
     BLANCO      : 'FFFFFFFF',
     PAR         : 'FFF9FAFB', // fondo fila par
@@ -3208,7 +3208,7 @@ function exportarExcelAdmin() {
       // colHdrSt('LUGAR'), // Columna LUGAR eliminada
       colHdrSt('T.TURNO'),
       colHdrSt('T.DÍA'),
-      colHdrSt('MOD.')
+      colHdrSt('MODIFICACIÓN')
     ]);
 
     var ROW_HDR = data.length; // número de filas de cabecera (0-indexed start of data)
@@ -3349,7 +3349,7 @@ function exportarExcelAdmin() {
       {wch:20}, // LUGAR
       {wch:10}, // T.TURNO
       {wch:10}, // T.DÍA
-      {wch:30}  // MOD
+      {wch:38}  // MODIFICACIÓN
     ];
 
     // Alturas de fila
