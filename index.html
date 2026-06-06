@@ -494,6 +494,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
       <span class="lbl">Período</span>
       <select id="periodo-rapido" onchange="aplicarPeriodoRapido(this.value)" style="width:100%;padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.75rem;border:1px solid var(--border2);border-radius:6px;background:#fff;color:var(--ink);outline:none;margin-bottom:8px;cursor:pointer">
         <option value="">Seleccionar período rápido...</option>
+        <option value="hoy">Hoy</option>
         <option value="este-mes">Este mes</option>
         <option value="mes-anterior">Mes anterior</option>
         <option value="esta-semana">Esta semana</option>
@@ -617,58 +618,180 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 </div><!-- /#app -->
 
 <!-- MODAL SOLICITUD CAMBIO HORA -->
+<style>
+.sol-modal-head{background:#15803d;padding:.8rem 1.1rem;border-radius:10px 10px 0 0;margin:-2rem -2rem 1.2rem}
+.sol-modal-head-title{font-size:1rem;font-weight:600;color:#fff;margin:0 0 2px}
+.sol-modal-head-sub{font-size:.65rem;color:rgba(255,255,255,.65);margin:0}
+.sol-step-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:.9rem}
+.sol-step-num{width:20px;height:20px;border-radius:50%;background:#dcfce7;color:#15803d;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sol-step-title{font-size:.8rem;font-weight:600;color:var(--ink);margin:0 0 6px}
+.sol-acc-item{border:1px solid var(--border);border-radius:10px;margin-bottom:6px;overflow:hidden;transition:border-color .15s}
+.sol-acc-item.open{border-color:#16a34a}
+.sol-acc-header{display:flex;align-items:center;justify-content:space-between;padding:.55rem .8rem;cursor:pointer;background:var(--cream2);user-select:none}
+.sol-acc-item.open .sol-acc-header{background:#f0fdf4}
+.sol-acc-header:hover{background:#e8f6ee}
+.sol-acc-left{display:flex;align-items:center;gap:8px}
+.sol-acc-icon{font-size:1rem;color:#15803d}
+.sol-acc-label{font-size:.8rem;font-weight:600;color:var(--ink)}
+.sol-acc-summary{font-size:.68rem;color:var(--ink3);margin-top:1px}
+.sol-acc-chev{font-size:.65rem;color:var(--ink3);transition:transform .2s}
+.sol-acc-item.open .sol-acc-chev{transform:rotate(180deg)}
+.sol-acc-body{display:none;border-top:1px solid #bbf7d0;background:#fff}
+.sol-acc-item.open .sol-acc-body{display:block}
+.sol-change-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;border-bottom:1px solid var(--border)}
+.sol-change-row:last-child{border-bottom:none}
+.sol-cr-left{display:flex;flex-direction:column;gap:2px;flex:1}
+.sol-cr-tipo{font-size:.55rem;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3)}
+.sol-cr-valor-row{display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap}
+.sol-cr-valor{font-size:.85rem;color:var(--ink)}
+.sol-cr-valor.changed{color:#15803d;font-weight:600}
+.sol-cr-old{font-size:.82rem;color:var(--ink3);text-decoration:line-through}
+.sol-cr-arr{font-size:.75rem;color:#16a34a}
+.sol-inline-inp{display:none;align-items:center;gap:6px;margin-top:5px}
+.sol-inline-inp.on{display:flex}
+.sol-inline-inp input{font-size:.75rem;padding:4px 7px;border:1px solid #16a34a;border-radius:6px;background:#fff;color:var(--ink);width:145px}
+.sol-clear-btn{font-size:.68rem;color:var(--ink3);cursor:pointer;background:none;border:none;padding:2px 4px;white-space:nowrap}
+.sol-pencil-btn{background:none;border:1px solid var(--border2);border-radius:7px;padding:5px 8px;cursor:pointer;color:var(--ink3);font-size:.75rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.sol-pencil-btn:hover{background:#f0fdf4;border-color:#16a34a;color:#16a34a}
+.sol-pencil-btn.active{background:#dcfce7;border-color:#16a34a;color:#16a34a}
+</style>
 <div class="modal-ov" id="modal-sol" onclick="if(event.target===this)cerrarModalSol()">
   <div class="modal-box">
-    <div class="modal-title">Solicitud de cambio de turno</div>
-    <div class="modal-turno-info" id="modal-turno-info"></div>
-    <div class="modal-row"><label>Empleado</label><input type="text" id="sol-emp" readonly style="background:var(--cream3)"></div>
-    <hr class="modal-divider">
-    <span class="modal-section-lbl">Entrada</span>
-    <div class="modal-row">
-      <label>Fecha entrada <span style="color:var(--ink3)">(actual → nueva, opcional)</span></label>
-      <div class="hora-change">
-        <input type="text" id="sol-fecha-entrada-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
-        <div class="hora-arrow">→</div>
-        <input type="date" id="sol-fecha-entrada-nueva" oninput="checkOverlap()">
+    <div class="sol-modal-head">
+      <div class="sol-modal-head-title">Solicitar cambio de turno</div>
+      <div class="sol-modal-head-sub" id="modal-turno-info"></div>
+    </div>
+
+    <!-- inputs ocultos que usa el resto del código sin cambios -->
+    <input type="hidden" id="sol-emp">
+    <input type="hidden" id="sol-fecha-entrada-actual">
+    <input type="hidden" id="sol-fecha-entrada-nueva">
+    <input type="hidden" id="sol-hora-entrada-actual">
+    <input type="hidden" id="sol-hora-salida-actual">
+    <input type="hidden" id="sol-fecha-salida-actual">
+    <input type="hidden" id="sol-fecha-salida-nueva">
+
+    <!-- Step 1 -->
+    <div class="sol-step-row">
+      <div class="sol-step-num">1</div>
+      <div style="flex:1">
+        <div class="sol-step-title">¿Qué quieres cambiar?</div>
+
+        <!-- ENTRADA -->
+        <div class="sol-acc-item" id="sacc-entrada">
+          <div class="sol-acc-header" onclick="solToggleAcc('sacc-entrada')">
+            <div class="sol-acc-left">
+              <span class="sol-acc-icon">↩</span>
+              <div>
+                <div class="sol-acc-label">Entrada</div>
+                <div class="sol-acc-summary" id="sacc-sum-entrada">—</div>
+              </div>
+            </div>
+            <span class="sol-acc-chev">▼</span>
+          </div>
+          <div class="sol-acc-body">
+            <!-- Fecha entrada -->
+            <div class="sol-change-row">
+              <div class="sol-cr-left">
+                <span class="sol-cr-tipo">Fecha</span>
+                <div class="sol-cr-valor-row" id="scr-fecha-entrada-display">
+                  <span class="sol-cr-valor" id="scr-fecha-entrada-val">—</span>
+                </div>
+                <div class="sol-inline-inp" id="scr-fecha-entrada-inp">
+                  <input type="date" id="sol-fecha-entrada-nueva-vis" oninput="solApplyFecha('entrada');checkOverlap()">
+                  <button class="sol-clear-btn" onclick="solClearField('entrada','fecha')">✕ Deshacer</button>
+                </div>
+              </div>
+              <button class="sol-pencil-btn" id="spb-fecha-entrada" onclick="solToggleField('entrada','fecha')">✏</button>
+            </div>
+            <!-- Hora entrada -->
+            <div class="sol-change-row">
+              <div class="sol-cr-left">
+                <span class="sol-cr-tipo">Hora</span>
+                <div class="sol-cr-valor-row" id="scr-hora-entrada-display">
+                  <span class="sol-cr-valor" id="scr-hora-entrada-val">—</span>
+                </div>
+                <div class="sol-inline-inp" id="scr-hora-entrada-inp">
+                  <input type="time" id="sol-hora-entrada-nueva" oninput="solApplyHora('entrada');checkOverlap()">
+                  <button class="sol-clear-btn" onclick="solClearField('entrada','hora')">✕ Deshacer</button>
+                </div>
+              </div>
+              <button class="sol-pencil-btn" id="spb-hora-entrada" onclick="solToggleField('entrada','hora')">✏</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SALIDA -->
+        <div class="sol-acc-item" id="sacc-salida">
+          <div class="sol-acc-header" onclick="solToggleAcc('sacc-salida')">
+            <div class="sol-acc-left">
+              <span class="sol-acc-icon">↪</span>
+              <div>
+                <div class="sol-acc-label">Salida</div>
+                <div class="sol-acc-summary" id="sacc-sum-salida">—</div>
+              </div>
+            </div>
+            <span class="sol-acc-chev">▼</span>
+          </div>
+          <div class="sol-acc-body">
+            <!-- Fecha salida -->
+            <div class="sol-change-row">
+              <div class="sol-cr-left">
+                <span class="sol-cr-tipo">Fecha</span>
+                <div class="sol-cr-valor-row" id="scr-fecha-salida-display">
+                  <span class="sol-cr-valor" id="scr-fecha-salida-val">—</span>
+                </div>
+                <div class="sol-inline-inp" id="scr-fecha-salida-inp">
+                  <input type="date" id="sol-fecha-salida-nueva-vis" oninput="solApplyFecha('salida');checkOverlap()">
+                  <button class="sol-clear-btn" onclick="solClearField('salida','fecha')">✕ Deshacer</button>
+                </div>
+              </div>
+              <button class="sol-pencil-btn" id="spb-fecha-salida" onclick="solToggleField('salida','fecha')">✏</button>
+            </div>
+            <!-- Hora salida -->
+            <div class="sol-change-row">
+              <div class="sol-cr-left">
+                <span class="sol-cr-tipo">Hora</span>
+                <div class="sol-cr-valor-row" id="scr-hora-salida-display">
+                  <span class="sol-cr-valor" id="scr-hora-salida-val">—</span>
+                </div>
+                <div class="sol-inline-inp" id="scr-hora-salida-inp">
+                  <input type="time" id="sol-hora-salida-nueva" oninput="solApplyHora('salida');checkOverlap()">
+                  <button class="sol-clear-btn" onclick="solClearField('salida','hora')">✕ Deshacer</button>
+                </div>
+              </div>
+              <button class="sol-pencil-btn" id="spb-hora-salida" onclick="solToggleField('salida','hora')">✏</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="overlap-error" id="overlap-error">⚠ ERROR: la hora/fecha nueva se solapa con otro turno existente.</div>
       </div>
     </div>
-    <div class="modal-row">
-      <label>Hora entrada <span style="color:var(--ink3)">(actual → nueva)</span></label>
-      <div class="hora-change">
-        <input type="text" id="sol-hora-entrada-actual" readonly style="background:var(--cream3);text-align:center">
-        <div class="hora-arrow">→</div>
-        <input type="time" id="sol-hora-entrada-nueva" oninput="checkOverlap()">
+
+    <!-- Step 2 -->
+    <div class="sol-step-row">
+      <div class="sol-step-num">2</div>
+      <div style="flex:1">
+        <div class="sol-step-title">Motivo</div>
+        <select id="sol-motivo" style="width:100%;padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;margin-bottom:.6rem">
+          <option value="OLVIDO DE FICHAJE">Olvido de fichaje</option>
+          <option value="NO FUNCIONABA EL SISTEMA">No funcionaba el sistema</option>
+          <option value="ERROR EN EL SISTEMA">Error en el sistema</option>
+          <option value="FICHAJE POR ERROR">Fichaje por error</option>
+          <option value="OTROS">Otros</option>
+        </select>
+        <div id="sol-eliminar-row" style="padding:8px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleEliminarFichaje()">
+          <input type="checkbox" id="sol-eliminar-check" style="width:14px;height:14px;accent-color:var(--red);flex-shrink:0;cursor:pointer;pointer-events:none">
+          <div>
+            <div style="font-size:.73rem;font-weight:600;color:var(--red)">Eliminar este fichaje completo</div>
+            <div style="font-size:.6rem;color:var(--ink3);margin-top:1px">Se borrará el turno entero si se aprueba</div>
+          </div>
+        </div>
+        <div class="modal-row" id="sol-email-row" style="margin-top:.75rem"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
       </div>
     </div>
-    <hr class="modal-divider">
-    <span class="modal-section-lbl">Salida</span>
-    <div class="modal-row">
-      <label>Fecha salida <span style="color:var(--ink3)">(actual → nueva, opcional)</span></label>
-      <div class="hora-change">
-        <input type="text" id="sol-fecha-salida-actual" readonly style="background:var(--cream3);text-align:center;font-size:.72rem">
-        <div class="hora-arrow">→</div>
-        <input type="date" id="sol-fecha-salida-nueva" oninput="checkOverlap()">
-      </div>
-    </div>
-    <div class="modal-row">
-      <label>Hora salida <span style="color:var(--ink3)">(actual → nueva)</span></label>
-      <div class="hora-change">
-        <input type="text" id="sol-hora-salida-actual" readonly style="background:var(--cream3);text-align:center">
-        <div class="hora-arrow">→</div>
-        <input type="time" id="sol-hora-salida-nueva" oninput="checkOverlap()">
-      </div>
-    </div>
-    <div class="overlap-error" id="overlap-error">⚠ ERROR: la hora/fecha nueva se solapa con otro turno existente.</div>
-    <hr class="modal-divider">
-    <div class="modal-row" id="sol-email-row"><label>Email del empleado</label><input type="email" id="sol-email-emp" placeholder="empleado@empresa.com"></div>
-    <div class="modal-row"><label>Motivo <span style="color:var(--red);font-weight:600">*</span></label><select id="sol-motivo" style="padding:8px 10px;font-family:'Outfit',sans-serif;font-size:.74rem;background:var(--cream);border:1px solid var(--border2);border-radius:6px;color:var(--ink);outline:none;width:100%;transition:border-color .15s"><option value="OLVIDO DE FICHAJE">OLVIDO DE FICHAJE</option><option value="NO FUNCIONABA EL SISTEMA">NO FUNCIONABA EL SISTEMA</option><option value="ERROR EN EL SISTEMA">ERROR EN EL SISTEMA</option><option value="FICHAJE POR ERROR">FICHAJE POR ERROR</option><option value="OTROS">OTROS</option></select></div>
-    <div id="sol-eliminar-row" style="margin-bottom:.9rem;padding:10px 12px;background:var(--cream);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleEliminarFichaje()">
-      <input type="checkbox" id="sol-eliminar-check" style="width:16px;height:16px;accent-color:var(--red);flex-shrink:0;cursor:pointer;pointer-events:none">
-      <div>
-        <div style="font-size:.74rem;font-weight:600;color:var(--ink)">🗑 Solicitar eliminación del fichaje</div>
-        <div style="font-size:.62rem;color:var(--ink2);margin-top:2px">Si se aprueba, se eliminará el turno completo del registro</div>
-      </div>
-    </div>
+
     <div class="modal-btns">
       <button class="btn-cancel" onclick="cerrarModalSol()">Cancelar</button>
       <button class="btn-submit" id="btn-submit-sol" onclick="enviarSolicitud()">Enviar solicitud</button>
@@ -1496,9 +1619,9 @@ function checkOverlap(){
   errEl.classList.remove('on');btnEl.disabled=false;
   var isEmp=solIsEmp,dmap=isEmp?empEditData:(editData[solActual.emp]||{});
   var horaEN=document.getElementById('sol-hora-entrada-nueva').value;
-  var fechaEN=document.getElementById('sol-fecha-entrada-nueva').value||solActual.fecha;
+  var fechaEN=document.getElementById('sol-fecha-entrada-nueva-vis').value||document.getElementById('sol-fecha-entrada-nueva').value||solActual.fecha;
   var horaSN=document.getElementById('sol-hora-salida-nueva').value;
-  var fechaSN=document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
+  var fechaSN=document.getElementById('sol-fecha-salida-nueva-vis').value||document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
   if(!horaEN&&!horaSN)return;
   var fechasRef=[diaAnterior(diaAnterior(solActual.fecha)),diaAnterior(solActual.fecha),solActual.fecha,diaSiguiente(solActual.fecha),diaSiguiente(diaSiguiente(solActual.fecha))];
   // intervalos: turnos completos (entrada+salida) de otros turnos
@@ -1574,7 +1697,9 @@ function aplicarPeriodoRapido(val){
   if(!val)return;
   var hoy=new Date();
   var desde,hasta;
-  if(val==='este-mes'){
+  if(val==='hoy'){
+    desde=hoy;hasta=hoy;
+  }else if(val==='este-mes'){
     desde=new Date(hoy.getFullYear(),hoy.getMonth(),1);hasta=hoy;
   }else if(val==='mes-anterior'){
     desde=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);hasta=new Date(hoy.getFullYear(),hoy.getMonth(),0);
@@ -1823,6 +1948,7 @@ function buildCardsConSemana(fechas,dmap,emp,isEmp){
   }
   if(semActual!==null)grupos.push({semana:semActual,mins:semMins,cards:semCards.slice()});
   var html='';
+  if(isEmp){html+='<div style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green-acc);font-weight:600;padding:6px 0 8px;opacity:.7">Cambios: pinchar en el turno</div>';}
   var colHdr='<div class="week-col-hdr"><span class="wch-day">D\u00eda</span><span class="wch-in">Entrada</span><span class="wch-out">Salida</span><span class="wch-tot">Total</span></div>';
   for(var g=0;g<grupos.length;g++){
     var gr=grupos[g];
@@ -1875,6 +2001,7 @@ function abrirModalSol(emp,fecha,isEmp,turnoIdx){
   document.getElementById('btn-submit-sol').disabled=false;
   if(solIsEmp){document.getElementById('sol-email-emp').value=session.email;document.getElementById('sol-email-row').style.display='none';}
   else{var empObj=empleados.find(function(e){return e.nombre===emp;});document.getElementById('sol-email-emp').value=empObj?empObj.email:'';document.getElementById('sol-email-row').style.display='flex';}
+  solInitModal(horaE,fechaE,horaS,fechaS);
   document.getElementById('modal-sol').classList.add('on');
 }
 function toggleEliminarFichaje(){
@@ -1999,9 +2126,9 @@ async function enviarSolicitud(){
     setLoader(false);return;
   }
   var horaEN=normHora(document.getElementById('sol-hora-entrada-nueva').value);
-  var fechaEN=document.getElementById('sol-fecha-entrada-nueva').value||solActual.fecha;
+  var fechaEN=document.getElementById('sol-fecha-entrada-nueva-vis').value||document.getElementById('sol-fecha-entrada-nueva').value||solActual.fecha;
   var horaSN=normHora(document.getElementById('sol-hora-salida-nueva').value);
-  var fechaSN=document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
+  var fechaSN=document.getElementById('sol-fecha-salida-nueva-vis').value||document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
   var cambiaE=horaEA!=='—'&&horaEN&&normHoraDisplay(horaEN)!==normHoraDisplay(horaEA);
   var cambiaFE=horaEA!=='—'&&fechaEN!==fechaEOrig;
   var cambiaS=horaSA!=='—'&&horaSN&&normHoraDisplay(horaSN)!==normHoraDisplay(horaSA);
@@ -2159,9 +2286,9 @@ function renderReport(){
 }
 function renderEmp(emp){
   var dmap=editData[emp];
-  if(!dmap)return'<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta" style="color:var(--red)">No se encontró la pestaña en el sheet.</div></div>';
+  if(!dmap)return'';
   var fechas=Object.keys(dmap).sort().reverse(),fechasAsc=fechas.slice().reverse();
-  if(!fechas.length)return'<div class="emp-block"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">Sin fichajes en el período.</div></div>';
+  if(!fechas.length)return'';
   var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="adm-date-jump-'+empId(emp)+'"><button class="btn-jump" onclick="jumpToDateAdmin(\''+esc(emp)+'\')">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmap,emp,false);
   return'<div class="emp-block" data-emp="'+esc(emp)+'"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
@@ -3382,6 +3509,138 @@ function exportarExcelAdmin() {
   XLSX.writeFile(wb, 'Fichajes_'+new Date().toISOString().slice(0,10)+'.xlsx');
   toast('Excel descargado ✓', 'ok');
 }
+
+// ── MODAL ACORDEÓN: funciones auxiliares ──
+function solToggleAcc(id){
+  var el=document.getElementById(id);
+  el.classList.toggle('open');
+}
+function solToggleField(turno,campo){
+  var wrapId='scr-'+campo+'-'+turno+'-inp';
+  var btnId='spb-'+campo+'-'+turno;
+  var wrap=document.getElementById(wrapId);
+  var btn=document.getElementById(btnId);
+  if(wrap.classList.contains('on')){
+    solClearField(turno,campo);
+  }else{
+    wrap.classList.add('on');
+    btn.classList.add('active');
+    var inpId=campo==='hora'?'sol-hora-'+turno+'-nueva':'sol-fecha-'+turno+'-nueva-vis';
+    var inp=document.getElementById(inpId);
+    if(inp)inp.focus();
+  }
+}
+function solApplyFecha(turno){
+  var inpId='sol-fecha-'+turno+'-nueva-vis';
+  var hidId='sol-fecha-'+turno+'-nueva';
+  var dispId='scr-fecha-'+turno+'-display';
+  var valId='scr-fecha-'+turno+'-val';
+  var inp=document.getElementById(inpId);
+  var hid=document.getElementById(hidId);
+  if(!inp||!inp.value)return;
+  if(hid)hid.value=inp.value;
+  var p=inp.value.split('-');
+  var nueva=p[2]+'/'+p[1]+'/'+p[0];
+  var orig=document.getElementById(valId)?document.getElementById(valId).getAttribute('data-orig'):'';
+  var dispEl=document.getElementById(dispId);
+  if(dispEl){
+    dispEl.innerHTML='<span class="sol-cr-old">'+orig+'</span><span class="sol-cr-arr">→</span><span class="sol-cr-valor changed">'+nueva+'</span>';
+  }
+  solUpdateSummary(turno);
+}
+function solApplyHora(turno){
+  var inpId='sol-hora-'+turno+'-nueva';
+  var dispId='scr-hora-'+turno+'-display';
+  var valId='scr-hora-'+turno+'-val';
+  var inp=document.getElementById(inpId);
+  if(!inp||!inp.value)return;
+  var nueva=inp.value;
+  var orig=document.getElementById(valId)?document.getElementById(valId).getAttribute('data-orig'):'';
+  var dispEl=document.getElementById(dispId);
+  if(dispEl){
+    dispEl.innerHTML='<span class="sol-cr-old">'+orig+'</span><span class="sol-cr-arr">→</span><span class="sol-cr-valor changed">'+nueva+'</span>';
+  }
+  solUpdateSummary(turno);
+}
+function solClearField(turno,campo){
+  var wrapId='scr-'+campo+'-'+turno+'-inp';
+  var btnId='spb-'+campo+'-'+turno;
+  var dispId='scr-'+campo+'-'+turno+'-display';
+  var valId='scr-'+campo+'-'+turno+'-val';
+  var wrap=document.getElementById(wrapId);
+  var btn=document.getElementById(btnId);
+  var dispEl=document.getElementById(dispId);
+  var valEl=document.getElementById(valId);
+  var orig=valEl?valEl.getAttribute('data-orig'):'—';
+  if(wrap)wrap.classList.remove('on');
+  if(btn)btn.classList.remove('active');
+  if(dispEl)dispEl.innerHTML='<span class="sol-cr-valor" id="'+valId+'" data-orig="'+orig+'">'+orig+'</span>';
+  // reset hidden inputs
+  if(campo==='fecha'){
+    var hidId='sol-fecha-'+turno+'-nueva';
+    var origIso=valEl?valEl.getAttribute('data-orig-iso'):'';
+    var hid=document.getElementById(hidId);
+    if(hid&&origIso)hid.value=origIso;
+    var vis=document.getElementById('sol-fecha-'+turno+'-nueva-vis');
+    if(vis)vis.value='';
+  }else{
+    var origHora=valEl?valEl.getAttribute('data-orig'):'';
+    var inp2=document.getElementById('sol-hora-'+turno+'-nueva');
+    if(inp2&&origHora&&origHora!=='—')inp2.value=origHora.slice(0,5);
+  }
+  solUpdateSummary(turno);
+}
+function solUpdateSummary(turno){
+  var sumEl=document.getElementById('sacc-sum-'+turno);
+  if(!sumEl)return;
+  var fechaEl=document.getElementById('scr-fecha-'+turno+'-val');
+  var horaEl=document.getElementById('scr-hora-'+turno+'-val');
+  // Leer fecha: del display o del original
+  var fechaDispEl=document.getElementById('scr-fecha-'+turno+'-display');
+  var horaDispEl=document.getElementById('scr-hora-'+turno+'-display');
+  var fechaTxt=fechaEl?fechaEl.getAttribute('data-orig').slice(0,5):'—';
+  var horaTxt=horaEl?horaEl.getAttribute('data-orig').slice(0,5):'—';
+  // Si hay cambio visible en display, tomarlo
+  if(fechaDispEl){var ch=fechaDispEl.querySelector('.sol-cr-valor.changed');if(ch)fechaTxt=ch.textContent.slice(0,5);}
+  if(horaDispEl){var ch2=horaDispEl.querySelector('.sol-cr-valor.changed');if(ch2)horaTxt=ch2.textContent;}
+  var hasChange=(fechaDispEl&&fechaDispEl.querySelector('.changed'))||(horaDispEl&&horaDispEl.querySelector('.changed'));
+  sumEl.textContent=fechaTxt+' · '+horaTxt;
+  sumEl.style.color=hasChange?'#16a34a':'';
+}
+function solInitModal(horaE,fechaE,horaS,fechaS){
+  // Inicializar displays de fecha/hora con data-orig
+  function setDisplay(dispId,valId,text,iso){
+    var dispEl=document.getElementById(dispId);
+    if(dispEl)dispEl.innerHTML='<span class="sol-cr-valor" id="'+valId+'" data-orig="'+text+'" data-orig-iso="'+(iso||'')+'">'+text+'</span>';
+  }
+  var fechaEdisp=fechaE?isoDisplay(fechaE):'—';
+  var fechaSdisp=fechaS?isoDisplay(fechaS):'—';
+  setDisplay('scr-fecha-entrada-display','scr-fecha-entrada-val',fechaEdisp,fechaE);
+  setDisplay('scr-hora-entrada-display','scr-hora-entrada-val',horaE&&horaE!=='—'?horaE.slice(0,5):'—','');
+  setDisplay('scr-fecha-salida-display','scr-fecha-salida-val',fechaSdisp,fechaS);
+  setDisplay('scr-hora-salida-display','scr-hora-salida-val',horaS&&horaS!=='—'?horaS.slice(0,5):'—','');
+  // Summaries
+  document.getElementById('sacc-sum-entrada').textContent=(fechaE?fechaE.slice(5).split('-').reverse().join('/'):'')+' · '+(horaE&&horaE!=='—'?horaE.slice(0,5):'—');
+  document.getElementById('sacc-sum-entrada').style.color='';
+  document.getElementById('sacc-sum-salida').textContent=(fechaS?fechaS.slice(5).split('-').reverse().join('/'):'')+' · '+(horaS&&horaS!=='—'?horaS.slice(0,5):'—');
+  document.getElementById('sacc-sum-salida').style.color='';
+  // Reset inline inputs y pencil btns
+  ['entrada','salida'].forEach(function(t){
+    ['fecha','hora'].forEach(function(c){
+      var w=document.getElementById('scr-'+c+'-'+t+'-inp');if(w)w.classList.remove('on');
+      var b=document.getElementById('spb-'+c+'-'+t);if(b)b.classList.remove('active');
+    });
+    var acc=document.getElementById('sacc-'+t);if(acc)acc.classList.remove('open');
+  });
+  // Reset time inputs
+  var hev=horaE&&horaE!=='—'?horaE.slice(0,5):'';
+  var hsv=horaS&&horaS!=='—'?horaS.slice(0,5):'';
+  var hei=document.getElementById('sol-hora-entrada-nueva');if(hei)hei.value=hev;
+  var hsi=document.getElementById('sol-hora-salida-nueva');if(hsi)hsi.value=hsv;
+  var fev=document.getElementById('sol-fecha-entrada-nueva-vis');if(fev)fev.value='';
+  var fsv=document.getElementById('sol-fecha-salida-nueva-vis');if(fsv)fsv.value='';
+}
+// ── FIN MODAL ACORDEÓN ──
 
 // ── PWA ──
 if('serviceWorker' in navigator){
