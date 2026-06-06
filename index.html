@@ -2798,6 +2798,8 @@ function renderBalanceVacaciones(d){
   if(!d)return'';
   var unidad=d.unidad||'horas';
   var conceptos=d.conceptos||[];
+  if(typeof conceptos==='string'){try{conceptos=JSON.parse(conceptos);}catch(e){conceptos=[];}}
+  if(typeof conceptos==='string'){try{conceptos=JSON.parse(conceptos);}catch(e){conceptos=[];}}
   if(!conceptos.length&&d.total===null)return'';
 
   function fmtVal(v,u){
