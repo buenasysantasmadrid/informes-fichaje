@@ -75,12 +75,12 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
 .emp-list{display:flex;flex-direction:column;gap:1px;max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--cream);padding:4px}
 .emp-list::-webkit-scrollbar{width:4px}
 .emp-list::-webkit-scrollbar-thumb{background:var(--cream3);border-radius:2px}
-.emp-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .12s}
+.emp-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background .12s;user-select:none}
 .emp-row:hover{background:var(--green3)}
-.emp-row input{accent-color:var(--green);width:14px;height:14px;flex-shrink:0;cursor:pointer}
-.emp-row label{font-size:.73rem;cursor:pointer;color:var(--ink2);line-height:1.3}
+.emp-row input{accent-color:var(--green);width:15px;height:15px;flex-shrink:0;cursor:pointer}
+.emp-row span{font-size:.88rem;cursor:pointer;color:var(--ink);line-height:1.3;font-weight:400}
 .emp-btns{display:flex;gap:6px;margin-bottom:6px}
-.bxs{padding:4px 10px;font-size:.63rem;font-family:'Outfit',sans-serif;border:1px solid var(--border2);background:#fff;border-radius:5px;cursor:pointer;color:var(--ink3);transition:all .12s}
+.bxs{padding:6px 14px;font-size:.75rem;font-family:'Outfit',sans-serif;border:1px solid var(--border2);background:#fff;border-radius:5px;cursor:pointer;color:var(--ink3);transition:all .12s}
 .bxs:hover{background:var(--green);color:#fff;border-color:var(--green)}
 .date-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .df{display:flex;flex-direction:column;gap:4px}
@@ -1164,7 +1164,8 @@ function eswitch(tab){
 }
 function renderEmpleados(){
   document.getElementById('emp-list').innerHTML=empleados.map(function(e){
-    return'<label class="emp-row"><input type="checkbox" class="echk" value="'+esc(e.nombre)+'" checked><label>'+esc(e.nombre)+'</label></label>';
+    var id='echk-'+empId(e.nombre);
+    return'<label class="emp-row" for="'+id+'"><input type="checkbox" class="echk" id="'+id+'" value="'+esc(e.nombre)+'" checked><span>'+esc(e.nombre)+'</span></label>';
   }).join('');
 }
 function selAll(){document.querySelectorAll('.echk').forEach(function(c){c.checked=true;});}
