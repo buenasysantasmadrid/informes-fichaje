@@ -1501,7 +1501,9 @@ function construirDmap(fichajes){
     return diasDesdeRef*86400+(horaToSecs(hora)||0);
   }
   // Ordenar todo cronológicamente
-  var todos=fichajes.map(function(f,i){return{f:f,i:i};}).sort(function(a,b){var d=absSecs(a.f.fecha,a.f.hora)-absSecs(b.f.fecha,b.f.hora);return d!==0?d:a.i-b.i;}).map(function(x){return x.f;});
+  // Cuando dos fichajes tienen el mismo instante, ENTRADA va siempre antes que SALIDA
+  // para que un turno de 0 minutos se empareje correctamente.
+  var todos=fichajes.map(function(f,i){return{f:f,i:i};}).sort(function(a,b){var d=absSecs(a.f.fecha,a.f.hora)-absSecs(b.f.fecha,b.f.hora);if(d!==0)return d;if(a.f.tipo==='ENTRADA'&&b.f.tipo==='SALIDA')return -1;if(a.f.tipo==='SALIDA'&&b.f.tipo==='ENTRADA')return 1;return a.i-b.i;}).map(function(x){return x.f;});
   var usada=new Array(todos.length).fill(false);
   var dmap={};
 
