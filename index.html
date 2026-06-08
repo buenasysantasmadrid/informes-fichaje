@@ -1951,7 +1951,7 @@ function buildCardsConSemana(fechas,dmap,emp,isEmp){
   }
   if(semActual!==null)grupos.push({semana:semActual,mins:semMins,cards:semCards.slice()});
   var html='';
-  if(isEmp){html+='<div style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green-acc);font-weight:600;padding:6px 0 8px;opacity:.7">Cambios: pinchar en el turno</div>';}
+  if(isEmp){html+='<div style="font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:#cc0000;font-weight:800;padding:6px 0 8px">⚠ Para hacer cambios pincha en el turno</div>';}
   var colHdr='<div class="week-col-hdr"><span class="wch-day">D\u00eda</span><span class="wch-in">Entrada</span><span class="wch-out">Salida</span><span class="wch-tot">Total</span></div>';
   for(var g=0;g<grupos.length;g++){
     var gr=grupos[g];
@@ -2292,9 +2292,8 @@ function renderEmp(emp){
   if(!dmap)return'';
   var fechas=Object.keys(dmap).sort().reverse(),fechasAsc=fechas.slice().reverse();
   if(!fechas.length)return'';
-  var dateSearch='<div class="date-search-bar"><label>Ir a fecha</label><input type="date" id="adm-date-jump-'+empId(emp)+'"><button class="btn-jump" onclick="jumpToDateAdmin(\''+esc(emp)+'\')">Ir</button></div>';
   var cards=buildCardsConSemana(fechas,dmap,emp,false);
-  return'<div class="emp-block" data-emp="'+esc(emp)+'"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div>'+dateSearch+'<div class="days">'+cards+'</div></div>';
+  return'<div class="emp-block" data-emp="'+esc(emp)+'"><div class="emp-name">'+esc(emp)+'</div><div class="emp-meta">'+isoDisplay(fechasAsc[0])+' → '+isoDisplay(fechasAsc[fechasAsc.length-1])+'</div><div class="days">'+cards+'</div></div>';
 }
 function jumpToDateAdmin(emp){var el=document.getElementById('adm-date-jump-'+empId(emp));if(!el)return;var fecha=el.value;if(!fecha){toast('Selecciona una fecha','err');return;}scrollToDay(fecha,emp);}
 
