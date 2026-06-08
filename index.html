@@ -1533,11 +1533,11 @@ function construirDmap(fichajes){
       }
 
     }else{
-      // SALIDA sin ENTRADA previa en este período → viene de un turno que empezó antes
-      // No la marcamos como error, simplemente la ignoramos (no se puede calcular duración)
+      // SALIDA sin ENTRADA previa en este período → la mostramos como turno sin entrada
       usada[i]=true;
-      // No la añadimos al dmap: no tiene sentido mostrar una salida huérfana
-      // Si el admin quiere verla, puede cargar un período más amplio
+      var fechaS2=reg.fecha;
+      if(!dmap[fechaS2])dmap[fechaS2]=[];
+      dmap[fechaS2].push({tipo:'SALIDA',hora:reg.hora,fechaReal:reg.fecha,errorNoche:false,huerfana:true});
     }
   }
   return dmap;
