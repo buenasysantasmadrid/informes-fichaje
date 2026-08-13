@@ -1491,6 +1491,24 @@ function diasEntreISO(desde,hasta){
   return Math.round((d2-d1)/86400000)+1;
 }
 
+// Hora límite (HH:MM:SS) hasta la que, en el día siguiente al último día del
+// informe, se admiten SALIDAS para poder cerrar el turno del último día.
+var CORTE_INFORME_SECS = 4*3600; // 04:00:00
+
+// Filtra los fichajes de un período [desde,hasta] pero además, si el último
+// día del informe tiene un turno que cruza la medianoche, incluye la SALIDA
+// registrada al día siguiente hasta las 04:00. Sin esto, un empleado que
+// fichó la entrada el último día y la salida ya pasada la medianoche se
+// queda con el turno abierto (el informe muestra ese día con solo entrada).
+function filtrarFichajesInforme(fichajes,desde,hasta){
+  var diaExtra=diaSiguiente(hasta);
+  return fichajes.filter(function(f){
+    if(f.fecha>=desde&&f.fecha<=hasta)return true;
+    if(f.tipo==='SALIDA'&&f.fecha===diaExtra&&(horaToSecs(f.hora)||0)<CORTE_INFORME_SECS)return true;
+    return false;
+  });
+}
+
 // ── TURNOS ──
 function construirDmap(fichajes){
   // Usamos segundos absolutos para precisión total HH:MM:SS
@@ -1746,7 +1764,7 @@ async function generar(){
     var emp=sel[i];setLoader(true,'Cargando '+emp.split(' ')[0]+'...');
     try{
       var table=await fetchSheet(emp);var fichajes=parsearTabla(table);
-      var filt=fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});
+      var filt=filtrarFichajesInforme(fichajes,desde,hasta);
       editData[emp]=construirDmap(filt);
     }catch(e){editData[emp]=null;}
   }
@@ -1766,7 +1784,7 @@ async function empGenerar(){
   setLoader(true,'Cargando fichajes...');empEditDataCal={};
   try{
     var table=await fetchSheet(session.nombre);var fichajes=parsearTabla(table);
-    var filt=fichajes.filter(function(f){return f.fecha>=desde&&f.fecha<=hasta;});
+    var filt=filtrarFichajesInforme(fichajes,desde,hasta);
     empEditDataCal=construirDmap(filt);
     esolicitudes=await loadSolicitudes(session.nombre);
     rebuildApprovedSet(esolicitudes);
@@ -2469,7 +2487,7 @@ async function aprobar(id){
       try{
         var table=await fetchSheet(sol.emp);
         var fichajes=parsearTabla(table);
-        var filt=fichajes.filter(function(f){return f.fecha>=currentDesde&&f.fecha<=currentHasta;});
+        var filt=filtrarFichajesInforme(fichajes,currentDesde,currentHasta);
         editData[sol.emp]=construirDmap(filt);
         var fechasAfectadas=[safeISO(sol.fechaEntradaOrig||sol.fecha),safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),safeISO(sol.fechaSalidaOrig||sol.fecha),safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha)];
         var vistas=new Set(fechasAfectadas.filter(Boolean));
