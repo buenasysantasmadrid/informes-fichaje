@@ -2085,6 +2085,44 @@ function cerrarModalNuevoFichaje(){
   document.getElementById('modal-nuevo-fichaje').classList.remove('on');
   nfEmpActual=null;
 }
+  function comprobarConflictosFichajeNuevo(dmap, fecha, horaE, horaS) {
+  var fechasRef = [diaAnterior(diaAnterior(fecha)), diaAnterior(fecha), fecha, diaSiguiente(fecha), diaSiguiente(diaSiguiente(fecha))];
+  var intervalos = [];
+  var puntosAisladosEntrada = [];
+  fechasRef.forEach(function(f) {
+    var regs = dmap[f] || [];
+    if (!regs.length) return;
+    var turnos = emparejarTurnos(regs, f);
+    turnos.forEach(function(t) {
+      var absE = t.entrada ? isoHoraToAbsMins(t.fechaEntrada, t.entrada.hora) : null;
+      var absS = t.salida  ? isoHoraToAbsMins(t.fechaSalida, t.salida.hora)  : null;
+      if (absE !== null && absS !== null) {
+        intervalos.push({ inicio: absE, fin: absS });
+      } else if (absE !== null) {
+        puntosAisladosEntrada.push(absE);
+      }
+    });
+  });
+  function solapaConAlguno(iso, horaStr) {
+    var abs = isoHoraToAbsMins(iso, horaStr);
+    if (abs === null) return false;
+    for (var j = 0; j < intervalos.length; j++) { if (abs > intervalos[j].inicio && abs < intervalos[j].fin) return true; }
+    for (var k = 0; k < puntosAisladosEntrada.length; k++) { if (abs === puntosAisladosEntrada[k]) return true; }
+    return false;
+  }
+  if (horaE && solapaConAlguno(fecha, horaE)) return 'ERROR, TRABAJANDO EN ESE HORARIO';
+  if (horaS && solapaConAlguno(fecha, horaS)) return 'ERROR, TRABAJANDO EN ESE HORARIO';
+  if (horaE && horaS) {
+    var absE2 = isoHoraToAbsMins(fecha, horaE);
+    var absS2 = isoHoraToAbsMins(fecha, horaS);
+    if (absE2 !== null && absS2 !== null) {
+      var dur = absS2 - absE2;
+      if (dur < MIN_TURNO_MINS) return 'ERROR: FICHAJE CORTO';
+      if (dur > MAX_TURNO_MINS) return 'ERROR: FICHAJE LARGO';
+    }
+  }
+  return null;
+}
 async function enviarNuevoFichaje(){
   var fecha=document.getElementById('nf-fecha').value;
   var horaE=document.getElementById('nf-hora-entrada').value;
