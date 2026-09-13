@@ -1664,10 +1664,7 @@ function checkOverlap(){
   var fechaSN=document.getElementById('sol-fecha-salida-nueva-vis').value||document.getElementById('sol-fecha-salida-nueva').value||solActual.fecha;
   if(!horaEN&&!horaSN)return;
   var fechasRef=[diaAnterior(diaAnterior(solActual.fecha)),diaAnterior(solActual.fecha),solActual.fecha,diaSiguiente(solActual.fecha),diaSiguiente(diaSiguiente(solActual.fecha))];
-  // intervalos: turnos completos (entrada+salida) de otros turnos
   var intervalos=[];
-  // puntosAisladosEntrada: solo ENTRADAS sueltas de otros turnos (no salidas antiguas)
-  // Una salida aislada del pasado NO puede bloquear fichajes futuros
   var puntosAisladosEntrada=[];
   fechasRef.forEach(function(f){
     var regs=dmap[f]||[];if(!regs.length)return;
@@ -1679,28 +1676,20 @@ function checkOverlap(){
       if(absE!==null&&absS!==null){
         intervalos.push({inicio:absE,fin:absS});
       }else{
-        // Solo registramos entradas aisladas como límite superior para salidas propuestas
-        // Las salidas aisladas de días pasados NO deben bloquear fichajes futuros
         if(absE!==null)puntosAisladosEntrada.push(absE);
       }
     });
   });
   function solapaConAlguno(iso,horaStr){
     var abs=isoHoraToAbsMins(iso,horaStr);if(abs===null)return false;
-    // cae dentro de un turno completo
     for(var j=0;j<intervalos.length;j++){if(abs>intervalos[j].inicio&&abs<intervalos[j].fin)return true;}
-    // coincide exactamente con una entrada aislada de otro turno
     for(var k=0;k<puntosAisladosEntrada.length;k++){if(abs===puntosAisladosEntrada[k])return true;}
     return false;
   }
-  // Una SALIDA propuesta no puede quedar DESPUÉS de la siguiente ENTRADA aislada futura
-  // (caso: hay una ENTRADA a las 09:00 del día siguiente y se pide SALIDA a las 10:00 de ese día)
   function superaPuntoAislado(iso,horaStr){
     var abs=isoHoraToAbsMins(iso,horaStr);if(abs===null)return false;
     for(var k=0;k<puntosAisladosEntrada.length;k++){
       var pe=puntosAisladosEntrada[k];
-      // Solo bloquea si la entrada aislada es POSTERIOR a la hora propuesta Y muy cercana (mismo día/turno)
-      // Una entrada del futuro lejano (>3 días) no debe bloquear
       if(pe>abs&&pe-abs<1440*3)return true;
     }
     return false;
@@ -1708,12 +1697,19 @@ function checkOverlap(){
   var solapa=false;
   if(horaEN&&solapaConAlguno(fechaEN,horaEN))solapa=true;
   if(horaSN&&solapaConAlguno(fechaSN,horaSN))solapa=true;
-  // La nueva SALIDA no puede ser posterior a la próxima ENTRADA suelta
   if(!solapa&&horaSN&&superaPuntoAislado(fechaSN,horaSN))solapa=true;
-  if(solapa){errEl.classList.add('on');btnEl.disabled=true;return;}
+  if(solapa){
+    errEl.textContent='⚠ ERROR, TRABAJANDO EN ESE HORARIO';
+    errEl.classList.add('on');btnEl.disabled=true;return;
+  }
   if(horaEN&&horaSN){
     var absE=isoHoraToAbsMins(fechaEN,horaEN);var absS=isoHoraToAbsMins(fechaSN,horaSN);
     if(absS!==null&&absE!==null&&absS<=absE){errEl.textContent='⚠ La salida no puede ser anterior o igual a la entrada.';errEl.classList.add('on');btnEl.disabled=true;return;}
+    if(absS!==null&&absE!==null){
+      var durProp=absS-absE;
+      if(durProp<MIN_TURNO_MINS){errEl.textContent='⚠ ERROR: FICHAJE CORTO';errEl.classList.add('on');btnEl.disabled=true;return;}
+      if(durProp>MAX_TURNO_MINS){errEl.textContent='⚠ ERROR: FICHAJE LARGO';errEl.classList.add('on');btnEl.disabled=true;return;}
+    }
   }
   if(!horaEN&&horaSN&&solActual.turno.entrada){
     var entradaFechaActual=solActual.turno.entrada.fechaReal||solActual.fecha;
@@ -1721,6 +1717,11 @@ function checkOverlap(){
     var absEActual=isoHoraToAbsMins(entradaFechaActual,entradaHoraActual);
     var absSNueva=isoHoraToAbsMins(fechaSN,horaSN);
     if(absSNueva!==null&&absEActual!==null&&absSNueva<=absEActual){errEl.textContent='⚠ La salida no puede ser anterior o igual a la entrada.';errEl.classList.add('on');btnEl.disabled=true;return;}
+    if(absSNueva!==null&&absEActual!==null){
+      var durProp2=absSNueva-absEActual;
+      if(durProp2<MIN_TURNO_MINS){errEl.textContent='⚠ ERROR: FICHAJE CORTO';errEl.classList.add('on');btnEl.disabled=true;return;}
+      if(durProp2>MAX_TURNO_MINS){errEl.textContent='⚠ ERROR: FICHAJE LARGO';errEl.classList.add('on');btnEl.disabled=true;return;}
+    }
   }
   if(horaEN&&!horaSN&&solActual.turno.salida){
     var salidaFechaActual=solActual.turno.salida.fechaReal||solActual.fecha;
@@ -1728,8 +1729,12 @@ function checkOverlap(){
     var absENueva=isoHoraToAbsMins(fechaEN,horaEN);
     var absSActual=isoHoraToAbsMins(salidaFechaActual,salidaHoraActual);
     if(absENueva!==null&&absSActual!==null&&absENueva>=absSActual){errEl.textContent='⚠ La entrada no puede ser posterior o igual a la salida.';errEl.classList.add('on');btnEl.disabled=true;return;}
+    if(absENueva!==null&&absSActual!==null){
+      var durProp3=absSActual-absENueva;
+      if(durProp3<MIN_TURNO_MINS){errEl.textContent='⚠ ERROR: FICHAJE CORTO';errEl.classList.add('on');btnEl.disabled=true;return;}
+      if(durProp3>MAX_TURNO_MINS){errEl.textContent='⚠ ERROR: FICHAJE LARGO';errEl.classList.add('on');btnEl.disabled=true;return;}
+    }
   }
-  errEl.textContent='⚠ ERROR: la hora/fecha nueva se solapa con otro turno existente.';
 }
 
 // ── PERÍODO RÁPIDO ──
