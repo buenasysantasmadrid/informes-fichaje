@@ -2131,6 +2131,9 @@ async function enviarNuevoFichaje(){
   if(!fecha){toast('Selecciona una fecha','err');return;}
   if(!horaE&&!horaS){toast('Indica al menos una hora','err');return;}
   if(horaE&&horaS&&horaS<=horaE){toast('La salida debe ser posterior a la entrada','err');return;}
+    var dmapValidar = nfIsEmp ? empEditData : (editData[nfEmpActual] || {});
+  var errValidacion = comprobarConflictosFichajeNuevo(dmapValidar, fecha, horaE, horaS);
+  if (errValidacion) { toast(errValidacion, 'err', 3500); return; }
   var fechaDisp=isoDisplay(fecha);
   cerrarModalNuevoFichaje();
   setLoader(true,'Enviando solicitud...');
