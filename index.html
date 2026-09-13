@@ -1457,11 +1457,15 @@ async function callScriptJSONP(payload) {
 function parsearTabla(table){
   if(!table||!table.rows)return[];
   var out=[];
+  var vistos={};
   for(var i=0;i<table.rows.length;i++){
     var c=table.rows[i].c||[];
     var get=function(idx){return(c[idx]&&c[idx].v!=null)?String(c[idx].v).trim():'';};
     var fecha=parseFecha(get(0)),tipo=get(1).toUpperCase(),hora=get(2).substring(0,8)||get(2);
     if(!fecha||(tipo!=='ENTRADA'&&tipo!=='SALIDA')||!hora)continue;
+    var clave=fecha+'|'+tipo+'|'+normHora(hora);
+    if(vistos[clave])continue;
+    vistos[clave]=true;
     out.push({fecha:fecha,tipo:tipo,hora:hora});
   }
   return out;
