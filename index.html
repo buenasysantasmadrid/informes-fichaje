@@ -1698,6 +1698,15 @@ function checkOverlap(){
   if(horaEN&&solapaConAlguno(fechaEN,horaEN))solapa=true;
   if(horaSN&&solapaConAlguno(fechaSN,horaSN))solapa=true;
   if(!solapa&&horaSN&&superaPuntoAislado(fechaSN,horaSN))solapa=true;
+  if(!solapa&&horaEN&&horaSN){
+    var nAbsE=isoHoraToAbsMins(fechaEN,horaEN);
+    var nAbsS=isoHoraToAbsMins(fechaSN,horaSN);
+    if(nAbsE!==null&&nAbsS!==null){
+      for(var mm=0;mm<intervalos.length;mm++){
+        if(nAbsE<intervalos[mm].fin&&nAbsS>intervalos[mm].inicio){solapa=true;break;}
+      }
+    }
+  }
   if(solapa){
     errEl.textContent='⚠ ERROR, TRABAJANDO EN ESE HORARIO';
     errEl.classList.add('on');btnEl.disabled=true;return;
@@ -2110,8 +2119,17 @@ function cerrarModalNuevoFichaje(){
     for (var k = 0; k < puntosAisladosEntrada.length; k++) { if (abs === puntosAisladosEntrada[k]) return true; }
     return false;
   }
-  if (horaE && solapaConAlguno(fecha, horaE)) return 'ERROR, TRABAJANDO EN ESE HORARIO';
-  if (horaS && solapaConAlguno(fecha, horaS)) return 'ERROR, TRABAJANDO EN ESE HORARIO';
+  if (horaE && solapaConAlguno(fecha, horaE)) return 'ERROR: YA ESTÁS TRABAJANDO EN ESE MOMENTO';
+  if (horaS && solapaConAlguno(fecha, horaS)) return 'ERROR: YA ESTÁS TRABAJANDO EN ESE MOMENTO';
+  if (horaE && horaS) {
+    var nAbsE2 = isoHoraToAbsMins(fecha, horaE);
+    var nAbsS2 = isoHoraToAbsMins(fecha, horaS);
+    if (nAbsE2 !== null && nAbsS2 !== null) {
+      for (var mm2 = 0; mm2 < intervalos.length; mm2++) {
+        if (nAbsE2 < intervalos[mm2].fin && nAbsS2 > intervalos[mm2].inicio) return 'ERROR: YA ESTÁS TRABAJANDO EN ESE MOMENTO';
+      }
+    }
+  }
   if (horaE && horaS) {
     var absE2 = isoHoraToAbsMins(fecha, horaE);
     var absS2 = isoHoraToAbsMins(fecha, horaS);
