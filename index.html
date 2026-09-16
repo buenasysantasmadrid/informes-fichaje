@@ -691,7 +691,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
           </div>
           <div class="sol-acc-body">
             <!-- Fecha entrada -->
-            <div class="sol-change-row">
+            <div class="sol-change-row" onclick="solRowClick(event,'entrada','fecha')" style="cursor:pointer">
               <div class="sol-cr-left">
                 <span class="sol-cr-tipo">Fecha</span>
                 <div class="sol-cr-valor-row" id="scr-fecha-entrada-display">
@@ -704,7 +704,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
               </div>
             </div>
             <!-- Hora entrada -->
-            <div class="sol-change-row">
+            <div class="sol-change-row" onclick="solRowClick(event,'entrada','hora')" style="cursor:pointer">
               <div class="sol-cr-left">
                 <span class="sol-cr-tipo">Hora</span>
                 <div class="sol-cr-valor-row" id="scr-hora-entrada-display">
@@ -733,7 +733,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
           </div>
           <div class="sol-acc-body">
             <!-- Fecha salida -->
-            <div class="sol-change-row">
+            <div class="sol-change-row" onclick="solRowClick(event,'salida','fecha')" style="cursor:pointer">
               <div class="sol-cr-left">
                 <span class="sol-cr-tipo">Fecha</span>
                 <div class="sol-cr-valor-row" id="scr-fecha-salida-display">
@@ -746,7 +746,7 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
               </div>
             </div>
             <!-- Hora salida -->
-            <div class="sol-change-row">
+            <div class="sol-change-row" onclick="solRowClick(event,'salida','hora')" style="cursor:pointer">
               <div class="sol-cr-left">
                 <span class="sol-cr-tipo">Hora</span>
                 <div class="sol-cr-valor-row" id="scr-hora-salida-display">
