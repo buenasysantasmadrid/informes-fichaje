@@ -1693,7 +1693,6 @@ function checkOverlap(){
   var solapa=false;
   if(horaEN&&solapaConAlguno(fechaEN,horaEN))solapa=true;
   if(horaSN&&solapaConAlguno(fechaSN,horaSN))solapa=true;
-  if(!solapa&&horaSN&&superaPuntoAislado(fechaSN,horaSN))solapa=true;
   if(!solapa&&horaEN&&horaSN){
     var nAbsE=isoHoraToAbsMins(fechaEN,horaEN);
     var nAbsS=isoHoraToAbsMins(fechaSN,horaSN);
