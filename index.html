@@ -702,7 +702,6 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
                   <button class="sol-clear-btn" onclick="solClearField('entrada','fecha')">✕ Deshacer</button>
                 </div>
               </div>
-              <button class="sol-pencil-btn" id="spb-fecha-entrada" onclick="solToggleField('entrada','fecha')">✏</button>
             </div>
             <!-- Hora entrada -->
             <div class="sol-change-row">
@@ -716,7 +715,6 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
                   <button class="sol-clear-btn" onclick="solClearField('entrada','hora')">✕ Deshacer</button>
                 </div>
               </div>
-              <button class="sol-pencil-btn" id="spb-hora-entrada" onclick="solToggleField('entrada','hora')">✏</button>
             </div>
           </div>
         </div>
@@ -746,7 +744,6 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
                   <button class="sol-clear-btn" onclick="solClearField('salida','fecha')">✕ Deshacer</button>
                 </div>
               </div>
-              <button class="sol-pencil-btn" id="spb-fecha-salida" onclick="solToggleField('salida','fecha')">✏</button>
             </div>
             <!-- Hora salida -->
             <div class="sol-change-row">
@@ -760,7 +757,6 @@ body{font-family:'Outfit',sans-serif;color:var(--ink);min-height:100vh}
                   <button class="sol-clear-btn" onclick="solClearField('salida','hora')">✕ Deshacer</button>
                 </div>
               </div>
-              <button class="sol-pencil-btn" id="spb-hora-salida" onclick="solToggleField('salida','hora')">✏</button>
             </div>
           </div>
         </div>
@@ -3629,10 +3625,13 @@ function solToggleField(turno,campo){
     solClearField(turno,campo);
   }else{
     wrap.classList.add('on');
-    btn.classList.add('active');
+    if(btn)btn.classList.add('active');
     var inpId=campo==='hora'?'sol-hora-'+turno+'-nueva':'sol-fecha-'+turno+'-nueva-vis';
     var inp=document.getElementById(inpId);
-    if(inp)inp.focus();
+    if(inp){
+      inp.focus();
+      if(inp.showPicker){ try{ inp.showPicker(); }catch(e){} }
+    }
   }
 }
 function solApplyFecha(turno){
