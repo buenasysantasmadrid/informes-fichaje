@@ -1652,7 +1652,7 @@ function calcDia(regs,fechaDia){
 
 // ── OVERLAP CHECK ──
 function isoToAbsDay(iso){var ref=new Date(2020,0,1);var p=iso.split('-').map(Number);var d=new Date(p[0],p[1]-1,p[2]);return Math.round((d-ref)/86400000);}
-function isoHoraToAbsMins(iso,horaStr){var dayOffset=isoToAbsDay(iso)*86400;var s=horaToSecs(horaStr);if(s===null)return null;return dayOffset+s;}
+function isoHoraToAbsMins(iso,horaStr){var dayOffset=isoToAbsDay(iso)*1440;var s=horaToSecs(horaStr);if(s===null)return null;return dayOffset+(s/60);}
 function checkOverlap(){
   if(!solActual)return;
   var errEl=document.getElementById('overlap-error'),btnEl=document.getElementById('btn-submit-sol');
