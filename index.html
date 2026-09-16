@@ -3679,7 +3679,7 @@ function solClearField(turno,campo){
   var orig=valEl?valEl.getAttribute('data-orig'):'—';
   if(wrap)wrap.classList.remove('on');
   if(btn)btn.classList.remove('active');
-  if(dispEl)dispEl.innerHTML='<span class="sol-cr-valor" id="'+valId+'" data-orig="'+orig+'">'+orig+'</span>';
+  if(dispEl)dispEl.innerHTML='<span class="sol-cr-valor" id="'+valId+'" data-orig="'+orig+'" onclick="solToggleField(\''+turno+'\',\''+campo+'\')" style="cursor:pointer">'+orig+'</span>';
   // reset hidden inputs
   if(campo==='fecha'){
     var hidId='sol-fecha-'+turno+'-nueva';
@@ -3716,7 +3716,9 @@ function solInitModal(horaE,fechaE,horaS,fechaS){
   // Inicializar displays de fecha/hora con data-orig
   function setDisplay(dispId,valId,text,iso){
     var dispEl=document.getElementById(dispId);
-    if(dispEl)dispEl.innerHTML='<span class="sol-cr-valor" id="'+valId+'" data-orig="'+text+'" data-orig-iso="'+(iso||'')+'">'+text+'</span>';
+    var parts=valId.split('-'); // scr-<campo>-<turno>-val
+    var campo=parts[1], turno=parts[2];
+    if(dispEl)dispEl.innerHTML='<span class="sol-cr-valor" id="'+valId+'" data-orig="'+text+'" data-orig-iso="'+(iso||'')+'" onclick="solToggleField(\''+turno+'\',\''+campo+'\')" style="cursor:pointer">'+text+'</span>';
   }
   var fechaEdisp=fechaE?isoDisplay(fechaE):'—';
   var fechaSdisp=fechaS?isoDisplay(fechaS):'—';
@@ -3735,15 +3737,15 @@ function solInitModal(horaE,fechaE,horaS,fechaS){
       var w=document.getElementById('scr-'+c+'-'+t+'-inp');if(w)w.classList.remove('on');
       var b=document.getElementById('spb-'+c+'-'+t);if(b)b.classList.remove('active');
     });
-    var acc=document.getElementById('sacc-'+t);if(acc)acc.classList.remove('open');
+    var acc=document.getElementById('sacc-'+t);if(acc)acc.classList.add('open');
   });
   // Reset time inputs
   var hev=horaE&&horaE!=='—'?horaE.slice(0,5):'';
   var hsv=horaS&&horaS!=='—'?horaS.slice(0,5):'';
   var hei=document.getElementById('sol-hora-entrada-nueva');if(hei)hei.value=hev;
   var hsi=document.getElementById('sol-hora-salida-nueva');if(hsi)hsi.value=hsv;
-  var fev=document.getElementById('sol-fecha-entrada-nueva-vis');if(fev)fev.value='';
-  var fsv=document.getElementById('sol-fecha-salida-nueva-vis');if(fsv)fsv.value='';
+  var fev=document.getElementById('sol-fecha-entrada-nueva-vis');if(fev)fev.value=fechaE||'';
+  var fsv=document.getElementById('sol-fecha-salida-nueva-vis');if(fsv)fsv.value=fechaS||'';
 }
 // ── FIN MODAL ACORDEÓN ──
 
