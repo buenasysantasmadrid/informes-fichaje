@@ -1405,7 +1405,12 @@ async function callScriptJSONP(payload) {
       var fSO=toISOf3(payload.fechaSalidaOrig),  fSN=toISOf3(payload.fechaSalidaNueva)||fSO;
       var hEA=normH(payload.horaEntradaActual), hEN=normH(payload.horaEntradaNueva);
       var hSA=normH(payload.horaSalidaActual),  hSN=normH(payload.horaSalidaNueva);
-      if (payload.eliminarTurno) {
+      if (payload.fichajeNuevo) {
+        var fParts=fEO.split('-');
+        var fDisp=fParts[2]+'/'+fParts[1]+'/'+fParts[0];
+        if (payload.cambiaEntrada && hEN) await callScriptJSONP({action:'addFichaje',nombre:payload.emp,fecha:fDisp,tipo:'ENTRADA',hora:hEN});
+        if (payload.cambiaSalida  && hSN) await callScriptJSONP({action:'addFichaje',nombre:payload.emp,fecha:fDisp,tipo:'SALIDA',hora:hSN});
+      } else if (payload.eliminarTurno) {
         if (payload.cambiaEntrada && hEA) await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fEO+'&tipo=eq.ENTRADA&hora=gte.'+encodeURIComponent(hEA.slice(0,5))+'&hora=lte.'+encodeURIComponent(hEA.slice(0,5)+':59'));
         if (payload.cambiaSalida  && hSA) await supaDelete('fichajes','empleado_nombre=eq.'+encodeURIComponent(payload.emp)+'&fecha=eq.'+fSO+'&tipo=eq.SALIDA&hora=gte.'+encodeURIComponent(hSA.slice(0,5))+'&hora=lte.'+encodeURIComponent(hSA.slice(0,5)+':59'));
       } else {
@@ -2148,15 +2153,17 @@ async function enviarNuevoFichaje(){
   var errValidacion = comprobarConflictosFichajeNuevo(dmapValidar, fecha, horaE, horaS);
   if (errValidacion) { toast(errValidacion, 'err', 3500); return; }
   var fechaDisp=isoDisplay(fecha);
+  var empNF=nfEmpActual;      // guardar antes de cerrar el modal
+  var esEmpNF=nfIsEmp;
   cerrarModalNuevoFichaje();
   setLoader(true,'Enviando solicitud...');
   var ok=true,errMsg='';
   try{
-    if(nfIsEmp){
+    if(esEmpNF){
       // Empleado → envía solicitud de fichaje nuevo (no inserta directamente)
       var payload={
         action:'guardarSolicitud',
-        emp:nfEmpActual,
+        emp:empNF,
         motivo:motivo||'OLVIDO DE FICHAJE',
         emailEmp:session.email||'',
         eliminarTurno:false,
@@ -2180,22 +2187,22 @@ async function enviarNuevoFichaje(){
     }else{
       // Admin → inserta directamente
       if(horaE){
-        var r1=await callScriptJSONP({action:'addFichaje',nombre:nfEmpActual,fecha:fechaDisp,tipo:'ENTRADA',hora:horaE});
+        var r1=await callScriptJSONP({action:'addFichaje',nombre:empNF,fecha:fechaDisp,tipo:'ENTRADA',hora:horaE});
         if(!r1||r1.ok===false)throw new Error(r1&&r1.msg?r1.msg:'Error añadiendo entrada');
       }
       if(horaS){
-        var r2=await callScriptJSONP({action:'addFichaje',nombre:nfEmpActual,fecha:fechaDisp,tipo:'SALIDA',hora:horaS});
+        var r2=await callScriptJSONP({action:'addFichaje',nombre:empNF,fecha:fechaDisp,tipo:'SALIDA',hora:horaS});
         if(!r2||r2.ok===false)throw new Error(r2&&r2.msg?r2.msg:'Error añadiendo salida');
       }
       try{
-        var t=await fetchSheet(nfEmpActual);
-        editData[nfEmpActual]=construirDmap(parsearTabla(t));
+        var t=await fetchSheet(empNF);
+        editData[empNF]=construirDmap(parsearTabla(t));
         renderReport();
       }catch(e2){renderReport();}
     }
   }catch(e){ok=false;errMsg=e.message;}
   setLoader(false);
-  if(ok){toast(nfIsEmp?'Solicitud enviada ✓':'Fichaje añadido ✓','ok');}
+  if(ok){toast(esEmpNF?'Solicitud enviada ✓':'Fichaje añadido ✓','ok');}
   else{toast('Error: '+errMsg,'err');}
 }
 
@@ -2529,6 +2536,7 @@ async function aprobar(id){
   try{
     var res=await callScriptJSONP({action:'aprobarSolicitud',id:sol.id,emp:sol.emp,emailEmp:sol.emailEmp||'',motivo:sol.motivo||'',
       eliminarTurno:sol.eliminarTurno||false,
+      fichajeNuevo:sol.fichajeNuevo||false,
       cambiaEntrada:sol.cambiaEntrada||false,fechaEntradaOrig:safeISO(sol.fechaEntradaOrig||sol.fecha),fechaEntradaNueva:safeISO(sol.fechaEntradaNueva||sol.fechaEntradaOrig||sol.fecha),horaEntradaActual:sol.horaEntradaActual||'—',horaEntradaNueva:sol.horaEntradaNueva||'—',
       cambiaSalida:sol.cambiaSalida||false,fechaSalidaOrig:safeISO(sol.fechaSalidaOrig||sol.fecha),fechaSalidaNueva:safeISO(sol.fechaSalidaNueva||sol.fechaSalidaOrig||sol.fecha),horaSalidaActual:sol.horaSalidaActual||'—',horaSalidaNueva:sol.horaSalidaNueva||'—'});
     if(!res||res.ok===false)throw new Error(res&&res.msg?res.msg:'Error al aprobar');
