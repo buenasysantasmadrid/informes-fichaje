@@ -1654,6 +1654,19 @@ function calcDia(regs,fechaDia){
 // ── OVERLAP CHECK ──
 function isoToAbsDay(iso){var ref=new Date(2020,0,1);var p=iso.split('-').map(Number);var d=new Date(p[0],p[1]-1,p[2]);return Math.round((d-ref)/86400000);}
 function isoHoraToAbsMins(iso,horaStr){var dayOffset=isoToAbsDay(iso)*1440;var s=horaToSecs(horaStr);if(s===null)return null;return dayOffset+(s/60);}
+// Intervalo de un turno en minutos absolutos (25/11/2026). La salida usa su
+// fecha real; si aun así queda antes de la entrada, es del día siguiente
+// (turno de noche que acaba de madrugada). Un turno con entrada y sin salida
+// cuenta como ocupado hasta MAX_TURNO_MINS después: antes era un solo minuto
+// y dejaba pedir cambios encima de un turno mal fichado.
+function intervaloTurno(t){
+  var absE=t.entrada?isoHoraToAbsMins(t.entrada.fechaReal||t.fechaEntrada,t.entrada.hora):null;
+  var absS=t.salida ?isoHoraToAbsMins(t.salida.fechaReal ||t.fechaSalida, t.salida.hora) :null;
+  if(absE!==null&&absS!==null&&absS<=absE)absS+=1440;
+  if(absE!==null&&absS===null)absS=absE+MAX_TURNO_MINS;
+  if(absE===null||absS===null)return null;
+  return{inicio:absE,fin:absS};
+}
 function checkOverlap(){
   if(!solActual)return;
   var errEl=document.getElementById('overlap-error'),btnEl=document.getElementById('btn-submit-sol');
@@ -1672,13 +1685,8 @@ function checkOverlap(){
     var turnos=emparejarTurnos(regs,f);
     turnos.forEach(function(t,idx){
       if(f===solActual.fecha&&idx===solActual.turnoIdx)return;
-      var absE=t.entrada?isoHoraToAbsMins(t.fechaEntrada,t.entrada.hora):null;
-      var absS=t.salida ?isoHoraToAbsMins(t.fechaSalida, t.salida.hora) :null;
-      if(absE!==null&&absS!==null){
-        intervalos.push({inicio:absE,fin:absS});
-      }else{
-        if(absE!==null)puntosAisladosEntrada.push(absE);
-      }
+      var iv=intervaloTurno(t);
+      if(iv)intervalos.push(iv);
     });
   });
   function solapaConAlguno(iso,horaStr){
@@ -1698,9 +1706,13 @@ function checkOverlap(){
   var solapa=false;
   if(horaEN&&solapaConAlguno(fechaEN,horaEN))solapa=true;
   if(horaSN&&solapaConAlguno(fechaSN,horaSN))solapa=true;
-  if(!solapa&&horaEN&&horaSN){
-    var nAbsE=isoHoraToAbsMins(fechaEN,horaEN);
-    var nAbsS=isoHoraToAbsMins(fechaSN,horaSN);
+  // El turno entero como quedaría (si solo cambia la entrada o la salida, la
+  // otra es la de antes): no puede pisar ningún otro turno.
+  var orig=(solActual.turno&&intervaloTurno(solActual.turno))||null;
+  if(!solapa&&(horaEN||horaSN)){
+    var nAbsE=horaEN?isoHoraToAbsMins(fechaEN,horaEN):(orig?orig.inicio:null);
+    var nAbsS=horaSN?isoHoraToAbsMins(fechaSN,horaSN):(orig?orig.fin:null);
+    if(nAbsE!==null&&nAbsS!==null&&nAbsS<=nAbsE&&!horaEN)nAbsS+=1440;
     if(nAbsE!==null&&nAbsS!==null){
       for(var mm=0;mm<intervalos.length;mm++){
         if(nAbsE<intervalos[mm].fin&&nAbsS>intervalos[mm].inicio){solapa=true;break;}
@@ -2103,13 +2115,8 @@ function cerrarModalNuevoFichaje(){
     if (!regs.length) return;
     var turnos = emparejarTurnos(regs, f);
     turnos.forEach(function(t) {
-      var absE = t.entrada ? isoHoraToAbsMins(t.fechaEntrada, t.entrada.hora) : null;
-      var absS = t.salida  ? isoHoraToAbsMins(t.fechaSalida, t.salida.hora)  : null;
-      if (absE !== null && absS !== null) {
-        intervalos.push({ inicio: absE, fin: absS });
-      } else if (absE !== null) {
-        puntosAisladosEntrada.push(absE);
-      }
+      var iv = intervaloTurno(t);
+      if (iv) intervalos.push(iv);
     });
   });
   function solapaConAlguno(iso, horaStr) {
